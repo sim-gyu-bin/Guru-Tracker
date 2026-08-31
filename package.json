@@ -1,0 +1,36 @@
+{
+  "name": "guru-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.18.3",
+  "sideEffects": false,
+  "scripts": {
+    "dev": "pnpm lint && next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "tsc --noEmit && biome lint . --max-diagnostics=100",
+    "lint:fix": "tsc --noEmit && biome lint . --write --max-diagnostics=100",
+    "pret": "biome format .",
+    "pret:fix": "biome format . --write",
+    "biome": "tsc --noEmit && biome check . --max-diagnostics=100",
+    "biome:fix": "tsc --noEmit && biome check . --write --max-diagnostics=100",
+    "biome:summary": "biome check --reporter=summary --max-diagnostics=100",
+    "prepare": "husky",
+    "preinstall": "npx only-allow pnpm"
+  },
+  "dependencies": {
+    "next": "16.2.3",
+    "react": "19.2.5",
+    "react-dom": "19.2.5"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.2.4",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "^20",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "husky": "^9.1.7",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^5.9.2"
+  }
+}

@@ -4,7 +4,7 @@
 
 ## 현재 상태
 
-**이 저장소는 현재 프로젝트 정의 및 초기 설정 단계입니다.** 아직 Next.js 애플리케이션, 데이터 수집기, 데이터베이스, PWA, 배포 환경은 구현되어 있지 않습니다. 아래의 동작과 구조는 구현 완료 기능이 아니라 **계획**입니다.
+**Next.js App Router 기반 애플리케이션과 pnpm·Biome·Husky 개발 도구 설정을 완료했습니다.** 현재 홈 화면은 제품 범위와 공식 출처를 안내하는 초기 반응형 화면입니다. 데이터 수집기, Supabase 데이터베이스, 설치형 PWA, Web Push와 배포 환경은 아직 구현되지 않았으며 아래 관련 내용은 **계획**입니다.
 
 ## 목적
 
@@ -48,14 +48,15 @@ Guru Tracker는 서로 다른 공개 공시 형식을 한곳에서 읽기 쉽게
 
 알림은 PWA service worker와 VAPID를 사용하는 표준 Web Push로 계획합니다. 권한은 사용자 동작에서만 opt-in으로 요청합니다. iOS의 일반적인 Push 흐름에서는 Home Screen에 설치한 웹 앱이 필요하지만, PWA Web Push를 위해 Apple Developer 계정은 필요하지 않습니다. 만료되었거나 유효하지 않은 subscription은 Push 서비스의 `404` 또는 `410` 응답을 받으면 제거합니다.
 
-## 예정 기술 구성
+## 기술 구성
 
-| 영역 | 계획 |
-| --- | --- |
-| 웹 애플리케이션 | Next.js App Router |
-| 호스팅 | Vercel Hobby |
-| 데이터베이스·파일 저장소 | Supabase PostgreSQL / Storage |
-| 클라이언트 제공 방식 | PWA-first |
+| 영역 | 구성 | 상태 |
+| --- | --- | --- |
+| 웹 애플리케이션 | Next.js App Router | 초기 반응형 화면 구현 |
+| 개발 도구 | pnpm, TypeScript, Biome, Husky, Tailwind CSS | 구현 |
+| 호스팅 | Vercel Hobby | 계획 |
+| 데이터베이스·파일 저장소 | Supabase PostgreSQL / Storage | 계획 |
+| 클라이언트 제공 방식 | PWA-first | 계획 |
 
 공시 원문과 런타임 산출물은 Supabase Storage에 둘 예정입니다. 이 저장소의 LLM Wiki 원문 보관 영역을 운영 데이터 저장소로 사용하지 않습니다.
 
@@ -72,23 +73,24 @@ Guru Tracker는 서로 다른 공개 공시 형식을 한곳에서 읽기 쉽게
 
 OMP 파일, 스킬, 에이전트, README, UI 문구와 커밋 메시지는 한국어로 작성하는 것을 원칙으로 합니다. 다만 구조 이름, 파일명, frontmatter 키, 코드·API·데이터베이스 식별자는 영어를 사용합니다.
 
-## 예정 저장소 구조
+## 현재 저장소 구조
 
 ```text
 .
+├── .husky/               # Git hook 진입점
 ├── .omp/                 # OMP 지침·규칙·에이전트·스킬
 ├── .wiki/                # LLM Wiki 스키마·기록·지식
 │   ├── raw/              # 사람 소유의 불변 근거 원문
 │   └── wiki/             # LLM 소유의 종합 지식
+├── huskyhooks/           # 타입·Biome 커밋/병합 검사
 ├── src/
-│   ├── app/              # 계획된 Next.js App Router 화면과 API
-│   ├── domain/           # 프레임워크 비종속 업무 규칙
-│   └── server/           # 수집·저장·동기화 로직
-├── supabase/             # 계획된 Supabase 스키마·설정 자산
-└── README.md
+│   └── app/              # Next.js App Router 초기 화면
+├── biome.json
+├── package.json
+└── pnpm-lock.yaml
 ```
 
-`src/`, `supabase/`를 포함한 애플리케이션 구조는 아직 생성되지 않았으며, 실제 구현 과정에서 구체화됩니다.
+`src/domain/`, `src/server/`, `supabase/`는 해당 기능을 구현할 때 필요한 최소 구조로 추가합니다.
 
 ## 이용 안내
 

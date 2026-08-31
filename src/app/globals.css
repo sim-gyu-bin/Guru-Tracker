@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+:root {
+  --canvas: #f4f5ef;
+  --ink: #1c201a;
+  --accent: #2f694c;
+}
+
+@theme inline {
+  --color-accent: var(--accent);
+  --color-canvas: var(--canvas);
+  --color-ink: var(--ink);
+  --shadow-soft: 0 24px 70px rgb(28 32 26 / 14%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  margin: 0;
+  background:
+    radial-gradient(circle at 12% 0%, rgb(255 255 255 / 90%), transparent 34rem),
+    var(--canvas);
+  color: var(--ink);
+  font-family: Arial, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
