@@ -1,0 +1,36 @@
+# 이 저장소에서만 OMP 도구 승인을 자동화한다.
+tools:
+  approvalMode: yolo
+  approval:
+    eval: allow
+    browser: allow
+    computer: allow
+    github: allow
+
+# 승인 질문 대신 호스트와 Git 이력을 훼손할 수 있는 명령을 차단한다.
+bash:
+  patterns:
+    - match: rm -rf *
+      approval: deny
+    - match: sudo *
+      approval: deny
+    - match: git push --force*
+      approval: deny
+    - match: git push -f*
+      approval: deny
+    - match: git reset --hard*
+      approval: deny
+    - match: git clean -fd*
+      approval: deny
+    - match: curl *|*
+      approval: deny
+    - match: wget *|*
+      approval: deny
+    - match: shutdown*
+      approval: deny
+    - match: reboot*
+      approval: deny
+    - match: poweroff*
+      approval: deny
+    - match: halt*
+      approval: deny
