@@ -6,7 +6,9 @@ source_capture:
   - ../raw/sessions/2026-08-31-hourly-sync-and-push-update.md
   - ../raw/sessions/2026-08-31-project-yolo-mode.md
   - ../raw/sessions/2026-08-31-code-comment-policy.md
-updated: 2026-08-31
+decision_record:
+  - project conversation, 2026-09-01
+updated: 2026-09-01
 ---
 
 # Guru Tracker Wiki Change Log
@@ -45,3 +47,7 @@ Added the Korean [configuration decision capture](../raw/sessions/2026-08-31-pro
 ### 2026-08-31 — Code comment policy
 
 Added the Korean [coding convention capture](../raw/sessions/2026-08-31-code-comment-policy.md) and [code comment policy](decisions/code-comment-policy.md). Core and externally meaningful code now requires maintained Korean comments explaining intent, invariants, failure conditions, and source semantics without redundant line-by-line narration.
+
+### 2026-09-01 — Google OAuth access policy
+
+Added the [Google OAuth access policy](decisions/google-oauth-access.md) and indexed the decision. Guru Tracker will initially admit every Google-authenticated account without email/password, Magic Link, approval email, or custom SMTP flows. URL distribution is explicitly not treated as access control; ordinary members remain constrained by Proxy checks, Row Level Security, user ownership, and server-only mutation boundaries. A later database email allowlist will keep Google OAuth while combining a Before User Created Hook for new identities with Proxy and RLS checks for existing users. No raw capture was added because `.wiki/raw` is human-owned.
