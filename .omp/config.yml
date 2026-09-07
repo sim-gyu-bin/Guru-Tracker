@@ -34,3 +34,13 @@ bash:
       approval: deny
     - match: halt*
       approval: deny
+
+# 독립 작업 위임을 권장하되 메인에서만 작업자를 생성한다.
+# Herdr 페인 작업자를 합친 전체 상한은 AGENTS.md에 따라 메인이 관리한다.
+task:
+  maxConcurrency: 3
+  batch: true
+  enableEffort: false
+  maxEffort: high
+  eager: preferred
+  maxRecursionDepth: 1
