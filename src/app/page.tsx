@@ -1,136 +1,141 @@
-const trackedGurus = [
-  "Stanley Druckenmiller",
-  "Cathie Wood",
-  "Nancy Pelosi",
-  "Michael Burry",
-  "Philippe Laffont",
-  "Brad Gerstner",
-  "David Tepper",
-] as const;
+import Link from "next/link";
 
-const sourceCards = [
-  {
-    eyebrow: "분기 공시",
-    title: "SEC 13F",
-    description: "기관 보유 현황을 공식 제출 문서 기준으로 확인합니다.",
-  },
-  {
-    eyebrow: "일별 자료",
-    title: "ARK Invest",
-    description: "공식 holdings와 trades 자료만 사용합니다.",
-  },
-  {
-    eyebrow: "거래 공개",
-    title: "미국 하원 PTR",
-    description: "의원 거래는 하원 공식 공개 문서를 기준으로 확인합니다.",
-  },
-] as const;
+import { AppShell } from "@/components/app-shell";
+import { StanleyRefresh } from "@/components/stanley-refresh";
+import { Badge } from "@/components/ui/badge";
+import { getStanleyView } from "@/server/stanley";
+
+// 빌드 시 서버 설정이 없어도 '설정 필요' 화면이 정적 산출물로 고정되지 않게 한다.
+export const dynamic = "force-dynamic";
 
 /**
- * 구현 전 제품 범위와 공식 출처를 명확히 보여 주는 초기 홈 화면이다.
- * 실제 데이터가 연결되기 전까지 수집 완료나 최신 상태로 오인할 표현을 노출하지 않는다.
+ * 저장된 Stanley SEC 13F 캐시를 작업 목록으로 보여 주는 홈 화면이다.
+ * 캐시가 stale 또는 비어 있을 때만 클라이언트 갱신 제어부가 동기화를 요청한다.
  */
-export default function HomePage() {
+export default async function HomePage() {
+  const stanley = await getStanleyView();
+  const snapshot = stanley.snapshot;
+
   return (
-    <div className="min-h-dvh">
-      <header className="border-b border-ink/10 bg-canvas/90 backdrop-blur">
-        <div className="mx-auto flex min-h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
-          <a className="font-semibold tracking-tight" href="#top">
-            Guru Tracker
-          </a>
-          <span className="rounded-full border border-ink/10 bg-white px-3 py-1 text-xs font-medium text-ink/65">
-            초기 구성 중
-          </span>
+    <AppShell current="home">
+      <div className="mb-[22px] grid gap-3 min-[761px]:mb-7 min-[761px]:flex min-[761px]:items-start min-[761px]:justify-between min-[761px]:gap-6">
+        <div>
+          <p className="mb-1.5 text-[11px] font-semibold tracking-[0.01em] text-muted-foreground">
+            공시 작업 공간
+          </p>
+          <h1 className="mb-2 text-[23px] leading-8 font-bold tracking-[-0.035em] min-[761px]:text-[25px]">
+            추적 현황
+          </h1>
+          <p className="mb-0 leading-[21px] text-muted-foreground">
+            공식 원문을 검증해 저장한 공시 캐시를 먼저 표시합니다.
+          </p>
         </div>
-      </header>
+        <Badge
+          className="h-auto justify-self-start rounded-full border-border bg-card px-[9px] py-[5px] text-[11px] font-semibold text-muted-foreground"
+          variant="outline"
+        >
+          Stanley 조회 지원
+        </Badge>
+      </div>
 
-      <main id="top">
-        <section className="mx-auto grid max-w-6xl gap-10 px-5 pb-16 pt-14 sm:px-8 sm:pb-24 sm:pt-20 lg:grid-cols-[1.25fr_0.75fr] lg:items-end">
+      <StanleyRefresh
+        lastAttemptAt={stanley.lastAttemptAt}
+        lastError={stanley.lastError}
+        stale={stanley.stale}
+        status={stanley.status}
+        syncing={stanley.syncing}
+      />
+
+      <section
+        className="overflow-hidden rounded-[9px] border border-border bg-card"
+        aria-labelledby="tracked-heading"
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-border px-[14px] py-[14px] min-[761px]:items-center min-[761px]:px-[18px] min-[761px]:py-[15px]">
           <div>
-            <p className="mb-5 text-sm font-semibold text-accent">
-              공식 공시 기반 투자 정보
+            <p className="mb-1.5 text-[11px] font-semibold tracking-[0.01em] text-muted-foreground">
+              데이터셋
             </p>
-            <h1 className="max-w-3xl text-balance text-4xl font-semibold leading-[1.08] tracking-[-0.045em] sm:text-6xl">
-              흩어진 투자 공시를
-              <br />한 흐름으로 살펴보세요
-            </h1>
-            <p className="mt-6 max-w-2xl text-pretty text-base leading-7 text-ink/65 sm:text-lg sm:leading-8">
-              일곱 명의 공개 보유·거래 정보를 공식 원문과 함께 읽기 쉽게 정리할
-              예정입니다. 현재는 애플리케이션 기반을 구성하고 있습니다.
-            </p>
+            <h2
+              className="mb-0 text-base font-bold tracking-[-0.02em]"
+              id="tracked-heading"
+            >
+              추적 대상
+            </h2>
           </div>
-
-          <aside className="rounded-3xl border border-ink/10 bg-ink p-6 text-canvas shadow-soft sm:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-canvas/55">
-              다음 구현 단계
-            </p>
-            <p className="mt-4 text-xl font-medium leading-8">
-              Supabase 데이터 계약과 첫 SEC 13F 수집 경로를 연결합니다.
-            </p>
-            <p className="mt-5 text-sm leading-6 text-canvas/60">
-              검증된 실제 데이터가 준비되기 전에는 임시 수치나 모의 공시를
-              표시하지 않습니다.
-            </p>
-          </aside>
-        </section>
-
-        <section className="border-y border-ink/10 bg-white/65">
-          <div className="mx-auto max-w-6xl px-5 py-12 sm:px-8 sm:py-16">
-            <div className="mb-8 flex items-end justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold text-accent">추적 범위</p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-                  일곱 명의 공개 정보
-                </h2>
-              </div>
-              <span className="text-sm text-ink/45">7명</span>
-            </div>
-            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {trackedGurus.map((guru, index) => (
-                <li
-                  className="flex min-h-16 items-center gap-4 rounded-2xl border border-ink/10 bg-canvas px-5"
-                  key={guru}
-                >
-                  <span className="text-xs tabular-nums text-ink/35">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                  <span className="font-medium">{guru}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        <section className="mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-24">
-          <p className="text-sm font-semibold text-accent">공식 출처</p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-            출처가 확인된 자료만 사용합니다
-          </h2>
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {sourceCards.map((source) => (
-              <article
-                className="rounded-3xl border border-ink/10 bg-white p-6 sm:p-7"
-                key={source.title}
-              >
-                <p className="text-xs font-semibold text-accent">
-                  {source.eyebrow}
-                </p>
-                <h3 className="mt-4 text-xl font-semibold">{source.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-ink/60">
-                  {source.description}
-                </p>
-              </article>
-            ))}
-          </div>
-        </section>
-      </main>
-
-      <footer className="border-t border-ink/10">
-        <div className="mx-auto max-w-6xl px-5 py-8 text-xs leading-5 text-ink/50 sm:px-8">
-          Guru Tracker는 투자 조언이나 수익을 보장하지 않습니다. 투자 판단 전
-          공식 원문을 별도로 확인하세요.
+          <span className="text-xs text-muted-foreground">공식 출처 기준</span>
         </div>
-      </footer>
-    </div>
+        <div className="grid">
+          <Link
+            className="flex min-h-[68px] items-center gap-3 border-b border-border px-[14px] py-2.5 no-underline hover:bg-accent/30 min-[761px]:min-h-16 min-[761px]:px-[18px]"
+            href="/gurus/stanley-druckenmiller"
+          >
+            <span
+              className="grid size-[30px] shrink-0 place-items-center rounded-[7px] bg-accent text-[10px] font-bold text-accent-foreground"
+              aria-hidden="true"
+            >
+              SD
+            </span>
+            <span className="grid min-w-0 gap-0.5">
+              <strong className="text-[13px]">Stanley Druckenmiller</strong>
+              <span className="truncate text-xs text-muted-foreground">
+                {snapshot?.managerName ?? "SEC 13F 캐시 대기"}
+              </span>
+            </span>
+            <span className="ml-auto hidden text-right text-[11px] leading-4 text-muted-foreground min-[761px]:grid">
+              <span>SEC 13F</span>
+              <span>
+                {snapshot ? `기준일 ${snapshot.reportDate}` : "데이터 없음"}
+              </span>
+            </span>
+            <span
+              className="ml-auto text-xl text-muted-foreground/70 min-[761px]:ml-[9px]"
+              aria-hidden="true"
+            >
+              ›
+            </span>
+          </Link>
+          {[
+            "Cathie Wood · ARK 공식 holdings/trades",
+            "Nancy Pelosi · 미국 하원 공식 PTR",
+            "Michael Burry · SEC 13F",
+            "Philippe Laffont · SEC 13F",
+            "Brad Gerstner · SEC 13F",
+            "David Tepper · SEC 13F",
+          ].map((item) => (
+            <div
+              className="flex min-h-[68px] items-center gap-3 border-b border-border px-[14px] py-2.5 text-muted-foreground last:border-b-0 min-[761px]:min-h-16 min-[761px]:px-[18px]"
+              key={item}
+            >
+              <span
+                className="grid size-[30px] shrink-0 place-items-center rounded-[7px] bg-muted text-[10px] font-bold text-muted-foreground/60"
+                aria-hidden="true"
+              >
+                —
+              </span>
+              <span className="grid min-w-0 gap-0.5">
+                <strong className="text-[13px]">{item.split(" · ")[0]}</strong>
+                <span className="truncate text-xs text-muted-foreground">
+                  {item.split(" · ")[1]}
+                </span>
+              </span>
+              <span className="ml-auto whitespace-nowrap text-right text-[11px] leading-4 text-muted-foreground">
+                미연결
+              </span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section
+        className="mt-[22px] border-t border-border pt-[17px] min-[761px]:mt-7"
+        aria-label="공시 해석 안내"
+      >
+        <strong className="text-xs">13F 공시 안내</strong>
+        <p className="mt-[5px] mb-0 max-w-[760px] text-xs leading-[19px] text-muted-foreground">
+          SEC 13F는 기관 보유 현황 공시입니다. 실시간 거래 또는 개인 계좌를
+          나타내지 않으며, 원문과 기준일을 함께 확인하세요.
+        </p>
+      </section>
+    </AppShell>
   );
 }

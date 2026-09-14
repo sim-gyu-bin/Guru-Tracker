@@ -4,7 +4,7 @@
 
 ## 현재 상태
 
-**Next.js App Router 기반 애플리케이션과 pnpm·Biome·Husky 개발 도구 설정을 완료했습니다.** 현재 홈 화면은 제품 범위와 공식 출처를 안내하는 초기 반응형 화면입니다. 데이터 수집기, Supabase 데이터베이스, 설치형 PWA, Web Push와 배포 환경은 아직 구현되지 않았으며 아래 관련 내용은 **계획**입니다.
+**Linear 제품 내부 UI를 기준으로 홈과 Stanley Druckenmiller 상세 조회 화면을 구현했습니다.** Stanley용 SEC 13F 수집·검증, Supabase DB·Storage 저장, 멱등 동기화 조정자와 SQL 마이그레이션이 포함됩니다. 원격 Supabase에서 실제 공시 저장과 동일 공시 재처리, 데스크톱·모바일의 95개 보유 항목 표시를 확인했습니다. 다른 여섯 대상의 수집, 로그인, 설치형 PWA, Web Push, 운영 배포와 시간별 Cron은 **계획**입니다.
 
 ## 목적
 
@@ -28,19 +28,19 @@ Guru Tracker는 서로 다른 공개 공시 형식을 한곳에서 읽기 쉽게
 - **ARK Invest 공식 holdings/trades**: Cathie Wood 관련 데이터에는 ARK가 공개한 일별 holdings 및 trades 자료를 사용합니다. 접근 공백 중 놓친 일별 이력은 나중에 접속해서 재구성할 수 없습니다.
 - **U.S. House PTR**: Nancy Pelosi 관련 데이터에는 U.S. House가 공개하는 Periodic Transaction Report를 사용합니다. PTR은 공시 문서에 기초하므로 거래 시점·금액·상세 정보의 공개 범위와 시차를 그대로 따릅니다.
 
-예정된 수집기는 공식 원문을 우선하며, 13F를 실시간 데이터처럼 호출하거나 불완전한 공시로부터 사실을 단정하지 않습니다.
+Stanley 수집기는 공식 SEC 제출 목록과 원문만 사용합니다. 나머지 출처 수집기도 같은 원칙을 따를 예정이며, 13F를 실시간 데이터처럼 표시하거나 불완전한 공시에서 사실을 단정하지 않습니다.
 
-## 예정된 동작
+## 동기화 구현과 운영 계획
 
 ### 시간별 동기화와 접근 시 보완
 
 무료 등급 구성을 유지하기 위해 **Supabase Cron**을 시간마다 한 번 실행할 계획입니다. `pg_cron`과 `pg_net`이 보호된 Next.js 내부 동기화 엔드포인트를 호출하며, 호출 비밀값은 Supabase Vault 및 서버 전용 설정에만 보관합니다. 시간별 일정에는 Vercel Hobby Cron을 사용하지 않습니다. Vercel Hobby Cron은 시간별 실행에 적합하지 않기 때문입니다.
 
-예약 실행과 사용자 접근 시 갱신은 데이터베이스 lease를 사용하는 동일한 멱등 동기화 coordinator를 호출합니다. 사용자가 접속하면 먼저 캐시된 데이터를 즉시 보여 주고, 데이터가 오래되었거나 예약 실행이 뒤처진 경우에만 이 coordinator로 갱신을 보완합니다. 따라서 접근 시 갱신은 시간별 예약 동기화의 대체가 아니라 장애·지연 상황을 위한 fallback이며, 출처의 갱신 주기와 실제 서비스 반영 시점은 같지 않을 수 있습니다.
+Stanley의 접근 시 갱신과 보호된 내부 진입점은 DB lease를 사용하는 동일한 멱등 조정자를 호출합니다. 화면은 저장된 데이터를 먼저 읽고, 마지막 성공 후 한 시간이 지났거나 캐시가 비었을 때 접근 갱신을 요청합니다. lease는 90초, 재시도 간격은 최소 60초이며 만료된 작업의 뒤늦은 커밋은 펜싱 토큰으로 차단합니다. 시간별 Cron은 아직 활성화하지 않았습니다. 따라서 현재 접근 갱신만으로 24시간 자동 수집이 운영되는 것은 아닙니다.
 
 ### 안전한 스냅샷 관리
 
-각 데이터셋은 **현재 스냅샷과 직전 스냅샷만** 보관할 계획입니다. 새 원문이 유효함을 확인한 뒤에만 스냅샷을 원자적으로 교체하고, 실제 변경이 있을 때만 데이터셋 버전을 증가시킵니다. 검증에 실패한 새 자료가 기존 데이터를 덮어쓰지 않도록 설계합니다.
+Stanley 마이그레이션은 **현재 스냅샷과 직전 스냅샷만** 보존합니다. 직전은 직전 분기가 아니라 이전에 반영한 버전이며 최초 수집 때는 없습니다. 원문 검증 후 실제 정규화 데이터가 달라질 때만 하나의 transaction에서 스냅샷을 회전하고 버전·변경 이벤트를 기록합니다. 같은 데이터의 새 정정 공시는 버전을 올리지 않고 출처 메타데이터만 갱신합니다. 원문은 콘텐츠 해시 주소로 저장하며 동일 객체를 덮어쓰지 않습니다. 이벤트에는 30일 보존 기준을 기록하지만 자동 삭제 작업은 없고, 고아 원문을 포함한 실제 정리는 별도 승인 대상입니다.
 
 ### 변경 알림 Web Push
 
@@ -52,13 +52,45 @@ Guru Tracker는 서로 다른 공개 공시 형식을 한곳에서 읽기 쉽게
 
 | 영역 | 구성 | 상태 |
 | --- | --- | --- |
-| 웹 애플리케이션 | Next.js App Router | 초기 반응형 화면 구현 |
+| 웹 애플리케이션 | Next.js App Router | Linear 스타일 홈·Stanley 상세 조회 구현 |
 | 개발 도구 | pnpm, TypeScript, Biome, Husky, Tailwind CSS | 구현 |
+| UI 컴포넌트 | Tailwind CSS 4, shadcn/ui (Radix 기반), Recharts | 버튼·배지·표·상태 안내·공시 비중 도넛 차트 구현 |
 | 호스팅 | Vercel Hobby | 계획 |
-| 데이터베이스·파일 저장소 | Supabase PostgreSQL / Storage | 계획 |
+| 데이터베이스·파일 저장소 | Supabase PostgreSQL / Storage | Stanley 실원문 저장·동일 공시 재처리 검증 완료 |
 | 클라이언트 제공 방식 | PWA-first | 계획 |
 
-공시 원문과 런타임 산출물은 Supabase Storage에 둘 예정입니다. 이 저장소의 LLM Wiki 원문 보관 영역을 운영 데이터 저장소로 사용하지 않습니다.
+공시 원문은 비공개 Supabase Storage `sec-originals` 버킷에 저장합니다. 이 저장소의 LLM Wiki 원문 보관 영역을 운영 데이터 저장소로 사용하지 않습니다.
+
+화면 배치·반응형·상태 스타일은 JSX의 Tailwind 유틸리티로 작성합니다. `src/components/ui/`의 shadcn/ui 컴포넌트를 재사용하고, `globals.css`에는 Tailwind 로딩·공통 테마 토큰·최소 기본 스타일만 둡니다. 화면별 전역 CSS 클래스나 `@apply` 기반 별도 스타일 체계는 사용하지 않습니다. `components.json`에 CLI 설정, `src/lib/utils.ts`에 공통 클래스 병합 진입점을 둡니다.
+
+Stanley 상세의 **13F 공시 평가금액 구성**은 저장된 스냅샷을 상위 5개와 기타로 집계합니다. CUSIP·증권 종류·PUT/CALL·수량 단위가 같은 항목만 합치며, 금액 합산·순위는 `BigInt`로 계산합니다. 도넛 옆 목록에 비중과 USD 금액을 항상 표시하고, 모바일에서는 차트 아래로 배치합니다. 차트에 키보드 포커스를 둔 뒤 좌우 방향키로 툴팁 항목을 이동할 수 있습니다. 빈 공시·총액 0은 차트를 그리지 않습니다.
+
+마우스를 올리거나 모바일에서 조각을 탭하면 세부 툴팁을 확인할 수 있습니다. 화면의 텍스트 목록은 툴팁 사용 여부와 관계없이 유지됩니다.
+
+이 비중은 **공시 기준일의 제출 금액 구성**이며 현재 전체 자산 배분을 뜻하지 않습니다. 옵션 금액은 매입원금·프리미엄·손익으로 해석하지 않습니다. 집계는 `src/domain/holding-allocation.ts`, 화면은 `src/components/holding-allocation-chart.tsx`가 담당하며 추가 수집이나 DB 저장은 하지 않습니다.
+
+## 로컬 실행과 첫 수집
+
+1. `.env.example`의 항목을 참고해 `.env.local`을 설정합니다. 기존 파일을 덮어쓰지 말고 필요한 값만 갱신합니다.
+   - `NEXT_PUBLIC_SUPABASE_URL`: 활성 Supabase 프로젝트의 HTTPS URL.
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: 프로젝트 공개 키. 현재 서버 조회는 Secret key를 사용합니다.
+   - `SUPABASE_SECRET_KEY`: 서버 전용 Secret key. 공개 키로 대체하지 않습니다.
+   - `SEC_USER_AGENT`: 앱 이름과 실제 연락 가능한 이메일을 포함한 SEC 요청 식별자.
+   - `SYNC_SECRET`: 내부 진입점의 Bearer 인증에 사용할 32자 이상 무작위 비밀값.
+2. Supabase SQL Editor 또는 인증된 마이그레이션 도구에서 `supabase/migrations/202609140001_stanley.sql`을 한 번 적용합니다. 기존 DB를 초기화하는 명령은 필요하지 않습니다. 이미 적용된 마이그레이션을 재실행하지 않습니다.
+3. `pnpm install`, `pnpm dev`로 실행합니다. 홈(`/`)에서 Stanley 항목을 누르면 `/gurus/stanley-druckenmiller`로 이동합니다.
+4. 설정과 DB가 준비되면 빈 캐시·오래된 캐시에서 `POST /api/sync/stanley`가 자동 요청됩니다. 브라우저의 같은 Origin만 허용합니다. 운영자용 `POST /api/internal/sync/stanley`는 `Authorization: Bearer <SYNC_SECRET>`이 필요하며 같은 조정자를 사용합니다.
+
+키·연락처를 클라이언트 코드나 로그·대화·저장소에 붙여 넣지 않습니다. 설정 누락이나 SEC 차단 응답은 성공으로 처리하지 않으며 가짜 종목을 표시하지 않습니다. 로그인과 접근 제한은 아직 없으므로 현재 상태를 가족·지인용 운영 서비스로 공개하지 않습니다.
+
+### 공시 검증과 현재 확인 범위
+
+- 대상 기관은 Duquesne Family Office LLC, CIK `0001536411`입니다. [공식 submissions](https://data.sec.gov/submissions/CIK0001536411.json)에서 최신 보고분기를 선택하고, 그 분기의 원본·정정 공시를 순서대로 처리합니다. `NEW HOLDINGS` 추가분과 `RESTATEMENT` 재작성은 구분하며, 다른 분기의 늦은 정정이 최신 분기를 덮지 않습니다.
+- 표지의 신고기관·CIK·보고일·행 수·합계를 정보표와 대조합니다. 2023-01-03 제출부터 USD, 이전 제출은 천 달러 단위로 해석합니다. 큰 정수·CUSIP·SH/PRN을 보존하고 `Put`/`Call`은 `PUT`/`CALL`로 정규화합니다. 수집 시각만 KST로 표시합니다.
+- [SEC 작성 지침](https://www.sec.gov/files/form13f.pdf)의 개별 행·총액 반올림을 반영해 합계 차이는 원문 단위에서 `floor(행 수 / 2)` 이내만 허용하며 금액 자체는 보정하지 않습니다. [공개 데이터 필드 정의](https://www.sec.gov/files/form_13f_readme.pdf)에서 nullable인 비공개 누락 표시의 생략은 허용하지만, 명시적인 비공개 누락은 반영을 보류합니다.
+- 2026-09-14 [공식 표지](https://www.sec.gov/Archives/edgar/data/1536411/000153641126000006/primary_doc.xml)와 [정보표](https://www.sec.gov/Archives/edgar/data/1536411/000153641126000006/form13f_20260630.xml)의 HTTP 200 응답을 확인했습니다. 공시는 `0001536411-26-000006`, 기준일 2026-06-30, 제출일 2026-08-14이며 95개 보유 항목입니다. 원문 표지 합계 5,210,860과 행 합계 5,210,856의 차이 4는 반올림 경계 이내입니다.
+- 실제 내부 동기화 호출은 최초 `updated`, 동일 공시 재처리는 `unchanged`를 반환했습니다. 원격 DB 버전은 1, 현재 보유 항목은 95개로 유지되고 직전 스냅샷은 아직 없습니다. 이전 Archives 403과 환경 설정 문제는 해소됐습니다. 인물별 전체 계좌나 실시간 보유 여부를 검증한 것은 아닙니다.
+- `pnpm test`는 합성 XML 경계와 PGlite 인메모리 PostgreSQL에서 중복 반영·정정·단위·큰 정수·lease·권한·transaction 롤백을 검증합니다. 이 결과는 실제 SEC 원문 수집이나 원격 Supabase 검증을 대신하지 않습니다. `pnpm lint`, `pnpm build`로 타입·정적 검사와 빌드를 확인합니다.
 
 ## 개발 워크플로
 
@@ -84,13 +116,20 @@ OMP 파일, 스킬, 에이전트, README, UI 문구와 커밋 메시지는 한�
 │   └── wiki/             # LLM 소유의 종합 지식
 ├── huskyhooks/           # 타입·Biome 커밋/병합 검사
 ├── src/
-│   └── app/              # Next.js App Router 초기 화면
+│   ├── app/              # 홈·Stanley 상세·갱신 API
+│   ├── components/       # 공통 화면·갱신 상태·shadcn/ui
+│   ├── domain/           # SEC 조회 데이터 계약
+│   ├── lib/              # 공통 클래스 병합 유틸리티
+│   └── server/           # SEC 수집·검증·Supabase 조정자
+├── supabase/migrations/  # 스냅샷·lease·권한·Storage SQL
+├── tests/               # 공시 정규화와 DB 무결성 회귀 검증
 ├── biome.json
+├── components.json      # shadcn/ui 설정
 ├── package.json
 └── pnpm-lock.yaml
 ```
 
-`src/domain/`, `src/server/`, `supabase/`는 해당 기능을 구현할 때 필요한 최소 구조로 추가합니다.
+Stanley 흐름의 구현 파일은 `src/server/sec.ts`, `src/server/stanley.ts`와 `supabase/migrations/202609140001_stanley.sql`입니다.
 
 ## 이용 안내
 

@@ -1,43 +1,89 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
+@custom-variant dark (&:is(.dark *));
+
+/* Linear 계열 라이트 테마의 공통 토큰만 둔다. 화면별 스타일은 Tailwind와 shadcn/ui에서 소유한다. */
 :root {
-  --canvas: #f4f5ef;
-  --ink: #1c201a;
-  --accent: #2f694c;
+  --background: #f7f7f8;
+  --foreground: #24252a;
+  --card: #ffffff;
+  --card-foreground: #24252a;
+  --primary: #5e6ad2;
+  --primary-foreground: #ffffff;
+  --secondary: #f3f3f5;
+  --secondary-foreground: #24252a;
+  --muted: #f3f3f5;
+  --muted-foreground: #6c6e78;
+  --accent: #eef0ff;
+  --accent-foreground: #3944a0;
+  --destructive: #c7344d;
+  --success: #367248;
+  --warning: #996b14;
+  --border: #e5e5e9;
+  --input: #cfd1d8;
+  --ring: #5e6ad2;
+  --sidebar: #fbfbfc;
+  --sidebar-foreground: #24252a;
+  --chart-1: #5e6ad2;
+  --chart-2: #388c85;
+  --chart-3: #c18a3a;
+  --chart-4: #9870ad;
+  --chart-5: #c4677c;
+  --chart-6: #a8aab3;
+  --radius: 0.625rem;
 }
 
 @theme inline {
+  --font-sans: Arial, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
-  --color-canvas: var(--canvas);
-  --color-ink: var(--ink);
-  --shadow-soft: 0 24px 70px rgb(28 32 26 / 14%);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-* {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  min-width: 320px;
-  margin: 0;
-  background:
-    radial-gradient(circle at 12% 0%, rgb(255 255 255 / 90%), transparent 34rem),
-    var(--canvas);
-  color: var(--ink);
-  font-family: Arial, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-  text-rendering: optimizeLegibility;
-}
-
-::selection {
-  background: color-mix(in srgb, var(--accent) 18%, transparent);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    min-width: 320px;
+    margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    text-rendering: optimizeLegibility;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
   }
 }
