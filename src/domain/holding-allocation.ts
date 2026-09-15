@@ -1,4 +1,5 @@
-import type { SecHolding } from "@/domain/sec";
+import { ratioToPercent } from "../lib/decimal";
+import type { SecHolding } from "./sec";
 
 /**
  * 차트와 목록에 표시할 하나의 13F 평가금액 구성 항목이다.
@@ -59,22 +60,6 @@ function createPositionKey(holding: SecHolding): string {
     holding.putCall ?? "",
     holding.shareType,
   ].join("\u0000");
-}
-
-/**
- * BigInt 금액의 비율을 계산해 차트에만 전달할 0~100 number로 직렬화한다.
- * 큰 금액을 Number로 바꾸지 않고 자릿수 차이에 맞춘 BigInt 나눗셈으로 작은 양수 비율도 유지한다.
- */
-function toPercent(value: bigint, total: bigint): number {
-  if (value === BigInt(0) || total === BigInt(0)) {
-    return 0;
-  }
-
-  const scale =
-    18 + Math.max(0, total.toString().length - value.toString().length);
-  const scaled = (value * BigInt(100) * BigInt(10) ** BigInt(scale)) / total;
-  // 부동소수점 표현 범위보다 작은 양수도 목록에서 0%로 오인되지 않게 한다.
-  return Math.max(Number.MIN_VALUE, Number(`${scaled}e-${scale}`));
 }
 
 function compareByValueThenKey(
@@ -157,7 +142,7 @@ export function buildHoldingAllocation(
     putCall: position.putCall,
     shareType: position.shareType,
     valueUsd: position.value.toString(),
-    percent: toPercent(position.value, total),
+    percent: ratioToPercent(position.value, total),
     positionCount: position.positionCount,
     isOther: false,
   }));
@@ -171,7 +156,7 @@ export function buildHoldingAllocation(
       putCall: null,
       shareType: "SH",
       valueUsd: otherValue.toString(),
-      percent: toPercent(otherValue, total),
+      percent: ratioToPercent(otherValue, total),
       positionCount: otherPositions.length,
       isOther: true,
     });
@@ -180,7 +165,7 @@ export function buildHoldingAllocation(
   return {
     totalValueUsd: total.toString(),
     topItemsValueUsd: topItemsValue.toString(),
-    topItemsPercent: toPercent(topItemsValue, total),
+    topItemsPercent: ratioToPercent(topItemsValue, total),
     itemCount: topPositions.length,
     items,
   };
