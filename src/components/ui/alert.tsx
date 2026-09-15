@@ -34,13 +34,17 @@ function Alert({
   );
 }
 
-/** 상태 안내의 제목을 렌더링하며 아이콘 유무에 따른 공통 배치를 유지한다. */
+/**
+ * 상태 안내의 제목을 렌더링하며 아이콘 유무에 따른 공통 배치를 유지한다.
+ * min-w-0·overflow-wrap:anywhere는 파일 경로·식별자처럼 끊을 곳이 없는 긴 토큰이 좁은 화면에서
+ * 안내 상자를 넘겨 문서 가로 스크롤을 만들지 않게 한다.
+ */
 function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="alert-title"
       className={cn(
-        "font-medium group-has-[>svg]/alert:col-start-2 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground",
+        "min-w-0 font-medium [overflow-wrap:anywhere] group-has-[>svg]/alert:col-start-2 [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground",
         className,
       )}
       {...props}
@@ -48,7 +52,10 @@ function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
-/** 상태 안내의 본문을 렌더링한다. 실패 원인과 기존 캐시 보존 여부를 호출부에서 설명한다. */
+/**
+ * 상태 안내의 본문을 렌더링한다. 실패 원인과 기존 캐시 보존 여부를 호출부에서 설명한다.
+ * 제목과 같은 이유로 min-w-0·overflow-wrap:anywhere를 적용한다.
+ */
 function AlertDescription({
   className,
   ...props
@@ -57,7 +64,7 @@ function AlertDescription({
     <div
       data-slot="alert-description"
       className={cn(
-        "text-sm text-balance text-muted-foreground md:text-pretty [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-4",
+        "min-w-0 text-sm text-balance text-muted-foreground [overflow-wrap:anywhere] md:text-pretty [&_a]:underline [&_a]:underline-offset-3 [&_a]:hover:text-foreground [&_p:not(:last-child)]:mb-4",
         className,
       )}
       {...props}

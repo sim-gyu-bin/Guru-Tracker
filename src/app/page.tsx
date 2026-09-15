@@ -3,7 +3,9 @@ import { GuruLink } from "@/components/guru-link";
 import { StanleyRefresh } from "@/components/stanley-refresh";
 import { Badge } from "@/components/ui/badge";
 import type { ArkView } from "@/domain/ark";
+import type { HousePtrView } from "@/domain/house";
 import { getArkView } from "@/server/ark";
+import { getHousePtrView } from "@/server/house";
 import { getStanleyView } from "@/server/stanley";
 
 // 빌드 시 서버 설정이 없어도 '설정 필요' 화면이 정적 산출물로 고정되지 않게 한다.
@@ -20,17 +22,27 @@ const ARK_STATUS_LABELS: Record<ArkView["status"], string> = {
   unconfigured: "ARKK · 설정 필요",
 };
 
+/** 하원 PTR 캐시 상태를 홈 목록 문구로 옮긴다. 수집하지 못한 상태를 제출 내역처럼 표시하지 않는다. */
+const HOUSE_STATUS_LABELS: Record<HousePtrView["status"], string> = {
+  ready: "미국 하원 PTR · 최신 제출 1건",
+  empty: "PTR · 자료 없음",
+  error: "PTR · 조회 오류",
+  unconfigured: "PTR · 설정 필요",
+};
+
 /**
  * 저장된 Stanley SEC 13F와 ARK 펀드 보유 캐시를 작업 목록으로 보여 주는 홈 화면이다.
  * 캐시가 stale 또는 비어 있을 때만 클라이언트 갱신 제어부가 동기화를 요청한다.
  */
 export default async function HomePage() {
-  const [stanley, ark] = await Promise.all([
+  const [stanley, ark, house] = await Promise.all([
     getStanleyView(),
     getArkView(HOME_ARK_FUND),
+    getHousePtrView(),
   ]);
   const snapshot = stanley.snapshot;
   const arkSnapshot = ark.snapshot;
+  const houseSnapshot = house.snapshot;
 
   return (
     <AppShell current="home">
@@ -50,7 +62,7 @@ export default async function HomePage() {
           className="h-auto justify-self-start rounded-full border-border bg-card px-[9px] py-[5px] text-[11px] font-semibold text-muted-foreground"
           variant="outline"
         >
-          Stanley · Cathie 조회 지원
+          Stanley · Cathie · Nancy 조회 지원
         </Badge>
       </div>
 
@@ -141,8 +153,38 @@ export default async function HomePage() {
               ›
             </span>
           </GuruLink>
+          <GuruLink
+            className="flex min-h-[68px] items-center gap-3 border-b border-border px-[14px] py-2.5 no-underline hover:bg-accent/30 min-[761px]:min-h-16 min-[761px]:px-[18px]"
+            href="/gurus/nancy-pelosi"
+          >
+            <span
+              className="grid size-[30px] shrink-0 place-items-center rounded-[7px] bg-accent text-[10px] font-bold text-accent-foreground"
+              aria-hidden="true"
+            >
+              NP
+            </span>
+            <span className="grid min-w-0 gap-0.5">
+              <strong className="text-[13px]">Nancy Pelosi</strong>
+              <span className="truncate text-xs text-muted-foreground">
+                {HOUSE_STATUS_LABELS[house.status]}
+              </span>
+            </span>
+            <span className="ml-auto hidden text-right text-[11px] leading-4 text-muted-foreground min-[761px]:grid">
+              <span>하원 PTR</span>
+              <span>
+                {houseSnapshot
+                  ? `제출일 ${houseSnapshot.filingDate}`
+                  : "데이터 없음"}
+              </span>
+            </span>
+            <span
+              className="ml-auto text-xl text-muted-foreground/70 min-[761px]:ml-[9px]"
+              aria-hidden="true"
+            >
+              ›
+            </span>
+          </GuruLink>
           {[
-            "Nancy Pelosi · 미국 하원 공식 PTR",
             "Michael Burry · SEC 13F",
             "Philippe Laffont · SEC 13F",
             "Brad Gerstner · SEC 13F",
@@ -184,6 +226,12 @@ export default async function HomePage() {
         <p className="mt-[5px] mb-0 max-w-[760px] text-xs leading-[19px] text-muted-foreground">
           ARK 보유 자료는 펀드가 공개한 공식 자료이며 개인 계좌나 실시간 매매가
           아닙니다. 수집 시각과 자료 기준일을 구분해 확인하세요.
+        </p>
+        <p className="mt-[5px] mb-0 max-w-[760px] text-xs leading-[19px] text-muted-foreground">
+          Nancy Pelosi의 PTR은 미국 하원 공식
+          공시(disclosures-clerk.house.gov)의 최신 제출 1건이며 보유 목록이
+          아닙니다. 금액은 원문이 구간으로 적은 거래금액 범위이고
+          제출일·거래일은 공식 날짜입니다.
         </p>
       </section>
     </AppShell>

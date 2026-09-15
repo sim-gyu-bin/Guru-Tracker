@@ -4,7 +4,6 @@ import { GuruLink } from "@/components/guru-link";
 import { Badge } from "@/components/ui/badge";
 
 const unavailableGurus = [
-  "Nancy Pelosi",
   "Michael Burry",
   "Philippe Laffont",
   "Brad Gerstner",
@@ -13,12 +12,12 @@ const unavailableGurus = [
 
 type AppShellProps = Readonly<{
   children: ReactNode;
-  current?: "home" | "stanley" | "cathie";
+  current?: "home" | "stanley" | "cathie" | "pelosi";
 }>;
 
 /**
  * 공시 조회 화면의 공통 탐색 프레임이다.
- * 연결된 Stanley·Cathie 경로만 링크로 제공하며, 나머지 대상은 미연결 상태를 명확히 표시한다.
+ * 연결된 Stanley·Cathie·Nancy 경로만 링크로 제공하며, 나머지 대상은 미연결 상태를 명확히 표시한다.
  */
 export function AppShell({ children, current = "home" }: AppShellProps) {
   return (
@@ -74,6 +73,22 @@ export function AppShell({ children, current = "home" }: AppShellProps) {
               variant="ghost"
             >
               ARK 공식
+            </Badge>
+          </GuruLink>
+          <GuruLink
+            className={`flex min-h-9 items-center justify-between gap-2 rounded-md px-2 py-[7px] text-[13px] leading-[18px] hover:bg-muted ${
+              current === "pelosi"
+                ? "bg-accent font-semibold text-accent-foreground"
+                : "text-muted-foreground"
+            }`}
+            href="/gurus/nancy-pelosi"
+          >
+            <span>Nancy Pelosi</span>
+            <Badge
+              className="h-auto px-0 py-0 text-[10px] font-medium text-muted-foreground"
+              variant="ghost"
+            >
+              하원 PTR
             </Badge>
           </GuruLink>
           {unavailableGurus.map((guru) => (
