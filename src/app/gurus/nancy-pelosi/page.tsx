@@ -1,5 +1,6 @@
 import { AppShell } from "@/components/app-shell";
 import { GuruLink } from "@/components/guru-link";
+import { HouseActivitySummary } from "@/components/house-activity-summary";
 import { HouseRefresh } from "@/components/house-refresh";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -11,11 +12,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  getHousePtrAssetTicker,
   HOUSE_PTR_ASSET_TYPE_LABELS,
+  HOUSE_PTR_NOT_PUBLICLY_TRADED_CODE,
   HOUSE_PTR_OWNER_CODE_LABELS,
   HOUSE_PTR_TRANSACTION_TYPE_LABELS,
   type HousePtrTransaction,
 } from "@/domain/house";
+import { buildHousePtrActivitySummary } from "@/domain/house-activity";
 import { getHousePtrView } from "@/server/house";
 
 // 요청마다 저장된 PTR 스냅샷과 동기화 상태를 읽으며 수집은 화면의 별도 보완 경로로 실행한다.
@@ -52,6 +56,42 @@ function ownerLabel(code: string): string {
   return code ? `${HOUSE_PTR_OWNER_CODE_LABELS[code]} · ${code}` : "기재 없음";
 }
 
+/** 옵션 코드. 이 행의 원문 티커 표기는 옵션 계약 심볼이 아니라 기초자산 이름에 붙은 값이다. */
+const OPTION_ASSET_TYPE_CODE = "OP";
+
+/**
+ * 원문 티커 표기 셀.
+ *
+ * 값은 제출자가 원문 자산명 끝에 함께 적은 괄호 표기를 그대로 옮긴 것이며 우리가 조회한 현재 티커가 아니다.
+ * 공식 PTR 양식은 자산의 완전한 이름만 요구하고 티커 표기 형식을 규정하지 않으므로, 표기가 없으면
+ * "티커 미기재"로만 적고 상장 여부로 해석하지 않는다(AB·OT 같은 코드는 상장 여부를 말하지 않는다).
+ * 자산유형 코드 가운데 비상장을 명시한 PS만 "비상장 주식"으로 적는다.
+ */
+function AssetTicker({ transaction }: { transaction: HousePtrTransaction }) {
+  const ticker = getHousePtrAssetTicker(
+    transaction.asset,
+    transaction.assetTypeCode,
+  );
+  if (!ticker)
+    return (
+      <span className="text-muted-foreground">
+        {transaction.assetTypeCode === HOUSE_PTR_NOT_PUBLICLY_TRADED_CODE
+          ? "비상장 주식"
+          : "티커 미기재"}
+      </span>
+    );
+  return (
+    <>
+      <span className="font-mono tabular-nums">{ticker}</span>
+      {transaction.assetTypeCode === OPTION_ASSET_TYPE_CODE ? (
+        <span className="mt-1 block text-[11px] leading-4 font-normal text-muted-foreground">
+          기초자산 티커
+        </span>
+      ) : null}
+    </>
+  );
+}
+
 /**
  * 모바일에서는 한 건씩 카드로 쌓아 가로 스크롤 없이 읽게 한다.
  * 자산명·설명은 원문 문자열이며 임의로 줄이지 않는다.
@@ -79,6 +119,12 @@ function TransactionCards({
             {assetTypeLabel(transaction.assetTypeCode)}
           </p>
           <dl className="mt-4 grid grid-cols-1 gap-3 min-[360px]:grid-cols-2">
+            <div className="min-w-0 min-[360px]:col-span-2">
+              <dt className="text-[11px] text-muted-foreground">원문 티커</dt>
+              <dd className="mt-1 text-sm font-semibold">
+                <AssetTicker transaction={transaction} />
+              </dd>
+            </div>
             <div className="min-w-0">
               <dt className="text-[11px] text-muted-foreground">거래유형</dt>
               <dd className="mt-1 text-sm font-semibold">
@@ -131,6 +177,7 @@ function TransactionCards({
 /**
  * 하원 PTR 거래 내역 표다.
  * 열은 공식 양식(소유자·자산·거래유형·거래일·통지일·금액)을 따르며 보유 수량·평가금액·비중 열은 없다.
+ * "원문 티커" 열만 양식에 없는 파생 표시로, 원문 자산명 끝에 제출자가 함께 적은 괄호 표기를 옮긴 값이다.
  */
 function TransactionTable({
   transactions,
@@ -138,7 +185,7 @@ function TransactionTable({
   transactions: readonly HousePtrTransaction[];
 }) {
   return (
-    <Table className="min-w-[880px] text-xs">
+    <Table className="min-w-[940px] text-xs">
       <TableHeader className="bg-muted/60">
         <TableRow className="hover:bg-muted/60">
           <TableHead
@@ -146,6 +193,12 @@ function TransactionTable({
             className="w-[36%] min-w-[240px] px-3 text-[11px] text-muted-foreground"
           >
             자산
+          </TableHead>
+          <TableHead
+            scope="col"
+            className="px-3 text-[11px] whitespace-nowrap text-muted-foreground"
+          >
+            원문 티커
           </TableHead>
           <TableHead
             scope="col"
@@ -200,6 +253,9 @@ function TransactionTable({
                   {transaction.details.join(" ")}
                 </span>
               ) : null}
+            </TableCell>
+            <TableCell className="px-3 whitespace-nowrap">
+              <AssetTicker transaction={transaction} />
             </TableCell>
             <TableCell className="px-3">
               <span className="font-mono tabular-nums">
@@ -342,6 +398,11 @@ export default async function NancyPelosiPage() {
             </div>
           </section>
 
+          {/* 공시 정보와 거래 내역 사이에 원문 행 수 기준 활동 요약을 둔다(금액·비중 기준이 아니다). */}
+          <HouseActivitySummary
+            summary={buildHousePtrActivitySummary(snapshot.transactions)}
+          />
+
           <section
             aria-labelledby="house-transactions-heading"
             className="overflow-hidden rounded-lg border border-border bg-card"
@@ -384,6 +445,13 @@ export default async function NancyPelosiPage() {
                 거래유형·소유자는 하원 윤리위원회 안내서가 정의한 코드에 한해
                 한국어를 원문 코드와 함께 표시하며 표에 없는 값은 해석하지
                 않습니다.
+              </p>
+              <p className="mb-0">
+                원문 티커는 제출자가 원문 자산명 끝에 함께 적은 괄호 표기이며
+                시장에서 조회한 현재 티커가 아닙니다. 옵션(OP) 행의 값은 옵션
+                계약 심볼이 아니라 기초자산 티커입니다. 자산유형 코드 가운데
+                비상장을 명시한 PS만 "비상장 주식"으로 표시하고, 표기가 없는
+                행은 "티커 미기재"로만 적어 상장 여부를 해석하지 않습니다.
               </p>
             </div>
           </section>

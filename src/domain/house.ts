@@ -170,3 +170,50 @@ export const HOUSE_PTR_ASSET_TYPE_LABELS: Readonly<Record<string, string>> = {
   VI: "Variable Insurance",
   WU: "Whole/Universal Insurance",
 };
+
+/** 비상장을 명시한 유일한 공식 자산유형 코드. 공식 코드표의 이름이 "Stock (Not Publicly Traded)"다. */
+export const HOUSE_PTR_NOT_PUBLICLY_TRADED_CODE = "PS";
+
+/**
+ * 원문 자산명 끝에 제출자가 함께 적은 괄호 티커 표기의 보수적 문법.
+ * 티커 모양(대문자로 시작하는 1~5자 영숫자 + 선택적 `.`/`-` 클래스 접미사)만 본다.
+ * 소문자·숫자로 시작하는 토큰, 공백이 든 토큰, 6자 이상 단어는 티커로 보지 않는다
+ * (예: "(2024)", "(Class A)", "(SHARES)").
+ *
+ * 실제 티커와 철자가 겹칠 수 있는 회사·상품 약어(CO, FUND, USA, TRUST 등)를 단어 목록으로 걸러 내지 않는다.
+ * 공식 문서에 표기 형식 규정이 없어 단어별 차단은 근거가 없고 진짜 티커를 누락시킬 수 있다.
+ */
+const HOUSE_PTR_ASSET_TICKER =
+  /^(.+?)\s*\(([A-Z][A-Z0-9]{0,4}(?:[.-][A-Z0-9]{1,2})?)\)$/;
+
+/**
+ * 원문 자산명 끝의 괄호 표기를 티커로 옮긴다(표시 전용). 저장된 `asset` 문자열은 바꾸지 않는다.
+ *
+ * 입력:
+ * - `asset`: 파서가 원문 자산명에서 `[코드]`를 떼어 낸 저장 문자열(예: "Bloom Energy Corporation
+ *   Class A Common Stock (BE)").
+ * - `assetTypeCode`: 같은 행의 공식 자산유형 코드. 비상장(PS) 판단을 호출부에 맡기지 않으려고 함께 받는다.
+ *
+ * 근거와 한계:
+ * - 하원 공식 PTR 양식은 자산의 완전한 이름을 요구하고 티커 심볼만 적는 것을 금지하며, 티커 표기 형식은
+ *   규정하지 않는다.
+ *   ("Provide the complete name of the asset ... Providing only a ticker symbol is not
+ *   permitted.")
+ *   따라서 이 값은 "제출자가 원문에 함께 적은 표기"이며, 시장에서 조회한 티커도 현재 상장 여부도 아니다.
+ * - 자산유형 코드와 무관하게 원문 표기를 읽는다. 같은 제출자의 원문에서 AB 유형 유닛 자산에도 괄호 티커가
+ *   쓰였으므로 ST·OP 같은 코드로 추출 대상을 좁히지 않는다.
+ * - 옵션(OP) 행의 표기는 옵션 계약 심볼이 아니라 원문에 함께 적힌 기초자산 이름에 붙은 값이다.
+ * - 비상장(PS) 행은 상장 티커가 아니므로 표기가 있어도 null을 준다.
+ *
+ * 반환: 원문 표기 토큰, 표기가 없거나 자산명 없이 괄호만 있거나 비상장이면 null. 값을 추측해 만들지 않는다.
+ */
+export function getHousePtrAssetTicker(
+  asset: string,
+  assetTypeCode: string,
+): string | null {
+  if (assetTypeCode === HOUSE_PTR_NOT_PUBLICLY_TRADED_CODE) return null;
+  const match = HOUSE_PTR_ASSET_TICKER.exec(asset);
+  // 자산명 없이 괄호 표기만 남은 문자열은 티커 표기로 볼 근거가 없다.
+  if (!match || match[1].trim() === "") return null;
+  return match[2];
+}

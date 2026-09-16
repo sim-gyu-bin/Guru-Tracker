@@ -4,7 +4,7 @@
 
 ## 현재 상태
 
-**Linear 제품 내부 UI를 기준으로 홈, Stanley Druckenmiller·Cathie Wood·Nancy Pelosi 상세 조회를 구현했습니다.** Stanley의 SEC 13F와 ARK 6개 펀드의 공식 holdings, Nancy Pelosi의 미국 하원 공식 PTR 최신 1건 수집·검증, Supabase DB·Storage 저장, 멱등 동기화 조정자와 SQL 마이그레이션이 포함됩니다. Stanley는 원격 저장·재처리와 95개 보유 항목 표시를 확인했습니다. ARK도 공식 CSV 6개, 원격 저장·동일 원문 재처리와 실제 캐시 화면 조회를 확인했습니다. Nancy Pelosi는 공식 PTR 문서 1건(거래 7행)의 수집·검증과 화면 렌더를 격리 환경에서 확인했고, **운영 Supabase에는 `202609160001_house_ptr.sql`을 적용하고 Vercel에 배포했으며 ARK·House 시간별 Cron도 등록했습니다.** 다만 운영에 배포된 함수에는 pdfjs 워커 파일(`pdf.worker.mjs`)이 빠져 있어 PDF 텍스트 추출이 런타임에 실패했고, 그 결과 운영 동기화는 503 `HOUSE_VALIDATION`으로 거절되었습니다. 두 house 라우트에 워커 파일을 함께 넣은 `next.config.ts` 수정은 **빌드는 통과했지만 Vercel이 `Deploying outputs` 단계에서 `invalid deployment package`로 배포를 거부했습니다.** include가 pnpm 심링크 경로(`node_modules/pdfjs-dist/…`)를 가리키면서 심링크 디렉터리를 거친 파일이 배포 함수 파일 목록에 들어간 것이 원인이었습니다. include를 심링크를 푼 실제 경로로 계산하도록 고쳐 로컬 빌드 검증은 마쳤지만, **Vercel 재배포 통과와 운영 수집 성공은 아직 확인하지 않았습니다.** 나머지 네 대상(Burry·Laffont·Gerstner·Tepper)의 수집, ARK trades, 로그인, 설치형 PWA와 Web Push는 **계획**입니다. ARK·House 시간별 Cron 설정 SQL은 `supabase/ark-cron.sql`, `supabase/house-cron.sql`로 작성했고 두 job 모두 등록했습니다. job 등록은 실제 수집 성공과 별개이므로 각 엔드포인트의 응답으로 성공 여부를 따로 확인합니다.
+**Linear 제품 내부 UI를 기준으로 홈, Stanley Druckenmiller·Cathie Wood·Nancy Pelosi 상세 조회를 구현했습니다.** Stanley의 SEC 13F와 ARK 6개 펀드의 공식 holdings, Nancy Pelosi의 미국 하원 공식 PTR 최신 1건 수집·검증, Supabase DB·Storage 저장, 멱등 동기화 조정자와 SQL 마이그레이션이 포함됩니다. Stanley는 원격 저장·재처리와 95개 보유 항목 표시를 확인했습니다. ARK도 공식 CSV 6개, 원격 저장·동일 원문 재처리와 실제 캐시 화면 조회를 확인했습니다. Nancy Pelosi는 공식 PTR 문서 1건(거래 7행)의 수집·검증과 화면 렌더를 격리 환경에서 확인했고, **운영 Supabase에는 `202609160001_house_ptr.sql`을 적용하고 Vercel에 배포했으며 ARK·House 시간별 Cron도 등록했습니다.** 이전 배포 함수에는 pdfjs 워커 파일(`pdf.worker.mjs`)이 빠져 운영 동기화가 503 `HOUSE_VALIDATION`으로 거절됐고, include를 pnpm 심링크 경로(`node_modules/pdfjs-dist/…`)로 넣은 수정은 Vercel이 `Deploying outputs` 단계에서 `invalid deployment package`로 거부했습니다. include를 심링크를 푼 실제 경로로 계산하도록 고친 수정은 **최신 배포에 성공했고 운영 조회 응답 HTTP 200을 사용자 확인으로 알고 있습니다. 다만 응답 본문의 `status` 값은 아직 확인하지 않았으므로 운영 수집이 `updated`·`unchanged`를 반환했다고도, 503으로 실패했다고도 단정하지 않습니다.** 나머지 네 대상(Burry·Laffont·Gerstner·Tepper)의 수집, ARK trades, 로그인, 설치형 PWA와 Web Push는 **계획**입니다. ARK·House 시간별 Cron 설정 SQL은 `supabase/ark-cron.sql`, `supabase/house-cron.sql`로 작성했고 두 job 모두 등록했습니다. job 등록은 실제 수집 성공과 별개이므로 각 엔드포인트의 응답으로 성공 여부를 따로 확인합니다.
 
 ## 목적
 
@@ -26,7 +26,7 @@ Guru Tracker는 서로 다른 공개 공시 형식을 한곳에서 읽기 쉽게
 
 - **SEC Form 13F**: Stanley Druckenmiller, Michael Burry, Philippe Laffont, Brad Gerstner, David Tepper의 기관 보유 현황에는 분기별 13F 공시를 사용합니다. 13F는 실시간 보유·거래 정보가 아니며, 분기 종료 뒤 공개되는 보고서입니다. 특히 Michael Burry의 옵션 포지션에서 정확한 손익을 추정하거나 표시하지 않습니다.
 - **ARK Invest 공식 holdings/trades**: 현재 Cathie Wood 화면은 ARK가 공개한 6개 펀드의 holdings만 사용하며 trades 수집은 계획입니다. 개인 계좌나 실시간 거래 내역이 아닙니다. 접근 공백 중 놓친 일별 이력은 나중에 접속해서 재구성할 수 없습니다.
-- **U.S. House PTR**: Nancy Pelosi 관련 데이터에는 U.S. House가 공개하는 Periodic Transaction Report(정기 거래 보고서)를 사용합니다. PTR은 **거래 내역**이며 보유 목록·현재 보유 여부·수익률이 아니고, 거래 시점·공개 범위와 시차를 그대로 따릅니다. 금액은 원문이 구간으로 적은 값이므로 화면에서도 **거래금액 범위**로만 표시하고 합계·중간값·비중을 계산하지 않습니다. 거래유형 `P`·`S`·`S (partial)`·`E`와 소유자 코드 `SP`·`DC`·`JT`는 하원 윤리위원회 지침이 정의한 코드에 한해서만 한국어와 원문 코드를 함께 표시하며, 그 밖의 값은 해석하지 않고 수집을 실패시킵니다.
+- **U.S. House PTR**: Nancy Pelosi 관련 데이터에는 U.S. House가 공개하는 Periodic Transaction Report(정기 거래 보고서)를 사용합니다. PTR은 **거래 내역**이며 보유 목록·현재 보유 여부·수익률이 아니고, 거래 시점·공개 범위와 시차를 그대로 따릅니다. 금액은 원문이 구간으로 적은 값이므로 화면에서도 **거래금액 범위**로만 표시하고 합계·중간값·비중을 계산하지 않습니다. 거래유형 `P`·`S`·`S (partial)`·`E`와 소유자 코드 `SP`·`DC`·`JT`는 하원 윤리위원회 지침이 정의한 코드에 한해서만 한국어와 원문 코드를 함께 표시하며, 그 밖의 값은 해석하지 않고 수집을 실패시킵니다. 화면의 `원문 티커` 열은 제출자가 원문 자산명 끝에 함께 적은 괄호 표기를 그대로 옮긴 값이며, 원문 밖에서 조회한 현재 티커나 상장 여부의 근거가 아닙니다.
 
 Stanley 수집기는 공식 SEC 제출 목록과 원문, ARK 수집기는 공식 holdings CSV, Nancy Pelosi 수집기는 하원 공개 색인과 원문 PDF만 사용합니다. 나머지 출처 수집기도 같은 원칙을 따를 예정이며, 13F를 실시간 데이터처럼 표시하거나 불완전한 공시에서 사실을 단정하지 않습니다.
 
@@ -36,7 +36,7 @@ Stanley 수집기는 공식 SEC 제출 목록과 원문, ARK 수집기는 공식
 
 무료 등급 구성을 유지하기 위해 **Supabase Cron**으로 시간마다 한 번 수집합니다. `pg_cron`과 `pg_net`이 보호된 Next.js 내부 동기화 엔드포인트를 호출하며, 호출 비밀값은 Supabase Vault 및 서버 전용 설정에만 보관합니다. ARK·House의 job SQL은 `supabase/ark-cron.sql`, `supabase/house-cron.sql`로 작성했고 두 job 모두 등록했습니다. 등록 자체는 실제 수집 성공을 뜻하지 않으며 성공 여부는 각 엔드포인트 응답으로 확인합니다. Stanley는 접근 갱신만 사용합니다. 시간별 일정에는 Vercel Hobby Cron을 사용하지 않습니다. Vercel Hobby Cron은 시간별 실행에 적합하지 않기 때문입니다.
 
-Stanley·ARK·Nancy Pelosi는 각각 접근 갱신과 보호된 내부 진입점이 같은 멱등 조정자·DB lease를 공유합니다. ARK의 lease와 캐시는 펀드별로 분리되고, Nancy Pelosi는 최신 PTR 문서 1건을 스냅샷 단위로 삼아 lease도 하나입니다. 화면은 저장된 데이터를 먼저 읽고, 마지막 성공 후 한 시간이 지났거나 캐시가 비었을 때 접근 갱신을 요청합니다. lease는 90초, 재시도 간격은 최소 60초이며 만료된 작업의 뒤늦은 커밋은 펜싱 토큰으로 차단합니다. 공통 갱신 컴포넌트는 펀드를 바꿀 때 요청 상태를 초기화하고 펀드별 쿨다운을 적용합니다. House 시간별 Cron은 등록되어 매시 13분에 호출하지만, 현재 배포에는 PDF 워커 파일이 없어 503 `HOUSE_VALIDATION`으로 실패합니다. ARK 시간별 job도 등록되어 매시 7분에 호출하며, 그 실제 수집 성공 여부는 이번 확인 범위가 아니므로 각 엔드포인트 응답으로 따로 확인합니다.
+Stanley·ARK·Nancy Pelosi는 각각 접근 갱신과 보호된 내부 진입점이 같은 멱등 조정자·DB lease를 공유합니다. ARK의 lease와 캐시는 펀드별로 분리되고, Nancy Pelosi는 최신 PTR 문서 1건을 스냅샷 단위로 삼아 lease도 하나입니다. 화면은 저장된 데이터를 먼저 읽고, 마지막 성공 후 한 시간이 지났거나 캐시가 비었을 때 접근 갱신을 요청합니다. lease는 90초, 재시도 간격은 최소 60초이며 만료된 작업의 뒤늦은 커밋은 펜싱 토큰으로 차단합니다. 공통 갱신 컴포넌트는 펀드를 바꿀 때 요청 상태를 초기화하고 펀드별 쿨다운을 적용합니다. House 시간별 Cron은 등록되어 매시 13분에 호출합니다. 과거 배포는 PDF 워커 파일 누락으로 503 `HOUSE_VALIDATION`을 반환했고, 워커 경로를 고친 최신 배포는 성공했으며 운영 조회 HTTP 200을 사용자 확인으로 알고 있습니다. 다만 동기화 응답 본문(`status`)은 아직 확인하지 않았으므로 수집이 `updated`·`unchanged`를 반환했다고 단정하지 않습니다. ARK 시간별 job도 등록되어 매시 7분에 호출하며, 그 실제 수집 성공 여부는 이번 확인 범위가 아니므로 각 엔드포인트 응답으로 따로 확인합니다.
 
 ### 안전한 스냅샷 관리
 
@@ -55,8 +55,8 @@ Stanley·ARK·Nancy Pelosi 마이그레이션은 대상별 **현재 스냅샷과
 | 웹 애플리케이션 | Next.js App Router | Linear 스타일 홈·Stanley·Cathie·Nancy Pelosi 상세 조회 구현 |
 | 개발 도구 | pnpm, TypeScript, Biome, Husky, Tailwind CSS | 구현 |
 | UI 컴포넌트 | Tailwind CSS 4, shadcn/ui (Radix 기반), Recharts | 버튼·배지·표·상태 안내·공시 비중 도넛 차트 구현 |
-| 호스팅 | Vercel Hobby | 배포 완료(house 수집 워커 누락 수정을 반영한 재배포 필요) |
-| 데이터베이스·파일 저장소 | Supabase PostgreSQL / Storage | Stanley·ARK 원격 저장·동일 원문 재처리 검증 완료, Nancy Pelosi 마이그레이션 적용·수집·화면 구현(운영 수집 성공은 워커 누락 수정 반영 뒤 확인) |
+| 호스팅 | Vercel Hobby | 배포 완료(워커 경로 수정 반영 최신 배포 성공, 운영 조회 HTTP 200은 사용자 확인 / 동기화 응답 본문은 미확인) |
+| 데이터베이스·파일 저장소 | Supabase PostgreSQL / Storage | Stanley·ARK 원격 저장·동일 원문 재처리 검증 완료, Nancy Pelosi 마이그레이션 적용·수집·화면 구현(운영 수집 응답 본문은 미확인) |
 | 클라이언트 제공 방식 | PWA-first | 계획 |
 
 공시 원문은 비공개 Supabase Storage의 `sec-originals`·`ark-originals`·`house-originals` 버킷에 출처별로 구분해 저장합니다. 이 저장소의 LLM Wiki 원문 보관 영역을 운영 데이터 저장소로 사용하지 않습니다.
@@ -77,15 +77,19 @@ Stanley 상세의 **13F 공시 평가금액 구성**은 저장된 스냅샷을 �
 
 보유 종목 목록은 1024px 미만 화면에서 단일 열 카드로, 그 이상에서는 표로 표시합니다. 카드에는 종목명·티커·증권 종류·USD 평가금액·수량과 단위·CUSIP을 표시하고, PUT/CALL은 배지로 구분합니다. Stanley·Cathie 화면은 공시 원문·정보표 새 탭 버튼을 제공하지 않지만, 내부 공식 원문 수집·검증·저장과 공시 기준일 표시는 유지합니다. Nancy Pelosi 화면은 거래 내역 옆에서 그 문서의 공식 원문 PDF 링크를 제공합니다.
 
-티커는 [OpenFIGI API](https://www.openfigi.com/api/documentation)의 **현재 미국 시장 참조 정보**입니다. 공시의 CUSIP·CINS를 정확히 조회하며, [CGS 식별자 규칙](https://www.cusip.com/identifiers.html)에 따라 첫 글자가 영문자인 CINS는 `ID_CINS`, 숫자로 시작하는 CUSIP은 `ID_CUSIP`으로 요청합니다. 미국 Equity의 유일한 티커·FIGI 조합만 표시하고, 이름 추측·다른 시장·비상장 식별자 대체는 하지 않습니다. 미매핑은 `—`, 일시적인 공급자 실패는 `일시 불가`로 구분합니다. SH와 옵션 기초자산에만 적용하며 PRN에는 적용하지 않습니다.
+Stanley 13F 보유 목록의 티커는 [OpenFIGI API](https://www.openfigi.com/api/documentation)의 **현재 미국 시장 참조 정보**입니다. 공시의 CUSIP·CINS를 정확히 조회하며, [CGS 식별자 규칙](https://www.cusip.com/identifiers.html)에 따라 첫 글자가 영문자인 CINS는 `ID_CINS`, 숫자로 시작하는 CUSIP은 `ID_CUSIP`으로 요청합니다. 미국 Equity의 유일한 티커·FIGI 조합만 표시하고, 이름 추측·다른 시장·비상장 식별자 대체는 하지 않습니다. 미매핑은 `—`, 일시적인 공급자 실패는 `일시 불가`로 구분합니다. SH와 옵션 기초자산에만 적용하며 PRN에는 적용하지 않습니다. **이 OpenFIGI 매핑은 Stanley 13F 보유 목록에만 적용하며 Pelosi PTR 화면의 `원문 티커` 열과는 무관합니다. PTR 화면은 원문에 적힌 표기만 쓰고 외부 식별자 조회를 하지 않습니다.**
 
-`src/server/tickers.ts`는 API 키 없이 최대 10건씩 순차 조회하고, 검증된 배치 결과를 Next 데이터 캐시에 24시간 저장합니다. 최초 조회 중에도 기존 공시 목록·차트를 먼저 표시하며, 매핑 결과는 카드·표·차트 범례와 툴팁에 반영합니다. 실패한 배치는 정상 미매핑으로 캐시하지 않고, 다른 배치의 결과와 재검증 전 정상 캐시는 보존합니다. 참조 티커는 공시 기준일 당시의 티커가 아니며 SEC 스냅샷·dataset version·변경 이벤트를 수정하지 않습니다.
+`src/server/tickers.ts`는 Stanley 13F 화면을 위해 API 키 없이 최대 10건씩 순차 조회하고, 검증된 배치 결과를 Next 데이터 캐시에 24시간 저장합니다. 최초 조회 중에도 기존 공시 목록·차트를 먼저 표시하며, 매핑 결과는 카드·표·차트 범례와 툴팁에 반영합니다. 실패한 배치는 정상 미매핑으로 캐시하지 않고, 다른 배치의 결과와 재검증 전 정상 캐시는 보존합니다. 참조 티커는 공시 기준일 당시의 티커가 아니며 SEC 스냅샷·dataset version·변경 이벤트를 수정하지 않습니다.
 
 Cathie 상세(`/gurus/cathie-wood`)는 **ARKK를 기본값**으로 ARKQ·ARKW·ARKG·ARKF·ARKX를 선택합니다. 공식 CSV의 원문 티커를 그대로 표시하므로 `RKLB UQ` 같은 표기도 유지하며, 빈 티커와 비표준 식별자를 추측·제외하지 않습니다. ARK에는 OpenFIGI 매핑이나 SEC의 SH/PRN 단위를 적용하지 않습니다.
 
 ARK 금액은 USD 센트, 수량은 소수 문자열로 보존하고 금액 합산·순위에는 `BigInt`를 사용합니다. 모바일 카드와 데스크톱 표는 원문 금액·수량·공식 비중을 표시합니다. 상위 5개·기타 도넛은 평가금액에서 재계산한 비중이므로 공식 반올림 비중과 조금 다를 수 있습니다. 음수 평가금액이 있으면 오해를 줄 수 있는 도넛·비중 범례 대신 안내를 표시하고 원문 표는 유지합니다. `src/domain/ark-allocation.ts`와 ARK 어댑터가 출처 차이를 처리하며, 도넛 표현과 캐시 갱신 제어는 Stanley와 공통 컴포넌트를 사용합니다.
 
-Nancy Pelosi 상세(`/gurus/nancy-pelosi`)는 **최신 PTR 문서 1건**만 다루며 보유 목록이나 누적 거래 이력을 합치지 않습니다. 머리에 문서번호·제출일·서명일·수집 성공 시각을 표시하고, 캐시를 먼저 보여 주면서 조건이 맞을 때만 갱신을 요청합니다. 상태 배지는 캐시 준비·데이터 없음·조회 오류·설정 필요를 구분하고, 갱신 중이거나 오래된 캐시는 갱신 안내 문구로 함께 알립니다. 1024px 이상에서는 거래 표, 그 미만에서는 단일 열 카드로 같은 내용을 보여 줍니다. 표의 열은 자산·자산유형·거래유형·거래일·통지일·**거래금액 범위**·소유자이고, 거래유형과 소유자는 한국어 라벨과 원문 코드를 함께 표시합니다(`매수 · P`, `배우자 · SP`). 소유자 기재가 없는 본인 보유 행은 `기재 없음`으로 표시하며 추측하지 않습니다. 자산명과 원문 설명 줄이 길어도 열 폭을 늘리지 않고 줄바꿈하며, 표시하는 거래 건수는 원문 1건 표 내용 전체입니다. 적용된 마이그레이션이 없으면 화면은 자료 대신 적용 안내를 표시합니다.
+Nancy Pelosi 상세(`/gurus/nancy-pelosi`)는 **최신 PTR 문서 1건**만 다루며 보유 목록이나 누적 거래 이력을 합치지 않습니다. 머리에 문서번호·제출일·서명일·수집 성공 시각을 표시하고, 캐시를 먼저 보여 주면서 조건이 맞을 때만 갱신을 요청합니다. 상태 배지는 캐시 준비·데이터 없음·조회 오류·설정 필요를 구분하고, 갱신 중이거나 오래된 캐시는 갱신 안내 문구로 함께 알립니다. 1024px 이상에서는 거래 표, 그 미만에서는 단일 열 카드로 같은 내용을 보여 줍니다. 표의 열은 자산·**원문 티커**·자산유형·거래유형·거래일·통지일·**거래금액 범위**·소유자이고, 거래유형과 소유자는 한국어 라벨과 원문 코드를 함께 표시합니다(`매수 · P`, `배우자 · SP`). 소유자 기재가 없는 본인 보유 행은 `기재 없음`으로 표시하며 추측하지 않습니다. 자산명과 원문 설명 줄이 길어도 열 폭을 늘리지 않고 줄바꿈하며, 표시하는 거래 건수는 원문 1건 표 내용 전체입니다. 적용된 마이그레이션이 없으면 화면은 자료 대신 적용 안내를 표시합니다.
+
+**원문 티커** 열은 제출자가 원문 자산명 끝에 함께 적은 괄호 표기(`(BE)`)를 그대로 옮긴 값이며, 공시 원문 밖에서 조회한 현재 시장 티커가 아닙니다. 옵션(`OP`) 행의 값은 옵션 계약 심볼이 아니라 그 행이 가리키는 기초자산의 원문 표기이므로 **기초자산 티커**로 함께 적고, 자산유형 코드가 비상장을 명시한 `PS`만 **비상장 주식**으로 표시합니다. 표기가 없는 행은 **티커 미기재**로만 적어 상장 여부를 해석하지 않습니다(`AB`·`OT` 같은 코드는 상장 여부를 말하지 않습니다). 자산 열은 원문 자산명 전체를 그대로 유지하고 파생 값은 별도 열로만 두며, 규칙은 `src/domain/house.ts`의 `getHousePtrAssetTicker`에 있습니다. 기존 캐시 스냅샷에서 표시 시점에만 계산하므로 **DB 마이그레이션·재수집·API·스냅샷 형식 변경이 필요하지 않습니다.** 이 열은 아직 운영 배포 전입니다.
+
+**자산별 활동 요약**은 같은 최신 PTR 문서 1건의 신고 행을 원문 자산명 문자열과 자산유형 코드 묶음으로만 세어, 거래·원문 자산·옵션 거래 건수와 자산별 건수를 보여 줍니다. 같은 원문 자산명의 주식(`ST`)·옵션(`OP`) 행은 한 항목으로 합치고, 비상장 주식(`PS`)·자산담보부증권(`AB`)처럼 다른 코드는 이름이 같아도 코드를 기준으로 나눕니다. 티커가 같다는 이유만으로 서로 다른 원문 자산명을 합치지 않으며 이름 정규화·티커 추측 매핑을 하지 않습니다. 막대는 최다 건수를 기준으로 한 상대 길이이고 금액·보유 비중·보유 현황이 아니며, 옵션 거래 건수는 전체 거래 건수에 포함된 부분집합입니다. 집계는 `src/domain/house-activity.ts`, 화면은 `src/components/house-activity-summary.tsx`가 담당합니다. 기존 캐시 스냅샷에서 표시 시점에만 계산하므로 **DB 마이그레이션·재수집·API·스냅샷 형식 변경이 필요하지 않습니다.** 이 요약도 아직 운영 배포 전입니다.
 
 ## 로컬 실행과 첫 수집
 
@@ -117,7 +121,7 @@ Nancy Pelosi 상세(`/gurus/nancy-pelosi`)는 **최신 PTR 문서 1건**만 다�
 3. `supabase/house-cron.sql`을 실행합니다. `guru_tracker_house_hourly` 한 개 job이 매시 13분에 보호된 엔드포인트 `/api/internal/sync/house`를 한 번 호출하고 제한 시간은 60초입니다. 재실행 시 같은 job만 갱신하며 기존 job을 삭제하지 않습니다. 운영에는 이 job을 등록했습니다. `202609160001_house_ptr.sql`을 적용하지 않았거나 Vault 값이 없으면 이 job은 자료를 만들지 않습니다.
 4. 파일 끝의 조회 예시로 일정·응답 상태 코드와 마지막 성공 시각을 확인합니다. 요청 헤더·Vault 원문·`net.http_request_queue` 내용을 로그에 복사하지 않습니다. 이 SQL은 Stanley·ARK Cron을 등록하지 않습니다.
 5. `next.config.ts`의 `outputFileTracingIncludes`가 수집을 실행하는 두 house 라우트와 PDF 워커 파일을 함께 지정하는지 확인합니다. pdfjs는 Node에서 워커를 opaque dynamic import로 불러 `@vercel/nft`가 추적하지 못하므로, 이 설정이 없으면 배포 함수에 `pdf.worker.mjs`가 빠지고 PDF 텍스트 추출이 런타임에 실패해 동기화가 503 `HOUSE_VALIDATION`으로 거절됩니다. 현재 설정은 `/api/sync/house`와 `/api/internal/sync/house` 각각에 `realpathSync`로 심링크를 푼 실제 `pdf.worker.mjs` 경로를 프로젝트 루트 기준 POSIX 상대 경로로 넣습니다. **심링크를 거친 경로는 include에 쓰지 않습니다.** pnpm은 `node_modules/pdfjs-dist`를 `.pnpm/pdfjs-dist@<버전>/…`로 가는 심링크로 두는데, 심링크 디렉터리를 거친 파일이 배포 함수 파일 목록에 들어가면 Vercel이 패키징을 거부합니다. 버전 폴더는 하드코딩하지 않고 매번 실제 경로에서 계산합니다.
-6. 재배포 뒤 `POST /api/internal/sync/house`를 `Authorization: Bearer <SYNC_SECRET>`로 호출해 503 `HOUSE_VALIDATION`이 아니라 `{"status":"updated"}` 또는 `{"status":"unchanged"}`가 오는지 확인합니다. 503 `HOUSE_VALIDATION`이 계속되면 함수 번들에 `pdf.worker.mjs`가 들어갔는지 확인합니다.
+6. 배포 뒤 `POST /api/internal/sync/house`를 `Authorization: Bearer <SYNC_SECRET>`로 호출해 응답 본문의 `status`를 확인합니다. 최신 배포의 운영 조회 HTTP 200은 사용자 확인이지만 응답 본문은 아직 확인하지 않았으므로 `{"status":"updated"}`·`{"status":"unchanged"}`를 단정하지 않습니다. 503 `HOUSE_VALIDATION`이 오면 함수 번들에 `pdf.worker.mjs`가 들어갔는지 확인합니다.
 
 ### 공시 검증과 현재 확인 범위
 
@@ -142,14 +146,15 @@ Nancy Pelosi 상세(`/gurus/nancy-pelosi`)는 **최신 PTR 문서 1건**만 다�
 
 - 출처는 하원 공식 공시 서버 `disclosures-clerk.house.gov`의 연도별 색인 zip(`/public_disc/financial-pdfs/2026FD.zip`)과 원문 PDF(`/public_disc/ptr-pdfs/2026/…`)뿐이며 제3자 요약·13F를 쓰지 않습니다. 색인 XML에서 문서번호·이름·주/선거구·연도·제출일을 검증하고, 연도를 올해부터 전년도까지 보며 그 해의 Pelosi PTR(`FilingType` `P`) 중 제출일·문서번호가 가장 뒤인 1건만 고릅니다. 고른 문서번호와 PDF 안의 문서번호·제출자·주/선거구가 모두 일치할 때만 사용하며, PDF 바이트 SHA-256을 `documentHash`, 파싱 결과 JSON의 SHA-256을 `normalizedHash`로 기록해 같은 문서·같은 내용인지 판정합니다.
 - 2026 색인의 Pelosi PTR 항목은 `20033725`(제출 1/23)·`20034836`(6/23)·`20035143`(8/21)이고, 확인된 최신 문서는 문서번호 **20035143**, 제출일·서명일 **2026-08-21**, 제출자 Hon. Nancy Pelosi(Member, CA11), 거래 **7행**입니다. [원문 PDF](https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/2026/20035143.pdf) 기준 `documentHash`는 `d745987c4b51ed65f9c8955932ca5c94a916f758201128d6f9978b4438fdb9e0`, `normalizedHash`는 `92aa1049f0d0ac05f26b3179cacc1302e3d45fdbff19ffdfa2d90c13ec137cdd`입니다.
-- 7행은 Bloom Energy 보통주 `ST`·옵션 `OP`(7/24·7/28), Intel 보통주 `ST`·옵션 `OP`(7/24), REOF XXV, LLC(원문 자산유형 `AB`, 7/27)이고 전부 거래유형 `P`(매수)·소유자 코드 `SP`(배우자)입니다. 금액은 원문이 적은 범위 그대로이며 최대는 `$1,000,001 - $5,000,000`입니다. 합계·중간값·비중을 계산하지 않고, 원문에 없는 티커·보유 수량·평가액을 만들지 않습니다.
+- 7행은 Bloom Energy 보통주 `ST`·옵션 `OP`(7/24·7/28), Intel 보통주 `ST`·옵션 `OP`(7/24), REOF XXV, LLC(원문 자산유형 `AB`, 7/27)이고 전부 거래유형 `P`(매수)·소유자 코드 `SP`(배우자)입니다. 금액은 원문이 적은 범위 그대로이며 최대는 `$1,000,001 - $5,000,000`입니다. 합계·중간값·비중을 계산하지 않고, 원문에 없는 티커·보유 수량·평가액을 만들지 않습니다. 원문 자산명 끝에 함께 적힌 괄호 표기는 `원문 티커` 열로 그대로 옮기기만 하고 이름이나 다른 출처로 값을 채우지 않습니다.
 - 파서는 PDF 텍스트 조각의 좌표를 읽습니다. 표 밖 값은 라벨 x=22, 값 x=99인 조각만 인정하고, 페이지마다 반복되는 표 헤더에서 열 기준 x를 다시 읽으며 거래 행은 페이지 경계를 넘어 이어집니다. 표 종료는 각주 `* For the complete list` 줄로만 판정하고 그 줄을 만나지 못하면 전체를 실패시킵니다. `D:`·`L:`·`C:` 같은 원문 접두는 유지하고, 줄바꿈으로 갈라진 설명·금액 조각은 이어 붙입니다.
 - **`Cap. Gains > $200?` 열은 파싱하지 않습니다.** 자산명은 원문 문자열 그대로이고 공식 자산유형 코드표 48종에 없는 코드, 지침에 없는 거래유형, 존재하지 않는 날짜, 원문에 없는 금액 표기는 부분 수용 없이 전체를 실패시킵니다. 원문이 구간이 아닌 단일 금액을 적은 거래(예: `$15.00`)는 표기 그대로 보존합니다.
 - Pelosi가 제출한 공식 PTR 문서 6건(2025년 제출 3건·2026년 제출 3건, 1~3페이지, 거래 1~18행, 다중 페이지 표·설명 행·줄바꿈 금액 포함)으로 파서를 대조했고, 문서번호 20035143의 7행은 독립 추출 스냅샷과 모든 필드가 일치했습니다. 색인 XML·PDF를 손상·변형한 입력은 모두 반영되지 않았습니다.
-- 실제 수집기가 공식 원문에서 만든 커밋 payload를 **인메모리 PostgreSQL**에 적용한 E2E에서 최초 반영이 `updated`, 같은 원문 재처리가 `unchanged`였습니다. 원문과 색인은 비공개 버킷 `house-originals`에 `house/{documentHash}` 접두사로 저장하도록 구성했습니다. **운영 Supabase에는 이 마이그레이션을 적용하고 배포했지만, 배포 함수에 pdfjs 워커 파일이 없어 운영 수집은 503 `HOUSE_VALIDATION`만 반환했습니다.**
+- 실제 수집기가 공식 원문에서 만든 커밋 payload를 **인메모리 PostgreSQL**에 적용한 E2E에서 최초 반영이 `updated`, 같은 원문 재처리가 `unchanged`였습니다. 원문과 색인은 비공개 버킷 `house-originals`에 `house/{documentHash}` 접두사로 저장하도록 구성했습니다. **운영 Supabase에는 이 마이그레이션을 적용하고 배포했습니다. 과거 배포 함수에 pdfjs 워커 파일이 없어 운영 수집이 503 `HOUSE_VALIDATION`을 반환했고, 워커 경로를 고친 최신 배포는 운영 조회 HTTP 200까지 사용자 확인을 받았지만 동기화 응답 본문은 아직 확인하지 않았습니다.**
 - 회귀 테스트는 합성 조각의 페이지 경계·금액 분리·설명 행·파일링 상태(`tests/house-parse.test.ts`)와 PGlite 인메모리 PostgreSQL의 lease·스냅샷 회전·오래된 제출 거부·같은 원문 해시의 정규화 불일치 실패·펜스 불일치 차단(`tests/house-ptr-state.test.ts`)을 검증합니다. 이 결과는 실제 원문 수집이나 원격 Supabase 검증을 대신하지 않습니다.
-- 실제 페이지 컴포넌트에 검증된 스냅샷을 연결한 **격리 브라우저**에서 1440px 표와 390px 카드로 거래 7행, `매수 · P`·`배우자 · SP`·`거래금액 범위` 표기, 320px~1440px 가로 오버플로 없음, 캐시 준비·데이터 없음·조회 오류·설정 필요·갱신 중·오래된 캐시·이전 스냅샷 상태 전환을 확인했습니다. 이 화면 검증은 운영 DB를 사용하지 않았습니다.
-- **운영 Supabase에는 `supabase/migrations/202609160001_house_ptr.sql`을 적용했고 House Cron도 등록했습니다.** 화면은 적용 전에만 자료 대신 적용 안내를 표시하므로 지금은 설정 누락 상태가 아닙니다. 다만 PDF 워커 파일 누락으로 운영 수집이 실패했으므로, 워커 포함 수정을 반영해 재배포한 뒤 `POST /api/internal/sync/house`가 `{"status":"updated"}` 또는 `{"status":"unchanged"}`를 반환하는지 확인합니다(§ House 시간별 동기화 활성화). 기존 Stanley·ARK 자료에는 영향이 없습니다.
+- 실제 페이지 컴포넌트에 검증된 스냅샷을 연결한 **격리 브라우저**에서 1440px 표와 390px 카드로 거래 7행, `매수 · P`·`배우자 · SP`·`거래금액 범위` 표기, 320px~1440px 가로 오버플로 없음, 캐시 준비·데이터 없음·조회 오류·설정 필요·갱신 중·오래된 캐시·이전 스냅샷 상태 전환을 확인했습니다. 같은 격리 화면에서 데스크톱 표와 모바일 카드의 `원문 티커` 열이 공식 최신 원문 7행의 `(BE)`·`(INTC)` 괄호 표기를 그대로 옮긴 `BE`·`INTC`로 표시되고, 표기가 없는 `REOF XXV, LLC` 행은 `티커 미기재`로 표시되는 것을 확인했습니다. 이어서 검증용 행을 별도로 추가해 `AB` 자산유형에서도 원문 괄호 티커가 보존되는지와 `PS` 행이 `비상장 주식`으로 표시되는지도 확인했습니다. 이 화면 검증은 운영 DB를 사용하지 않았습니다.
+- 같은 격리 화면에서 **자산별 활동 요약**을 실제 Next.js로 확인했습니다. 1440px·390px·320px 모두에서 총 거래 7건·원문 자산 3개·옵션 거래 3건, 자산별 `BE` 4건·`INTC` 2건·`REOF XXV, LLC` 1건과 최다 건수 기준 막대 상대 길이(4·2·1건 → 100%·50%·25%)를 확인했고, 320px에서도 세 지표가 한 줄에 유지됐습니다. 거래가 없는 요약의 안내 문구, 긴 자산명의 줄바꿈, 같은 이름의 주식·옵션 병합과 `AB`·`PS` 분리 경계, 옵션 거래 건수가 전체 거래 건수의 부분집합으로 표시되는지도 함께 확인했습니다. 이 화면 검증도 운영 DB를 사용하지 않았습니다.
+- **운영 Supabase에는 `supabase/migrations/202609160001_house_ptr.sql`을 적용했고 House Cron도 등록했습니다.** 화면은 적용 전에만 자료 대신 적용 안내를 표시하므로 지금은 설정 누락 상태가 아닙니다. 워커 경로를 고친 최신 배포는 운영 조회 HTTP 200까지 사용자 확인을 받았지만 `POST /api/internal/sync/house`의 응답 본문(`{"status":"updated"}`·`{"status":"unchanged"}`)은 아직 확인하지 않아 운영 수집 결과를 단정하지 않습니다(§ House 시간별 동기화 활성화). 기존 Stanley·ARK 자료에는 영향이 없습니다.
 
 ## 개발 워크플로
 
