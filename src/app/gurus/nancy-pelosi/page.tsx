@@ -102,10 +102,7 @@ function TransactionCards({
   transactions: readonly HousePtrTransaction[];
 }) {
   return (
-    <ul
-      aria-label="거래 내역 카드"
-      className="space-y-3 bg-background p-3 lg:hidden"
-    >
+    <ul aria-label="거래 내역 카드" className="space-y-3 bg-card p-3 lg:hidden">
       {transactions.map((transaction, index) => (
         <li
           // 원문에는 행 식별자가 없다. 문서 안 순서를 화면 표시용 키로만 쓴다.
@@ -186,53 +183,53 @@ function TransactionTable({
 }) {
   return (
     <Table className="min-w-[940px] text-xs">
-      <TableHeader className="bg-muted/60">
-        <TableRow className="hover:bg-muted/60">
+      <TableHeader className="bg-card">
+        <TableRow className="bg-card hover:bg-card">
           <TableHead
             scope="col"
-            className="w-[36%] min-w-[240px] px-3 text-[11px] text-muted-foreground"
+            className="w-[36%] min-w-[240px] px-3 text-xs font-semibold text-foreground"
           >
             자산
           </TableHead>
           <TableHead
             scope="col"
-            className="px-3 text-[11px] whitespace-nowrap text-muted-foreground"
+            className="px-3 text-xs font-semibold whitespace-nowrap text-foreground"
           >
             원문 티커
           </TableHead>
           <TableHead
             scope="col"
-            className="px-3 text-[11px] text-muted-foreground"
+            className="px-3 text-xs font-semibold text-foreground"
           >
             자산유형
           </TableHead>
           <TableHead
             scope="col"
-            className="px-3 text-[11px] text-muted-foreground"
+            className="px-3 text-xs font-semibold text-foreground"
           >
             거래유형
           </TableHead>
           <TableHead
             scope="col"
-            className="px-3 text-[11px] text-muted-foreground"
+            className="px-3 text-xs font-semibold text-foreground"
           >
             거래일
           </TableHead>
           <TableHead
             scope="col"
-            className="px-3 text-[11px] text-muted-foreground"
+            className="px-3 text-xs font-semibold text-foreground"
           >
             통지일
           </TableHead>
           <TableHead
             scope="col"
-            className="px-3 text-[11px] text-muted-foreground"
+            className="px-3 text-xs font-semibold text-foreground"
           >
             거래금액 범위
           </TableHead>
           <TableHead
             scope="col"
-            className="px-3 text-[11px] text-muted-foreground"
+            className="px-3 text-xs font-semibold text-foreground"
           >
             소유자
           </TableHead>

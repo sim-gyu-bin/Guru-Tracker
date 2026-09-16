@@ -73,10 +73,7 @@ function FundSelector({ current }: { current: ArkFund }) {
 /** 모바일은 카드로 표시하고 360px 미만에서는 금액·수량을 한 열로 쌓아 센트가 다음 줄로 갈라지는 일을 줄인다. */
 function HoldingCards({ holdings }: { holdings: ArkHolding[] }) {
   return (
-    <ul
-      aria-label="보유 항목 카드"
-      className="space-y-3 bg-background p-3 lg:hidden"
-    >
+    <ul aria-label="보유 항목 카드" className="space-y-3 bg-card p-3 lg:hidden">
       {holdings.map((holding) => (
         <li
           key={holding.id}
@@ -129,41 +126,41 @@ function HoldingCards({ holdings }: { holdings: ArkHolding[] }) {
 function HoldingTable({ holdings }: { holdings: ArkHolding[] }) {
   return (
     <Table className="min-w-[880px] text-xs">
-      <TableHeader className="bg-muted/60">
-        <TableRow className="hover:bg-muted/60">
+      <TableHeader className="bg-card">
+        <TableRow className="bg-card hover:bg-card">
           <TableHead
             scope="col"
-            className="px-3 text-[11px] text-muted-foreground"
+            className="px-3 text-xs font-semibold text-foreground"
           >
             종목명
           </TableHead>
           <TableHead
             scope="col"
-            className="px-3 text-[11px] text-muted-foreground"
+            className="px-3 text-xs font-semibold text-foreground"
           >
             티커
           </TableHead>
           <TableHead
             scope="col"
-            className="px-3 text-[11px] text-muted-foreground"
+            className="px-3 text-xs font-semibold text-foreground"
           >
             원문 식별자
           </TableHead>
           <TableHead
             scope="col"
-            className="px-3 text-right text-[11px] text-muted-foreground"
+            className="px-3 text-right text-xs font-semibold text-foreground"
           >
             평가금액 USD
           </TableHead>
           <TableHead
             scope="col"
-            className="px-3 text-right text-[11px] text-muted-foreground"
+            className="px-3 text-right text-xs font-semibold text-foreground"
           >
             수량
           </TableHead>
           <TableHead
             scope="col"
-            className="px-3 text-right text-[11px] text-muted-foreground"
+            className="px-3 text-right text-xs font-semibold text-foreground"
           >
             공식 비중
           </TableHead>

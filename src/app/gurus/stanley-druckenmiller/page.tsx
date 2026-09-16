@@ -78,53 +78,53 @@ function HoldingTable({
 }) {
   return (
     <Table className="min-w-[880px] text-xs">
-      <TableHeader className="bg-muted/60">
-        <TableRow className="hover:bg-muted/60">
+      <TableHeader className="bg-card">
+        <TableRow className="bg-card hover:bg-card">
           <TableHead
             scope="col"
-            className="px-3 text-[11px] text-muted-foreground"
+            className="px-3 text-xs font-semibold text-foreground"
           >
             종목명
           </TableHead>
           <TableHead
             scope="col"
-            className="px-3 text-[11px] text-muted-foreground"
+            className="px-3 text-xs font-semibold text-foreground"
           >
             티커
           </TableHead>
           <TableHead
             scope="col"
-            className="px-3 text-[11px] text-muted-foreground"
+            className="px-3 text-xs font-semibold text-foreground"
           >
             종류
           </TableHead>
           <TableHead
             scope="col"
-            className="px-3 text-[11px] text-muted-foreground"
+            className="px-3 text-xs font-semibold text-foreground"
           >
             CUSIP
           </TableHead>
           <TableHead
             scope="col"
-            className="px-3 text-right text-[11px] text-muted-foreground"
+            className="px-3 text-right text-xs font-semibold text-foreground"
           >
             평가금액 USD
           </TableHead>
           <TableHead
             scope="col"
-            className="px-3 text-right text-[11px] text-muted-foreground"
+            className="px-3 text-right text-xs font-semibold text-foreground"
           >
             수량
           </TableHead>
           <TableHead
             scope="col"
-            className="px-3 text-[11px] text-muted-foreground"
+            className="px-3 text-xs font-semibold text-foreground"
           >
             단위
           </TableHead>
           <TableHead
             scope="col"
-            className="px-3 text-[11px] text-muted-foreground"
+            className="px-3 text-xs font-semibold text-foreground"
           >
             PUT / CALL
           </TableHead>
@@ -173,10 +173,7 @@ function HoldingCards({
   tickerLoading: boolean;
 }) {
   return (
-    <ul
-      aria-label="보유 종목 카드"
-      className="space-y-3 bg-background p-3 lg:hidden"
-    >
+    <ul aria-label="보유 종목 카드" className="space-y-3 bg-card p-3 lg:hidden">
       {holdings.map((holding, index) => (
         <li
           key={`${holding.cusip}-${holding.titleOfClass}-${holding.putCall ?? "common"}-${holding.shareType}-${index}`}

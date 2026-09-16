@@ -116,7 +116,7 @@ export function AppShell({ children, current = "home" }: AppShellProps) {
       <div className="min-h-dvh min-[761px]:ml-[248px]">
         <header className="sticky top-0 z-1 flex min-h-[50px] items-center justify-between border-b border-border bg-card/92 px-4 backdrop-blur-[10px] min-[761px]:min-h-[52px] min-[761px]:px-8">
           <GuruLink
-            className="inline-flex min-h-11 items-center text-sm font-bold min-[761px]:hidden"
+            className="inline-flex min-h-11 items-center text-xl font-bold min-[761px]:hidden"
             href="/"
           >
             Guru Tracker
