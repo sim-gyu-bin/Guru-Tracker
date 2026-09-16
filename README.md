@@ -4,7 +4,7 @@
 
 ## 현재 상태
 
-**Linear 제품 내부 UI를 기준으로 홈, Stanley Druckenmiller·Cathie Wood·Nancy Pelosi 상세 조회를 구현했습니다.** Stanley의 SEC 13F와 ARK 6개 펀드의 공식 holdings, Nancy Pelosi의 미국 하원 공식 PTR 최신 1건 수집·검증, Supabase DB·Storage 저장, 멱등 동기화 조정자와 SQL 마이그레이션이 포함됩니다. Stanley는 원격 저장·재처리와 95개 보유 항목 표시를 확인했습니다. ARK도 공식 CSV 6개, 원격 저장·동일 원문 재처리와 실제 캐시 화면 조회를 확인했습니다. Nancy Pelosi는 공식 PTR 문서 1건(거래 7행)의 수집·검증과 화면 렌더를 격리 환경에서 확인했지만 **운영 Supabase에는 아직 이 마이그레이션을 적용하지 않았습니다.** 적용 전까지 배포 화면은 자료 대신 적용 안내를 보여 줍니다. 나머지 네 대상(Burry·Laffont·Gerstner·Tepper)의 수집, ARK trades, 로그인, 설치형 PWA, Web Push와 운영 배포는 **계획**입니다. ARK·House 시간별 Cron 설정 SQL은 작성했지만 활성화하지 않았습니다.
+**Linear 제품 내부 UI를 기준으로 홈, Stanley Druckenmiller·Cathie Wood·Nancy Pelosi 상세 조회를 구현했습니다.** Stanley의 SEC 13F와 ARK 6개 펀드의 공식 holdings, Nancy Pelosi의 미국 하원 공식 PTR 최신 1건 수집·검증, Supabase DB·Storage 저장, 멱등 동기화 조정자와 SQL 마이그레이션이 포함됩니다. Stanley는 원격 저장·재처리와 95개 보유 항목 표시를 확인했습니다. ARK도 공식 CSV 6개, 원격 저장·동일 원문 재처리와 실제 캐시 화면 조회를 확인했습니다. Nancy Pelosi는 공식 PTR 문서 1건(거래 7행)의 수집·검증과 화면 렌더를 격리 환경에서 확인했고, **운영 Supabase에는 `202609160001_house_ptr.sql`을 적용하고 Vercel에 배포했으며 ARK·House 시간별 Cron도 등록했습니다.** 다만 배포된 함수에 pdfjs 워커 파일(`pdf.worker.mjs`)이 빠져 PDF 텍스트 추출이 런타임에 실패했고, 그 결과 운영 동기화는 503 `HOUSE_VALIDATION`으로 거절되었습니다. 수집을 실행하는 두 house 라우트에 워커 파일을 함께 넣도록 `next.config.ts`를 고쳤으므로 **재배포 뒤에** 정상화됩니다. 나머지 네 대상(Burry·Laffont·Gerstner·Tepper)의 수집, ARK trades, 로그인, 설치형 PWA와 Web Push는 **계획**입니다. ARK·House 시간별 Cron 설정 SQL은 `supabase/ark-cron.sql`, `supabase/house-cron.sql`로 작성했고 두 job 모두 등록했습니다. job 등록은 실제 수집 성공과 별개이므로 각 엔드포인트의 응답으로 성공 여부를 따로 확인합니다.
 
 ## 목적
 
@@ -34,9 +34,9 @@ Stanley 수집기는 공식 SEC 제출 목록과 원문, ARK 수집기는 공식
 
 ### 시간별 동기화와 접근 시 보완
 
-무료 등급 구성을 유지하기 위해 **Supabase Cron**으로 시간마다 한 번 수집합니다. `pg_cron`과 `pg_net`이 보호된 Next.js 내부 동기화 엔드포인트를 호출하며, 호출 비밀값은 Supabase Vault 및 서버 전용 설정에만 보관합니다. ARK·House의 job SQL은 `supabase/ark-cron.sql`, `supabase/house-cron.sql`로 작성했지만 아직 등록하지 않았고, Stanley는 접근 갱신만 사용합니다. 시간별 일정에는 Vercel Hobby Cron을 사용하지 않습니다. Vercel Hobby Cron은 시간별 실행에 적합하지 않기 때문입니다.
+무료 등급 구성을 유지하기 위해 **Supabase Cron**으로 시간마다 한 번 수집합니다. `pg_cron`과 `pg_net`이 보호된 Next.js 내부 동기화 엔드포인트를 호출하며, 호출 비밀값은 Supabase Vault 및 서버 전용 설정에만 보관합니다. ARK·House의 job SQL은 `supabase/ark-cron.sql`, `supabase/house-cron.sql`로 작성했고 두 job 모두 등록했습니다. 등록 자체는 실제 수집 성공을 뜻하지 않으며 성공 여부는 각 엔드포인트 응답으로 확인합니다. Stanley는 접근 갱신만 사용합니다. 시간별 일정에는 Vercel Hobby Cron을 사용하지 않습니다. Vercel Hobby Cron은 시간별 실행에 적합하지 않기 때문입니다.
 
-Stanley·ARK·Nancy Pelosi는 각각 접근 갱신과 보호된 내부 진입점이 같은 멱등 조정자·DB lease를 공유합니다. ARK의 lease와 캐시는 펀드별로 분리되고, Nancy Pelosi는 최신 PTR 문서 1건을 스냅샷 단위로 삼아 lease도 하나입니다. 화면은 저장된 데이터를 먼저 읽고, 마지막 성공 후 한 시간이 지났거나 캐시가 비었을 때 접근 갱신을 요청합니다. lease는 90초, 재시도 간격은 최소 60초이며 만료된 작업의 뒤늦은 커밋은 펜싱 토큰으로 차단합니다. 공통 갱신 컴포넌트는 펀드를 바꿀 때 요청 상태를 초기화하고 펀드별 쿨다운을 적용합니다. 시간별 Cron은 아직 활성화하지 않았으므로 접근 갱신만으로 24시간 자동 수집이 운영되는 것은 아닙니다.
+Stanley·ARK·Nancy Pelosi는 각각 접근 갱신과 보호된 내부 진입점이 같은 멱등 조정자·DB lease를 공유합니다. ARK의 lease와 캐시는 펀드별로 분리되고, Nancy Pelosi는 최신 PTR 문서 1건을 스냅샷 단위로 삼아 lease도 하나입니다. 화면은 저장된 데이터를 먼저 읽고, 마지막 성공 후 한 시간이 지났거나 캐시가 비었을 때 접근 갱신을 요청합니다. lease는 90초, 재시도 간격은 최소 60초이며 만료된 작업의 뒤늦은 커밋은 펜싱 토큰으로 차단합니다. 공통 갱신 컴포넌트는 펀드를 바꿀 때 요청 상태를 초기화하고 펀드별 쿨다운을 적용합니다. House 시간별 Cron은 등록되어 매시 13분에 호출하지만, 현재 배포에는 PDF 워커 파일이 없어 503 `HOUSE_VALIDATION`으로 실패합니다. ARK 시간별 job도 등록되어 매시 7분에 호출하며, 그 실제 수집 성공 여부는 이번 확인 범위가 아니므로 각 엔드포인트 응답으로 따로 확인합니다.
 
 ### 안전한 스냅샷 관리
 
@@ -55,8 +55,8 @@ Stanley·ARK·Nancy Pelosi 마이그레이션은 대상별 **현재 스냅샷과
 | 웹 애플리케이션 | Next.js App Router | Linear 스타일 홈·Stanley·Cathie·Nancy Pelosi 상세 조회 구현 |
 | 개발 도구 | pnpm, TypeScript, Biome, Husky, Tailwind CSS | 구현 |
 | UI 컴포넌트 | Tailwind CSS 4, shadcn/ui (Radix 기반), Recharts | 버튼·배지·표·상태 안내·공시 비중 도넛 차트 구현 |
-| 호스팅 | Vercel Hobby | 계획 |
-| 데이터베이스·파일 저장소 | Supabase PostgreSQL / Storage | Stanley·ARK 원격 저장·동일 원문 재처리 검증 완료, Nancy Pelosi 마이그레이션·수집·화면 구현(운영 미적용, 격리 검증) |
+| 호스팅 | Vercel Hobby | 배포 완료(house 수집 워커 누락 수정을 반영한 재배포 필요) |
+| 데이터베이스·파일 저장소 | Supabase PostgreSQL / Storage | Stanley·ARK 원격 저장·동일 원문 재처리 검증 완료, Nancy Pelosi 마이그레이션 적용·수집·화면 구현(운영 수집 성공은 워커 누락 수정 반영 뒤 확인) |
 | 클라이언트 제공 방식 | PWA-first | 계획 |
 
 공시 원문은 비공개 Supabase Storage의 `sec-originals`·`ark-originals`·`house-originals` 버킷에 출처별로 구분해 저장합니다. 이 저장소의 LLM Wiki 원문 보관 영역을 운영 데이터 저장소로 사용하지 않습니다.
@@ -107,15 +107,17 @@ Nancy Pelosi 상세(`/gurus/nancy-pelosi`)는 **최신 PTR 문서 1건**만 다�
 
 1. 운영 HTTPS origin에 배포하고 서버 환경 변수를 설정합니다. 로컬 `localhost`나 LAN 주소는 Supabase에서 호출할 수 없습니다.
 2. Supabase Dashboard의 Vault 화면에서 `guru_tracker_base_url`에 배포 origin, `guru_tracker_sync_secret`에 서버 `SYNC_SECRET`과 동일한 값을 추가합니다. SQL Editor에 비밀값이 포함된 `create_secret` 문을 넣으면 실행 이력에 남으므로 사용하지 않습니다.
-3. `supabase/ark-cron.sql`을 실행합니다. `guru_tracker_ark_hourly` 한 개 job이 매시 7분에 6개 펀드의 보호된 엔드포인트를 각각 호출합니다. 재실행 시 같은 job만 갱신하며 기존 job을 삭제하지 않습니다. ARK 마이그레이션 적용만으로 Cron이 활성화되지는 않습니다.
+3. `supabase/ark-cron.sql`을 실행합니다. `guru_tracker_ark_hourly` 한 개 job이 매시 7분에 6개 펀드의 보호된 엔드포인트를 각각 호출합니다. 재실행 시 같은 job만 갱신하며 기존 job을 삭제하지 않습니다. 운영에는 이 job을 등록했으며, 등록과 실제 수집 성공은 별개이므로 성공 여부는 4번 조회 예시로 확인합니다. ARK 마이그레이션 적용만으로 Cron이 활성화되지는 않습니다.
 4. 파일 끝의 조회 예시로 일정·응답 상태 코드를 확인하고 각 펀드의 마지막 성공 시각을 확인합니다. 요청 헤더·Vault 원문·`net.http_request_queue` 내용을 로그에 복사하지 않습니다. 이 SQL은 Stanley Cron을 등록하지 않습니다.
 
 ### House 시간별 동기화 활성화
 
 1. 운영 HTTPS origin에 배포하고 서버 환경 변수를 설정합니다. 로컬 `localhost`나 LAN 주소는 Supabase에서 호출할 수 없습니다.
 2. Supabase Dashboard의 Vault 화면에 `guru_tracker_base_url`(배포 origin)과 `guru_tracker_sync_secret`(서버 `SYNC_SECRET`과 같은 값)이 있는지 확인합니다. ARK 절차와 같은 값이며, SQL Editor에 비밀값이 포함된 `create_secret` 문을 넣으면 실행 이력에 남으므로 사용하지 않습니다.
-3. `supabase/house-cron.sql`을 실행합니다. `guru_tracker_house_hourly` 한 개 job이 매시 13분에 보호된 엔드포인트 `/api/internal/sync/house`를 한 번 호출하고 제한 시간은 60초입니다. 재실행 시 같은 job만 갱신하며 기존 job을 삭제하지 않습니다. `202609160001_house_ptr.sql`을 적용하지 않았거나 Vault 값이 없으면 이 job은 자료를 만들지 않습니다.
+3. `supabase/house-cron.sql`을 실행합니다. `guru_tracker_house_hourly` 한 개 job이 매시 13분에 보호된 엔드포인트 `/api/internal/sync/house`를 한 번 호출하고 제한 시간은 60초입니다. 재실행 시 같은 job만 갱신하며 기존 job을 삭제하지 않습니다. 운영에는 이 job을 등록했습니다. `202609160001_house_ptr.sql`을 적용하지 않았거나 Vault 값이 없으면 이 job은 자료를 만들지 않습니다.
 4. 파일 끝의 조회 예시로 일정·응답 상태 코드와 마지막 성공 시각을 확인합니다. 요청 헤더·Vault 원문·`net.http_request_queue` 내용을 로그에 복사하지 않습니다. 이 SQL은 Stanley·ARK Cron을 등록하지 않습니다.
+5. `next.config.ts`의 `outputFileTracingIncludes`가 수집을 실행하는 두 house 라우트와 PDF 워커 파일을 함께 지정하는지 확인합니다. pdfjs는 Node에서 워커를 opaque dynamic import로 불러 `@vercel/nft`가 추적하지 못하므로, 이 설정이 없으면 배포 함수에 `pdf.worker.mjs`가 빠지고 PDF 텍스트 추출이 런타임에 실패해 동기화가 503 `HOUSE_VALIDATION`으로 거절됩니다. 현재 설정은 `/api/sync/house`와 `/api/internal/sync/house`에 `./node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs`를 포함합니다.
+6. 재배포 뒤 `POST /api/internal/sync/house`를 `Authorization: Bearer <SYNC_SECRET>`로 호출해 503 `HOUSE_VALIDATION`이 아니라 `{"status":"updated"}` 또는 `{"status":"unchanged"}`가 오는지 확인합니다. 503 `HOUSE_VALIDATION`이 계속되면 함수 번들에 `pdf.worker.mjs`가 들어갔는지 확인합니다.
 
 ### 공시 검증과 현재 확인 범위
 
@@ -144,10 +146,10 @@ Nancy Pelosi 상세(`/gurus/nancy-pelosi`)는 **최신 PTR 문서 1건**만 다�
 - 파서는 PDF 텍스트 조각의 좌표를 읽습니다. 표 밖 값은 라벨 x=22, 값 x=99인 조각만 인정하고, 페이지마다 반복되는 표 헤더에서 열 기준 x를 다시 읽으며 거래 행은 페이지 경계를 넘어 이어집니다. 표 종료는 각주 `* For the complete list` 줄로만 판정하고 그 줄을 만나지 못하면 전체를 실패시킵니다. `D:`·`L:`·`C:` 같은 원문 접두는 유지하고, 줄바꿈으로 갈라진 설명·금액 조각은 이어 붙입니다.
 - **`Cap. Gains > $200?` 열은 파싱하지 않습니다.** 자산명은 원문 문자열 그대로이고 공식 자산유형 코드표 48종에 없는 코드, 지침에 없는 거래유형, 존재하지 않는 날짜, 원문에 없는 금액 표기는 부분 수용 없이 전체를 실패시킵니다. 원문이 구간이 아닌 단일 금액을 적은 거래(예: `$15.00`)는 표기 그대로 보존합니다.
 - Pelosi가 제출한 공식 PTR 문서 6건(2025년 제출 3건·2026년 제출 3건, 1~3페이지, 거래 1~18행, 다중 페이지 표·설명 행·줄바꿈 금액 포함)으로 파서를 대조했고, 문서번호 20035143의 7행은 독립 추출 스냅샷과 모든 필드가 일치했습니다. 색인 XML·PDF를 손상·변형한 입력은 모두 반영되지 않았습니다.
-- 실제 수집기가 공식 원문에서 만든 커밋 payload를 **인메모리 PostgreSQL**에 적용한 E2E에서 최초 반영이 `updated`, 같은 원문 재처리가 `unchanged`였습니다. 원문과 색인은 비공개 버킷 `house-originals`에 `house/{documentHash}` 접두사로 저장하도록 구성했습니다. **운영 Supabase에는 아직 적용하거나 검증하지 않았습니다.**
+- 실제 수집기가 공식 원문에서 만든 커밋 payload를 **인메모리 PostgreSQL**에 적용한 E2E에서 최초 반영이 `updated`, 같은 원문 재처리가 `unchanged`였습니다. 원문과 색인은 비공개 버킷 `house-originals`에 `house/{documentHash}` 접두사로 저장하도록 구성했습니다. **운영 Supabase에는 이 마이그레이션을 적용하고 배포했지만, 배포 함수에 pdfjs 워커 파일이 없어 운영 수집은 503 `HOUSE_VALIDATION`만 반환했습니다.**
 - 회귀 테스트는 합성 조각의 페이지 경계·금액 분리·설명 행·파일링 상태(`tests/house-parse.test.ts`)와 PGlite 인메모리 PostgreSQL의 lease·스냅샷 회전·오래된 제출 거부·같은 원문 해시의 정규화 불일치 실패·펜스 불일치 차단(`tests/house-ptr-state.test.ts`)을 검증합니다. 이 결과는 실제 원문 수집이나 원격 Supabase 검증을 대신하지 않습니다.
 - 실제 페이지 컴포넌트에 검증된 스냅샷을 연결한 **격리 브라우저**에서 1440px 표와 390px 카드로 거래 7행, `매수 · P`·`배우자 · SP`·`거래금액 범위` 표기, 320px~1440px 가로 오버플로 없음, 캐시 준비·데이터 없음·조회 오류·설정 필요·갱신 중·오래된 캐시·이전 스냅샷 상태 전환을 확인했습니다. 이 화면 검증은 운영 DB를 사용하지 않았습니다.
-- **운영 Supabase에는 `supabase/migrations/202609160001_house_ptr.sql`을 아직 적용하지 않았습니다.** 적용 전까지 배포 화면은 자료 대신 적용 안내를 표시하며 이는 오류가 아니라 설정 누락 상태입니다. 기존 Stanley·ARK 자료에는 영향이 없습니다.
+- **운영 Supabase에는 `supabase/migrations/202609160001_house_ptr.sql`을 적용했고 House Cron도 등록했습니다.** 화면은 적용 전에만 자료 대신 적용 안내를 표시하므로 지금은 설정 누락 상태가 아닙니다. 다만 PDF 워커 파일 누락으로 운영 수집이 실패했으므로, 워커 포함 수정을 반영해 재배포한 뒤 `POST /api/internal/sync/house`가 `{"status":"updated"}` 또는 `{"status":"unchanged"}`를 반환하는지 확인합니다(§ House 시간별 동기화 활성화). 기존 Stanley·ARK 자료에는 영향이 없습니다.
 
 ## 개발 워크플로
 
