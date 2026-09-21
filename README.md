@@ -4,7 +4,7 @@
 
 ## 현재 상태
 
-**Linear 제품 내부 UI를 기준으로 홈, Stanley Druckenmiller·Cathie Wood·Nancy Pelosi 상세 조회를 구현했습니다.** Stanley의 SEC 13F와 ARK 6개 펀드의 공식 holdings, Nancy Pelosi의 미국 하원 공식 PTR 최신 1건 수집·검증, Supabase DB·Storage 저장, 멱등 동기화 조정자와 SQL 마이그레이션이 포함됩니다. Stanley는 원격 저장·재처리와 95개 보유 항목 표시를 확인했습니다. ARK도 공식 CSV 6개, 원격 저장·동일 원문 재처리와 실제 캐시 화면 조회를 확인했습니다. Nancy Pelosi는 공식 PTR 문서 1건(거래 7행)의 수집·검증과 화면 렌더를 격리 환경에서 확인했고, **운영 Supabase에는 `202609160001_house_ptr.sql`을 적용하고 Vercel에 배포했으며 ARK·House 시간별 Cron도 등록했습니다.** 이전 배포 함수에는 pdfjs 워커 파일(`pdf.worker.mjs`)이 빠져 운영 동기화가 503 `HOUSE_VALIDATION`으로 거절됐고, include를 pnpm 심링크 경로(`node_modules/pdfjs-dist/…`)로 넣은 수정은 Vercel이 `Deploying outputs` 단계에서 `invalid deployment package`로 거부했습니다. include를 심링크를 푼 실제 경로로 계산하도록 고친 수정은 **최신 배포에 성공했고 운영 조회 응답 HTTP 200을 사용자 확인으로 알고 있습니다. 다만 응답 본문의 `status` 값은 아직 확인하지 않았으므로 운영 수집이 `updated`·`unchanged`를 반환했다고도, 503으로 실패했다고도 단정하지 않습니다.** 나머지 네 대상(Burry·Laffont·Gerstner·Tepper)의 수집, ARK trades, 로그인, 설치형 PWA와 Web Push는 **계획**입니다. ARK·House 시간별 Cron 설정 SQL은 `supabase/ark-cron.sql`, `supabase/house-cron.sql`로 작성했고 두 job 모두 등록했습니다. job 등록은 실제 수집 성공과 별개이므로 각 엔드포인트의 응답으로 성공 여부를 따로 확인합니다.
+**Linear 제품 내부 UI를 기준으로 홈, Stanley Druckenmiller·Cathie Wood·Nancy Pelosi 상세 조회를 구현했습니다.** Stanley의 SEC 13F와 ARK 6개 펀드의 공식 holdings, Nancy Pelosi의 미국 하원 공식 PTR 최신 1건 수집·검증, Supabase DB·Storage 저장, 멱등 동기화 조정자와 SQL 마이그레이션이 포함됩니다. Stanley는 원격 저장·재처리와 95개 보유 항목 표시를 확인했습니다. ARK도 공식 CSV 6개, 원격 저장·동일 원문 재처리와 실제 캐시 화면 조회를 확인했습니다. Nancy Pelosi는 공식 PTR 문서 1건(거래 7행)의 수집·검증과 화면 렌더를 격리 환경에서 확인했고, **운영 Supabase에는 `202609160001_house_ptr.sql`을 적용하고 Vercel에 배포했으며 ARK·House 시간별 Cron도 등록했습니다.** 이전 배포 함수에는 pdfjs 워커 파일(`pdf.worker.mjs`)이 빠져 운영 동기화가 503 `HOUSE_VALIDATION`으로 거절됐고, include를 pnpm 심링크 경로(`node_modules/pdfjs-dist/…`)로 넣은 수정은 Vercel이 `Deploying outputs` 단계에서 `invalid deployment package`로 거부했습니다. include를 심링크를 푼 실제 경로로 계산하도록 고친 수정은 **최신 배포에 성공했고 운영 조회 응답 HTTP 200을 사용자 확인으로 알고 있습니다. 다만 응답 본문의 `status` 값은 아직 확인하지 않았으므로 운영 수집이 `updated`·`unchanged`를 반환했다고도, 503으로 실패했다고도 단정하지 않습니다.** 나머지 네 대상(Burry·Laffont·Gerstner·Tepper)의 수집, ARK trades, 설치형 PWA와 Web Push는 **계획**입니다. **로그인과 소유자 승인 기반 접근 제한은 저장소에 구현되어 있지만 배포 설정과 실운영 검증은 끝나지 않았습니다**(아래 "접근 정책 (저장소 구현, 배포 설정 미완료)"). ARK·House 시간별 Cron 설정 SQL은 `supabase/ark-cron.sql`, `supabase/house-cron.sql`로 작성했고 두 job 모두 등록했습니다. job 등록은 실제 수집 성공과 별개이므로 각 엔드포인트의 응답으로 성공 여부를 따로 확인합니다.
 
 ## 목적
 
@@ -48,16 +48,49 @@ Stanley·ARK·Nancy Pelosi 마이그레이션은 대상별 **현재 스냅샷과
 
 알림은 PWA service worker와 VAPID를 사용하는 표준 Web Push로 계획합니다. 권한은 사용자 동작에서만 opt-in으로 요청합니다. iOS의 일반적인 Push 흐름에서는 Home Screen에 설치한 웹 앱이 필요하지만, PWA Web Push를 위해 Apple Developer 계정은 필요하지 않습니다. 만료되었거나 유효하지 않은 subscription은 Push 서비스의 `404` 또는 `410` 응답을 받으면 제거합니다.
 
+## 접근 정책 (저장소 구현, 배포 설정 미완료)
+
+Guru Tracker의 접근 방식은 **소유자 승인**으로 확정되었고, 그 코드·스키마가 저장소에 구현되어 있습니다. 아래 계약은 확정 결정이며, **운영 배포에 필요한 설정은 아직 채우지 않았습니다.**
+
+- **로그인**: Supabase Auth의 Google OAuth만 사용합니다. 이메일/비밀번호와 Magic Link는 사용하지 않습니다.
+- **상태**: 최초 Google 로그인은 접근 요청을 `pending`으로 기록하고, `approved`인 사람만 서비스를 이용합니다. `rejected`(거절)·`revoked`(승인 후 해제)는 이용할 수 없고, 다시 로그인해도 새 요청이 자동 생성되지 않으며 다음 서버·API 요청이 차단됩니다. 소유자는 같은 화면에서 거절·해제한 사람을 다시 승인할 수 있습니다.
+- **소유자**: 소유자는 한 명이며 검증된 Google identity와 DB user id로 지정합니다. 서버 전용 `ADMIN_EMAIL`이 초기 소유자를 식별합니다. 실제 이메일 주소는 저장소·README·Wiki·코드·로그에 적지 않습니다. 소유자 결속은 단일 행으로 유지하고, 상태 변경은 기대 버전을 함께 받아 오래된·재생된 결정이 최신 상태를 덮지 않게 합니다.
+- **라우팅**: `(public)`에 `/`(서비스 소개), `/login`(Google 로그인), `/privacy`(개인정보처리방침), `/terms`(이용약관)를 둡니다. `(private)`에 `/pending`(승인 대기), `/admin`(소유자 관리), `/main`, `/main/gurus/...`를 두며 URL은 그룹 이름 없이 유지합니다. 비공개 화면은 서버에서 검증된 세션이 없으면 로그인으로 이동하지 않고 HTTP 404를 반환합니다. 로그인한 사용자의 승인·관리자 권한 및 API 권한 검사는 유지합니다.
+- **관리자 화면**: `/admin`은 승인된 관리자 외에는 로그인·승인 여부와 관계없이 HTTP 404를 반환합니다. 결정 요청 중에는 목록과 확인 패널의 버튼·링크를 잠그고 처리 중 상태를 표시합니다. 연속 제출 차단과 별개로 서버의 기대 revision 검사는 유지합니다.
+- **메일 알림**: 새 `pending` 요청은 provider API로 소유자에게 알립니다. 메일의 수락·거절 링크는 해당 요청의 `/admin` 화면을 여는 GET 이동일 뿐이고, 상태 변경은 소유자가 Google 관리자로 로그인한 뒤의 POST로만 처리합니다. 메일 스캐너나 링크 미리보기가 링크를 열어도 접근 상태는 바뀌지 않습니다. 발송이 실패해도 요청은 `pending`으로 남아 `/admin`에서 처리할 수 있습니다.
+- **권한 경계**: 일반 사용자의 접근은 서버·API·Row Level Security로 제한하고, 수집·동기화·스냅샷 회전·Push outbox는 서버 전용으로 유지합니다. 내부 Cron 엔드포인트는 기존 Bearer(`SYNC_SECRET`) 인증을 그대로 사용하며 소유자 승인 상태와 무관합니다.
+- **설정**: 서버 전용 `ADMIN_EMAIL`·`RESEND_API_KEY`·`RESEND_FROM`·`APP_URL`과 Supabase 공개 키를 사용합니다. 실제 값과 수신 주소는 저장소·README·Wiki·코드·로그에 적지 않습니다. 이 네 값은 **아직 설정하지 않았습니다.**
+- **메일 provider**: 초기 후보는 Resend이며 제품 결정이 아니라 구현 선택입니다. provider를 교체해도 승인 상태·라우팅·DB 계약은 바뀌지 않습니다.
+
+**저장소에 구현된 것**
+
+- **라우트**: 공개 `/`·`/privacy`·`/terms`, `/login`, `/pending`, `/admin`, `/main`, `/main/gurus/...`와 `/auth/signin`·`/auth/callback`·`/auth/signout`.
+- **판정·세션**: `src/proxy.ts`가 화면 접근을 판정하면서 Supabase 세션을 갱신하고, `src/domain/access.ts`·`src/server/access-store.ts`가 상태·경로 판정을 담당합니다. 화면 판정은 DB를 읽기만 하며 가입 요청을 만들지 않습니다.
+- **DB**: `supabase/migrations/202609180001_access_approval.sql`의 `public.access_users`(상태 `pending`·`approved`·`rejected`·`revoked`, 단일 관리자 부분 유니크 인덱스, 결정 세대 번호 `revision`, RLS)와 RPC `access_request_submit`·`access_confirm_admin`·`access_decide`.
+- **서버 모듈**: `src/server/config.ts`(`APP_URL`·`ADMIN_EMAIL` 해석), `src/server/session.ts`, `src/server/supabase.ts`, `src/server/access.ts`, `src/server/origin.ts`(Host·`x-forwarded-host` 기준 같은 출처 판정), `src/server/mail.ts`(Resend HTTP API).
+- **회귀 검증**: `tests/access-approval.test.ts`가 PGlite 인메모리 PostgreSQL에 실제 마이그레이션을 적용해 판정·RPC·RLS 경계를 검증합니다.
+
+**아직 완료되지 않은 배포 설정**
+
+- Google Cloud OAuth 클라이언트와 동의 화면 게시, Supabase Google provider 및 redirect 허용 목록 등록.
+- 서버 전용 `APP_URL`·`ADMIN_EMAIL`·`RESEND_API_KEY`·`RESEND_FROM` 값. `.env.example`에 항목만 있고 이 저장소와 로컬 개발 환경 파일에는 값이 없습니다.
+- 원격 Supabase로의 `202609180001_access_approval.sql` 적용과 Resend 발신 도메인 인증.
+
+실제 Google 로그인·승인 알림 메일·운영 승인 흐름은 **아직 검증되지 않았습니다.** Google Cloud·Supabase·Resend 설정을 채운 배포에서 최종 확인해야 합니다. 운영에서는 `APP_URL`이 없으면 로그인이 거절됩니다. 로컬 개발 모드에서는 미설정 시 루프백 요청의 현재 포트로 OAuth 복귀 주소를 만들며, `APP_URL`이나 Resend 설정이 없으면 승인 메일만 생략된 채 요청이 `pending`으로 남습니다.
+
+**로컬에서 확인한 범위(2026-09-18)**: `pnpm test`는 **48/48 통과**(`tests 48`, `pass 48`, `fail 0`, exit 0)했고, 이와 구분되는 런타임 가드 스윕은 로컬 릴리스 빌드에서 **50/50**(구현자 `probe-guards.sh`)과 **66/66**(검증 담당 `verify-guards.mts`)으로 전부 통과했습니다. 같은 로컬 빌드를 실제 Chromium으로 열어 대역 세션에서 상태 전이 4종(승인·거절·해제·재승인)의 `revision` 1 증가, 같은 결정 폼 2회 제출 시 두 번째 `stale` 처리, 메일 링크 GET의 상태 불변, 재로그인 무효과, 데스크톱 `/main`·상세 200과 미승인 `/pending` 이동, 옛 `/gurus/...` 404, 로그아웃 후 쿠키 제거를 확인했고, `/login`·`/admin`·`/pending`·`/main`·`/main/gurus/stanley-druckenmiller`를 데스크톱 1280x900과 모바일 390x844에서 렌더링했습니다(`/admin`은 표에서 단일 열 카드로 재배치). 이 범위는 대역 Supabase(PGlite)와 로컬 빌드 기준이며 실제 Google 세션·원격 DB·메일 발송·원격 RLS 동작을 대신하지 않습니다.
+
 ## 기술 구성
 
 | 영역 | 구성 | 상태 |
 | --- | --- | --- |
-| 웹 애플리케이션 | Next.js App Router | Linear 스타일 홈·Stanley·Cathie·Nancy Pelosi 상세 조회 구현 |
+| 웹 애플리케이션 | Next.js App Router | Linear 스타일 홈·Stanley·Cathie·Nancy Pelosi 상세 조회(`/main`, `/main/gurus/...`)와 승인 화면(`/login`, `/pending`, `/admin`) 구현 |
 | 개발 도구 | pnpm, TypeScript, Biome, Husky, Tailwind CSS | 구현 |
 | UI 컴포넌트 | Tailwind CSS 4, shadcn/ui (Radix 기반), Recharts | 버튼·배지·표·상태 안내·공시 비중 도넛 차트 구현 |
 | 호스팅 | Vercel Hobby | 배포 완료(워커 경로 수정 반영 최신 배포 성공, 운영 조회 HTTP 200은 사용자 확인 / 동기화 응답 본문은 미확인) |
 | 데이터베이스·파일 저장소 | Supabase PostgreSQL / Storage | Stanley·ARK 원격 저장·동일 원문 재처리 검증 완료, Nancy Pelosi 마이그레이션 적용·수집·화면 구현(운영 수집 응답 본문은 미확인) |
 | 클라이언트 제공 방식 | PWA-first | 계획 |
+| 인증·접근 제어 | Supabase Auth(Google OAuth) + 소유자 승인, 서버 전용 `ADMIN_EMAIL` | 저장소 구현 완료(라우트·마이그레이션 `202609180001`·회귀 테스트), 로컬 릴리스 빌드 가드 스윕 50/50·66/66과 Chromium 데스크톱·모바일 화면 스모크 통과 / 배포 설정과 실운영 Google·메일 검증 미완료 |
 
 공시 원문은 비공개 Supabase Storage의 `sec-originals`·`ark-originals`·`house-originals` 버킷에 출처별로 구분해 저장합니다. 이 저장소의 LLM Wiki 원문 보관 영역을 운영 데이터 저장소로 사용하지 않습니다.
 
@@ -81,11 +114,11 @@ Stanley 13F 보유 목록의 티커는 [OpenFIGI API](https://www.openfigi.com/a
 
 `src/server/tickers.ts`는 Stanley 13F 화면을 위해 API 키 없이 최대 10건씩 순차 조회하고, 검증된 배치 결과를 Next 데이터 캐시에 24시간 저장합니다. 최초 조회 중에도 기존 공시 목록·차트를 먼저 표시하며, 매핑 결과는 카드·표·차트 범례와 툴팁에 반영합니다. 실패한 배치는 정상 미매핑으로 캐시하지 않고, 다른 배치의 결과와 재검증 전 정상 캐시는 보존합니다. 참조 티커는 공시 기준일 당시의 티커가 아니며 SEC 스냅샷·dataset version·변경 이벤트를 수정하지 않습니다.
 
-Cathie 상세(`/gurus/cathie-wood`)는 **ARKK를 기본값**으로 ARKQ·ARKW·ARKG·ARKF·ARKX를 선택합니다. 공식 CSV의 원문 티커를 그대로 표시하므로 `RKLB UQ` 같은 표기도 유지하며, 빈 티커와 비표준 식별자를 추측·제외하지 않습니다. ARK에는 OpenFIGI 매핑이나 SEC의 SH/PRN 단위를 적용하지 않습니다.
+Cathie 상세(`/main/gurus/cathie-wood`)는 **ARKK를 기본값**으로 ARKQ·ARKW·ARKG·ARKF·ARKX를 선택합니다. 공식 CSV의 원문 티커를 그대로 표시하므로 `RKLB UQ` 같은 표기도 유지하며, 빈 티커와 비표준 식별자를 추측·제외하지 않습니다. ARK에는 OpenFIGI 매핑이나 SEC의 SH/PRN 단위를 적용하지 않습니다.
 
 ARK 금액은 USD 센트, 수량은 소수 문자열로 보존하고 금액 합산·순위에는 `BigInt`를 사용합니다. 모바일 카드와 데스크톱 표는 원문 금액·수량·공식 비중을 표시합니다. 상위 5개·기타 도넛은 평가금액에서 재계산한 비중이므로 공식 반올림 비중과 조금 다를 수 있습니다. 음수 평가금액이 있으면 오해를 줄 수 있는 도넛·비중 범례 대신 안내를 표시하고 원문 표는 유지합니다. `src/domain/ark-allocation.ts`와 ARK 어댑터가 출처 차이를 처리하며, 도넛 표현과 캐시 갱신 제어는 Stanley와 공통 컴포넌트를 사용합니다.
 
-Nancy Pelosi 상세(`/gurus/nancy-pelosi`)는 **최신 PTR 문서 1건**만 다루며 보유 목록이나 누적 거래 이력을 합치지 않습니다. 머리에 문서번호·제출일·서명일·수집 성공 시각을 표시하고, 캐시를 먼저 보여 주면서 조건이 맞을 때만 갱신을 요청합니다. 상태 배지는 캐시 준비·데이터 없음·조회 오류·설정 필요를 구분하고, 갱신 중이거나 오래된 캐시는 갱신 안내 문구로 함께 알립니다. 1024px 이상에서는 거래 표, 그 미만에서는 단일 열 카드로 같은 내용을 보여 줍니다. 표의 열은 자산·**원문 티커**·자산유형·거래유형·거래일·통지일·**거래금액 범위**·소유자이고, 거래유형과 소유자는 한국어 라벨과 원문 코드를 함께 표시합니다(`매수 · P`, `배우자 · SP`). 소유자 기재가 없는 본인 보유 행은 `기재 없음`으로 표시하며 추측하지 않습니다. 자산명과 원문 설명 줄이 길어도 열 폭을 늘리지 않고 줄바꿈하며, 표시하는 거래 건수는 원문 1건 표 내용 전체입니다. 적용된 마이그레이션이 없으면 화면은 자료 대신 적용 안내를 표시합니다.
+Nancy Pelosi 상세(`/main/gurus/nancy-pelosi`)는 **최신 PTR 문서 1건**만 다루며 보유 목록이나 누적 거래 이력을 합치지 않습니다. 머리에 문서번호·제출일·서명일·수집 성공 시각을 표시하고, 캐시를 먼저 보여 주면서 조건이 맞을 때만 갱신을 요청합니다. 상태 배지는 캐시 준비·데이터 없음·조회 오류·설정 필요를 구분하고, 갱신 중이거나 오래된 캐시는 갱신 안내 문구로 함께 알립니다. 1024px 이상에서는 거래 표, 그 미만에서는 단일 열 카드로 같은 내용을 보여 줍니다. 표의 열은 자산·**원문 티커**·자산유형·거래유형·거래일·통지일·**거래금액 범위**·소유자이고, 거래유형과 소유자는 한국어 라벨과 원문 코드를 함께 표시합니다(`매수 · P`, `배우자 · SP`). 소유자 기재가 없는 본인 보유 행은 `기재 없음`으로 표시하며 추측하지 않습니다. 자산명과 원문 설명 줄이 길어도 열 폭을 늘리지 않고 줄바꿈하며, 표시하는 거래 건수는 원문 1건 표 내용 전체입니다. 적용된 마이그레이션이 없으면 화면은 자료 대신 적용 안내를 표시합니다.
 
 **원문 티커** 열은 제출자가 원문 자산명 끝에 함께 적은 괄호 표기(`(BE)`)를 그대로 옮긴 값이며, 공시 원문 밖에서 조회한 현재 시장 티커가 아닙니다. 옵션(`OP`) 행의 값은 옵션 계약 심볼이 아니라 그 행이 가리키는 기초자산의 원문 표기이므로 **기초자산 티커**로 함께 적고, 자산유형 코드가 비상장을 명시한 `PS`만 **비상장 주식**으로 표시합니다. 표기가 없는 행은 **티커 미기재**로만 적어 상장 여부를 해석하지 않습니다(`AB`·`OT` 같은 코드는 상장 여부를 말하지 않습니다). 자산 열은 원문 자산명 전체를 그대로 유지하고 파생 값은 별도 열로만 두며, 규칙은 `src/domain/house.ts`의 `getHousePtrAssetTicker`에 있습니다. 기존 캐시 스냅샷에서 표시 시점에만 계산하므로 **DB 마이그레이션·재수집·API·스냅샷 형식 변경이 필요하지 않습니다.** 이 열은 아직 운영 배포 전입니다.
 
@@ -99,11 +132,18 @@ Nancy Pelosi 상세(`/gurus/nancy-pelosi`)는 **최신 PTR 문서 1건**만 다�
    - `SUPABASE_SECRET_KEY`: 서버 전용 Secret key. 공개 키로 대체하지 않습니다.
    - `SEC_USER_AGENT`: 앱 이름과 실제 연락 가능한 이메일을 포함한 SEC 요청 식별자.
    - `SYNC_SECRET`: 내부 진입점의 Bearer 인증에 사용할 32자 이상 무작위 비밀값.
-2. Supabase SQL Editor 또는 인증된 마이그레이션 도구에서 `supabase/migrations/202609140001_stanley.sql`, `supabase/migrations/202609150001_ark.sql`, `supabase/migrations/202609160001_house_ptr.sql`을 순서대로 한 번씩 적용합니다. 기존 DB를 초기화하지 않으며 이미 적용된 파일은 재실행하지 않습니다.
-3. `pnpm install`, `pnpm dev`로 실행합니다. 홈(`/`)에서 Stanley·Cathie·Nancy Pelosi 항목으로 이동합니다. Nancy Pelosi 화면은 위 마이그레이션을 적용하지 않았으면 적용 안내를 표시합니다. Cathie의 펀드 선택은 `?fund=ARKQ`처럼 URL에 유지되며 지원하지 않는 값·중복 펀드 선택은 404입니다.
+   - `APP_URL`: 운영 OAuth callback과 승인 메일의 고정 HTTPS origin(예: `https://example.com`). 경로·쿼리 없이 설정합니다. 로컬 `pnpm dev`에서는 `APP_URL=`로 비워 두면 `localhost`·`127.0.0.1`의 현재 접속 포트를 사용합니다. 명시된 값이 잘못됐으면 자동 감지하지 않습니다. 운영 및 `pnpm start`에서는 필수이며 로컬 자동 감지를 사용하지 않습니다. 승인 메일은 자동 감지하지 않으므로 로컬에서도 메일을 시험하려면 접근 가능한 고정 `APP_URL`이 필요합니다.
+   - `ADMIN_EMAIL`: 초기 소유자를 식별하는 서버 전용 주소. 실제 주소는 저장소·README·Wiki·코드·로그에 적지 않습니다.
+   - `RESEND_API_KEY`·`RESEND_FROM`: 승인 요청 알림을 보내는 Resend 자격 증명과 발신 주소. 없으면 메일만 생략되고 요청은 `pending`으로 남습니다.
+   - Supabase **Authentication → URL Configuration → Redirect URLs**에 개발용 `http://localhost:*/auth/callback`과 `http://127.0.0.1:*/auth/callback`을 등록합니다. 운영은 `https://실제서비스도메인/auth/callback`을 정확히 등록하고 Site URL도 운영 origin으로 설정합니다.
+   - Vercel **Production** 환경의 `APP_URL`은 실제 서비스 origin으로 설정한 뒤 재배포합니다. Preview에서 로그인까지 사용할 경우 그 배포의 고정 origin과 정확한 callback 허용 목록을 별도로 설정합니다. `NODE_ENV`는 직접 설정하지 않습니다.
+2. Supabase SQL Editor 또는 인증된 마이그레이션 도구에서 `supabase/migrations/202609140001_stanley.sql`, `supabase/migrations/202609150001_ark.sql`, `supabase/migrations/202609160001_house_ptr.sql`, `supabase/migrations/202609180001_access_approval.sql`을 순서대로 한 번씩 적용합니다. 기존 DB를 초기화하지 않으며 이미 적용된 파일은 재실행하지 않습니다. 접근 승인 마이그레이션이 적용되지 않았거나 `ADMIN_EMAIL`이 없으면 승인 화면은 목록 대신 "가입 승인 설정이 필요합니다" 안내를 표시합니다.
+3. `pnpm install`, `pnpm dev`로 실행합니다. 홈(`/`)은 로그인 없이 서비스 소개를 표시합니다. 로그인 버튼으로 기존 승인 흐름에 진입하고, 승인된 사용자는 조회 홈 `/main`에서 Stanley·Cathie·Nancy Pelosi 항목으로 이동합니다. Nancy Pelosi 화면은 위 마이그레이션을 적용하지 않았으면 적용 안내를 표시합니다. Cathie의 펀드 선택은 `?fund=ARKQ`처럼 URL에 유지되며 지원하지 않는 값·중복 펀드 선택은 404입니다.
 4. 빈 캐시·오래된 캐시에서 `POST /api/sync/stanley`, `POST /api/sync/ark?fund=ARKK`, `POST /api/sync/house`가 자동 요청됩니다. 브라우저의 같은 Origin만 허용합니다. 운영자용 `/api/internal/sync/stanley`, `/api/internal/sync/ark?fund=ARKK`, `/api/internal/sync/house`는 `Authorization: Bearer <SYNC_SECRET>`이 필요하며 각각 같은 조정자를 사용합니다. ARK 요청에는 6개 중 하나의 대문자 펀드 코드가 필요하고, House 요청은 최신 PTR 문서 1건만 대상으로 하므로 추가 파라미터가 없습니다.
 
-키·연락처를 클라이언트 코드나 로그·대화·저장소에 붙여 넣지 않습니다. 설정 누락이나 공식 출처 차단 응답은 성공으로 처리하지 않으며 가짜 종목을 표시하지 않습니다. 로그인과 접근 제한은 아직 없으므로 현재 상태를 가족·지인용 운영 서비스로 공개하지 않습니다.
+키·연락처를 클라이언트 코드나 로그·대화·저장소에 붙여 넣지 않습니다. 설정 누락이나 공식 출처 차단 응답은 성공으로 처리하지 않으며 가짜 종목을 표시하지 않습니다. 로그인과 승인 기반 접근 제한은 저장소에 구현되어 있지만 Google Cloud·Supabase OAuth 설정, `APP_URL`·`ADMIN_EMAIL`·`RESEND_*` 값, 원격 마이그레이션 적용과 실운영 검증이 끝나지 않았으므로 현재 상태를 가족·지인용 운영 서비스로 공개하지 않습니다. 접근 계약과 구현·배포 설정의 구분은 위 "접근 정책" 절을 따릅니다.
+
+Google 브랜딩의 홈페이지·개인정보처리방침·약관에는 배포한 운영 origin의 `/`·`/privacy`·`/terms`를 각각 등록합니다. 페이지 배포와 Google 브랜드 인증은 별개이며, 도메인 소유권 확인과 Google 심사 결과는 보장하지 않습니다. 정책에는 실제 인증·승인·선택적 관리자 메일 처리를 반영했으며, 운영자는 배포 전 연락 방법과 실제 인프라 보존·처리 조건이 맞는지 검토해야 합니다.
 
 같은 Wi-Fi의 휴대폰에서는 `http://192.168.0.17:3000`처럼 개발 PC의 LAN 주소로 접속할 수 있습니다. `next.config.ts`의 `allowedDevOrigins: ["**.*"]`는 점으로 구분된 IPv4 주소·일반 도메인을 폭넓게 허용하므로 개발 PC의 IP가 바뀌어도 목록을 수정할 필요가 없습니다. `localhost`는 기본 허용됩니다. 개발용 WebSocket이 차단되면 설정 반영 여부를 확인하고 페이지를 새로고침합니다. 이 설정은 개발 전용이며 Vercel 프로덕션에는 적용되지 않습니다. 방화벽·공유기·터널을 자동으로 개방하는 설정은 아니므로 다른 네트워크에서 접속하려면 별도의 네트워크 경로가 필요합니다.
 
@@ -180,21 +220,22 @@ OMP 파일, 스킬, 에이전트, README, UI 문구와 커밋 메시지는 한�
 │   └── wiki/             # LLM 소유의 종합 지식
 ├── huskyhooks/           # 타입·Biome 커밋/병합 검사
 ├── src/
-│   ├── app/              # 홈·Stanley·Cathie·Nancy Pelosi 상세·갱신 API
+│   ├── proxy.ts          # 접근 상태 판정과 Supabase 세션 갱신
+│   ├── app/              # 홈·승인 화면(`/login`·`/pending`·`/admin`)·조회 홈과 상세·갱신 API
 │   ├── components/       # 공통 차트·갱신 상태·출처별 어댑터·shadcn/ui
-│   ├── domain/           # SEC·ARK·PTR 데이터 계약과 금액 집계
+│   ├── domain/           # SEC·ARK·PTR 데이터 계약·금액 집계·접근 상태 판정
 │   ├── hooks/            # Guru 전용 명령형 라우터
 │   ├── lib/              # 십진 금액·클래스 병합 유틸리티
-│   └── server/           # SEC·ARK·PTR 수집·검증·Supabase 조정자
-├── supabase/             # 마이그레이션과 ARK·House Cron 운영 SQL
-├── tests/               # 공시 정규화와 DB 무결성 회귀 검증
+│   └── server/           # SEC·ARK·PTR 수집·검증·Supabase 조정자·가입 승인 저장소·메일
+├── supabase/             # 마이그레이션과 ARK·House Cron 운영 SQL, 접근 승인 테이블
+├── tests/                # 공시 정규화·DB 무결성·가입 승인 회귀 검증
 ├── biome.json
 ├── components.json      # shadcn/ui 설정
 ├── package.json
 └── pnpm-lock.yaml
 ```
 
-Stanley 흐름은 `src/server/sec.ts`, `src/server/stanley.ts`와 `supabase/migrations/202609140001_stanley.sql`, ARK 흐름은 `src/server/ingestion/ark/`, `src/server/ark.ts`와 `supabase/migrations/202609150001_ark.sql`, Nancy Pelosi 흐름은 `src/server/ingestion/house/`, `src/server/house.ts`, `src/components/house-refresh.tsx`와 `supabase/migrations/202609160001_house_ptr.sql`이 담당하며 동기화 Cron은 `supabase/house-cron.sql`로 등록합니다.
+Stanley 흐름은 `src/server/sec.ts`, `src/server/stanley.ts`와 `supabase/migrations/202609140001_stanley.sql`, ARK 흐름은 `src/server/ingestion/ark/`, `src/server/ark.ts`와 `supabase/migrations/202609150001_ark.sql`, Nancy Pelosi 흐름은 `src/server/ingestion/house/`, `src/server/house.ts`, `src/components/house-refresh.tsx`와 `supabase/migrations/202609160001_house_ptr.sql`이 담당하며 동기화 Cron은 `supabase/house-cron.sql`로 등록합니다. 가입 승인 흐름은 `src/proxy.ts`(화면 접근 판정과 세션 갱신), `src/domain/access.ts`(상태·경로 판정), `src/server/access.ts`·`src/server/access-store.ts`(가입 요청·결정 RPC), `src/server/mail.ts`(provider API 알림)와 `supabase/migrations/202609180001_access_approval.sql`이 담당하고, 회귀 검증은 `tests/access-approval.test.ts`가 맡습니다.
 
 ## 이용 안내
 

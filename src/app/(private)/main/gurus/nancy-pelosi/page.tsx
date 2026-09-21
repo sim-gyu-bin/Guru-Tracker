@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { isAdminRow } from "@/domain/access";
 import {
   getHousePtrAssetTicker,
   HOUSE_PTR_ASSET_TYPE_LABELS,
@@ -20,6 +21,7 @@ import {
   type HousePtrTransaction,
 } from "@/domain/house";
 import { buildHousePtrActivitySummary } from "@/domain/house-activity";
+import { requireApprovedPage } from "@/server/access";
 import { getHousePtrView } from "@/server/house";
 
 // 요청마다 저장된 PTR 스냅샷과 동기화 상태를 읽으며 수집은 화면의 별도 보완 경로로 실행한다.
@@ -290,18 +292,20 @@ function TransactionTable({
  * 이미 검증해 둔 스냅샷은 그대로 보여 준다(수집 실패가 기존 캐시를 지우지 않는다).
  */
 export default async function NancyPelosiPage() {
+  // 공시 자료를 읽기 전에 승인 상태를 서버에서 다시 확인한다. 승인되지 않은 요청은 여기서 끝난다.
+  const row = await requireApprovedPage();
   const house = await getHousePtrView();
   const snapshot = house.snapshot;
 
   return (
-    <AppShell current="pelosi">
+    <AppShell admin={isAdminRow(row)} current="pelosi">
       <nav
         aria-label="이동 경로"
         className="mb-[18px] flex gap-2 text-xs text-muted-foreground"
       >
         <GuruLink
           className="min-h-11 content-center hover:text-foreground"
-          href="/"
+          href="/main"
         >
           추적 현황
         </GuruLink>

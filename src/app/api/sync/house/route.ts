@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { approvedApi } from "@/server/access";
 import { getHousePtrView, syncHousePtr } from "@/server/house";
+import { isSameOriginRequest } from "@/server/origin";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -9,14 +11,15 @@ export const maxDuration = 60;
  * 최신 PTR 1건만 대상이라 추가 입력이 없다.
  */
 export async function POST(request: Request) {
-  const url = new URL(request.url);
-  const origin = request.headers.get("origin");
-  if (origin !== url.origin) {
+  if (!isSameOriginRequest(request.headers)) {
     return NextResponse.json(
       { status: "failed", message: "같은 사이트에서만 갱신할 수 있습니다." },
       { status: 403 },
     );
   }
+  // 승인되지 않은 요청은 캐시 읽기 전에 끝낸다. 내부 Cron은 이 경로가 아니라 bearer 경로를 쓴다.
+  const access = await approvedApi();
+  if (!access.ok) return access.response;
 
   const view = await getHousePtrView();
   if (view.status === "unconfigured") {

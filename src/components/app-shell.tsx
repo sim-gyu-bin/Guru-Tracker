@@ -12,14 +12,21 @@ const unavailableGurus = [
 
 type AppShellProps = Readonly<{
   children: ReactNode;
-  current?: "home" | "stanley" | "cathie" | "pelosi";
+  current?: "home" | "stanley" | "cathie" | "pelosi" | "admin";
+  /** 관리자에게만 보이는 승인 화면 링크를 켠다. 판정은 서버가 하며 이 값은 표시만 바꾼다. */
+  admin?: boolean;
 }>;
 
 /**
  * 공시 조회 화면의 공통 탐색 프레임이다.
  * 연결된 Stanley·Cathie·Nancy 경로만 링크로 제공하며, 나머지 대상은 미연결 상태를 명확히 표시한다.
+ * 로그인한 사용자의 로그아웃과 관리자의 승인 화면 이동을 같은 머리말에 둔다.
  */
-export function AppShell({ children, current = "home" }: AppShellProps) {
+export function AppShell({
+  children,
+  current = "home",
+  admin = false,
+}: AppShellProps) {
   return (
     <div className="min-h-dvh">
       <aside
@@ -28,7 +35,7 @@ export function AppShell({ children, current = "home" }: AppShellProps) {
       >
         <GuruLink
           className="flex min-h-9 items-center gap-[9px] px-2 text-sm font-bold tracking-[-0.02em]"
-          href="/"
+          href="/main"
         >
           <span
             className="grid size-[23px] place-items-center rounded-md bg-foreground text-[9px] tracking-[-0.08em] text-primary-foreground"
@@ -49,7 +56,7 @@ export function AppShell({ children, current = "home" }: AppShellProps) {
                 ? "bg-accent font-semibold text-accent-foreground"
                 : "text-muted-foreground"
             }`}
-            href="/gurus/stanley-druckenmiller"
+            href="/main/gurus/stanley-druckenmiller"
           >
             <span>Stanley Druckenmiller</span>
             <Badge
@@ -65,7 +72,7 @@ export function AppShell({ children, current = "home" }: AppShellProps) {
                 ? "bg-accent font-semibold text-accent-foreground"
                 : "text-muted-foreground"
             }`}
-            href="/gurus/cathie-wood"
+            href="/main/gurus/cathie-wood"
           >
             <span>Cathie Wood</span>
             <Badge
@@ -81,7 +88,7 @@ export function AppShell({ children, current = "home" }: AppShellProps) {
                 ? "bg-accent font-semibold text-accent-foreground"
                 : "text-muted-foreground"
             }`}
-            href="/gurus/nancy-pelosi"
+            href="/main/gurus/nancy-pelosi"
           >
             <span>Nancy Pelosi</span>
             <Badge
@@ -117,7 +124,7 @@ export function AppShell({ children, current = "home" }: AppShellProps) {
         <header className="sticky top-0 z-1 flex min-h-[50px] items-center justify-between border-b border-border bg-card/92 px-4 backdrop-blur-[10px] min-[761px]:min-h-[52px] min-[761px]:px-8">
           <GuruLink
             className="inline-flex min-h-11 items-center text-xl font-bold min-[761px]:hidden"
-            href="/"
+            href="/main"
           >
             Guru Tracker
           </GuruLink>
@@ -128,7 +135,28 @@ export function AppShell({ children, current = "home" }: AppShellProps) {
             />
             <span>공식 공시</span>
           </div>
-          <span className="text-xs text-muted-foreground">캐시 우선</span>
+          <div className="flex items-center gap-3">
+            {admin ? (
+              <GuruLink
+                className="inline-flex min-h-11 items-center text-xs text-muted-foreground hover:text-foreground"
+                href="/admin"
+              >
+                가입 승인
+              </GuruLink>
+            ) : null}
+            <span className="hidden text-xs text-muted-foreground min-[761px]:inline">
+              캐시 우선
+            </span>
+            {/* 로그아웃은 상태를 바꾸므로 링크가 아니라 같은 출처 POST로만 실행한다. */}
+            <form action="/auth/signout" method="post">
+              <button
+                className="inline-flex min-h-11 items-center text-xs text-muted-foreground hover:text-foreground"
+                type="submit"
+              >
+                로그아웃
+              </button>
+            </form>
+          </div>
         </header>
         <main className="mx-auto w-full max-w-[1120px] px-4 pt-6 pb-10 min-[761px]:px-8 min-[761px]:pt-[38px] min-[761px]:pb-14">
           {children}

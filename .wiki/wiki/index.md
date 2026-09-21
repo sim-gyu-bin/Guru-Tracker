@@ -8,7 +8,8 @@ source_capture:
   - ../raw/sessions/2026-08-31-code-comment-policy.md
 decision_record:
   - project conversation, 2026-09-01
-updated: 2026-09-01
+  - project conversation, 2026-09-18
+updated: 2026-09-21
 ---
 
 # Guru Tracker Wiki Index
@@ -17,7 +18,9 @@ updated: 2026-09-01
 
 This index locates the LLM-owned English synthesis, its immutable Korean evidence captures, and governance. The [project brainstorm capture](../raw/sessions/2026-08-31-project-brainstorm.md) supplies the initial product decisions; the [hourly sync and push update](../raw/sessions/2026-08-31-hourly-sync-and-push-update.md) supersedes its no-cron decision; the [project YOLO mode capture](../raw/sessions/2026-08-31-project-yolo-mode.md) records the repository-local OMP approval policy. No official source sample has been captured.
 
-Authentication is now decided at the policy level: Google OAuth admits every Google-authenticated user initially, while RLS and server-only boundaries prevent member privilege escalation. A database email allowlist with a pre-creation hook and ongoing membership checks is the deferred hardening path; see [Google OAuth access policy](decisions/google-oauth-access.md).
+Authentication is decided at the policy level and is now approval-gated: Supabase Auth with Google OAuth is the only sign-in method, a first sign-in creates a `pending` request, and only one owner bound to a verified Google identity and database user id may approve or refuse it. The 2026-09-01 open-admission decision and its deferred email allowlist are revoked; see [Google OAuth access approval policy](decisions/google-oauth-access.md).
+
+The 2026-09-21 public-page decision adds an unauthenticated introduction at `/`, privacy policy at `/privacy`, and terms at `/terms`. Browsing and administration remain approval-gated; see [system overview](architecture/system-overview.md). Google brand verification and production publication remain separate, unverified operations.
 
 ## Pages
 
@@ -48,7 +51,7 @@ Authentication is now decided at the policy level: Google OAuth admits every Goo
 - [Language policy](decisions/language-policy.md)
 - [Project-local OMP YOLO mode](decisions/project-yolo-mode.md)
 - [Code comment policy](decisions/code-comment-policy.md)
-- [Google OAuth access policy](decisions/google-oauth-access.md)
+- [Google OAuth access approval policy](decisions/google-oauth-access.md)
 
 ### Concepts
 
@@ -73,4 +76,5 @@ Future evidence captures, additional pages, and their index categories must be a
 - [Hourly sync and push update](../raw/sessions/2026-08-31-hourly-sync-and-push-update.md) — superseding synchronization and push decision.
 - [Project YOLO mode capture](../raw/sessions/2026-08-31-project-yolo-mode.md) — project-local OMP approval decision.
 - [Code comment policy capture](../raw/sessions/2026-08-31-code-comment-policy.md) — Korean comment convention.
-- Project conversation on 2026-09-01 — Google OAuth admission and deferred allowlist decision; no raw capture was added because `.wiki/raw` is human-owned.
+- Project conversation on 2026-09-01 — Google OAuth admission and deferred allowlist decision, superseded on 2026-09-18; no raw capture was added because `.wiki/raw` is human-owned.
+- Project conversation on 2026-09-18 — approval-gated access decision; no raw capture was added because `.wiki/raw` is human-owned.

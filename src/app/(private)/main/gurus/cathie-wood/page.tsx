@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { isAdminRow } from "@/domain/access";
 import {
   ARK_FUNDS,
   type ArkFund,
@@ -21,6 +22,7 @@ import {
 } from "@/domain/ark";
 import { buildArkAllocation } from "@/domain/ark-allocation";
 import { formatDecimalString } from "@/lib/decimal";
+import { requireApprovedPage } from "@/server/access";
 import { getArkView } from "@/server/ark";
 
 // 요청마다 저장된 펀드 자료와 동기화 상태를 읽으며 수집은 화면의 별도 보완 경로로 실행한다.
@@ -57,7 +59,7 @@ function FundSelector({ current }: { current: ArkFund }) {
                 ? "border-border bg-accent font-semibold text-accent-foreground"
                 : "border-border bg-card text-muted-foreground hover:bg-muted"
             }`}
-            href={`/gurus/cathie-wood?fund=${fund.ticker}`}
+            href={`/main/gurus/cathie-wood?fund=${fund.ticker}`}
           >
             <span className="font-mono tabular-nums">{fund.ticker}</span>
             <span className="ml-2 hidden text-xs min-[761px]:inline">
@@ -204,6 +206,8 @@ export default async function CathieWoodPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  // 공시 자료를 읽기 전에 승인 상태를 서버에서 다시 확인한다. 승인되지 않은 요청은 여기서 끝난다.
+  const row = await requireApprovedPage();
   const params = await searchParams;
 
   // 같은 파라미터가 여러 번 온 요청은 어느 펀드를 보여 줄지 결정할 수 없으므로 거부한다.
@@ -224,14 +228,14 @@ export default async function CathieWoodPage({
     ARK_FUNDS.find((entry) => entry.ticker === fund)?.name ?? fund;
 
   return (
-    <AppShell current="cathie">
+    <AppShell admin={isAdminRow(row)} current="cathie">
       <nav
         aria-label="이동 경로"
         className="mb-[18px] flex gap-2 text-xs text-muted-foreground"
       >
         <GuruLink
           className="min-h-11 content-center hover:text-foreground"
-          href="/"
+          href="/main"
         >
           추적 현황
         </GuruLink>

@@ -12,9 +12,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { isAdminRow } from "@/domain/access";
 import { buildHoldingAllocation } from "@/domain/holding-allocation";
 import type { SecHolding } from "@/domain/sec";
 import { getTickerReference, type TickerLookup } from "@/domain/ticker";
+import { requireApprovedPage } from "@/server/access";
 import { getStanleyView } from "@/server/stanley";
 import { getHoldingTickers } from "@/server/tickers";
 // 요청마다 저장된 공시와 동기화 상태를 읽으며 수집은 화면의 별도 보완 경로로 실행한다.
@@ -352,18 +354,20 @@ async function ResolvedHoldingsContent({
  * 공시 기준일과 제출일은 수집 성공 시각과 별도이며, 기존 캐시가 있으면 갱신 실패에도 보존한다.
  */
 export default async function StanleyDruckenmillerPage() {
+  // 공시 자료를 읽기 전에 승인 상태를 서버에서 다시 확인한다. 승인되지 않은 요청은 여기서 끝난다.
+  const row = await requireApprovedPage();
   const stanley = await getStanleyView();
   const snapshot = stanley.snapshot;
 
   return (
-    <AppShell current="stanley">
+    <AppShell admin={isAdminRow(row)} current="stanley">
       <nav
         aria-label="이동 경로"
         className="mb-[18px] flex gap-2 text-xs text-muted-foreground"
       >
         <GuruLink
           className="min-h-11 content-center hover:text-foreground"
-          href="/"
+          href="/main"
         >
           추적 현황
         </GuruLink>

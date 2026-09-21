@@ -7,7 +7,8 @@ source_capture:
   - ../../raw/sessions/2026-08-31-project-yolo-mode.md
 decision_record:
   - project conversation, 2026-09-01
-updated: 2026-09-01
+  - project conversation, 2026-09-18
+updated: 2026-09-18
 ---
 
 # Technology Stack
@@ -20,15 +21,19 @@ Supabase Cron (`pg_cron` with `pg_net`) is planned to call a protected Next.js i
 
 OMP is configured with a repository-local explicit YOLO approval policy. It auto-approves ordinary tool tiers for this project while denying selected destructive shell patterns; see [project-local OMP YOLO mode](project-yolo-mode.md).
 
-Supabase Auth with Google OAuth is the decided initial authentication stack. Every Google-authenticated account is admitted initially, with ordinary member privileges constrained by SSR session validation and Row Level Security. Email/password, Magic Link, approval email, and custom SMTP flows are excluded; see [Google OAuth access policy](google-oauth-access.md).
+Supabase Auth with Google OAuth is the decided sign-in stack, now gated by owner approval: a first sign-in creates a `pending` access request that only the single owner may approve, and `rejected` or `revoked` people are blocked instead of re-requesting automatically. Ordinary users are constrained by SSR session validation, server routes, APIs, and Row Level Security, while the internal cron endpoints keep their separate bearer authorization. Email/password and Magic Link sign-in remain excluded; see [Google OAuth access approval policy](google-oauth-access.md).
+
+Owner approval notifications need transactional email through a provider API. Resend is the initial provider candidate and is recorded as an implementation choice, not a product decision: the provider can be replaced without changing the approval states, routes, or database contract.
 
 ## Deferred / open questions
 
-Versions, schema details, deployment configuration, storage paths, endpoint authorization details, observability, and PWA implementation details remain undecided.
+Versions, schema details, deployment configuration, storage paths, endpoint authorization details, observability, and PWA implementation details remain undecided. The Google Cloud OAuth client, Supabase Google provider and redirect allowlist, provider email credentials, and remote migration application are not set up, and the server-only `ADMIN_EMAIL` value that identifies the initial owner is runtime configuration rather than repository content.
 
 ## Sources
 
 - [Project brainstorm capture](../../raw/sessions/2026-08-31-project-brainstorm.md) — retained planned stack.
 - [Hourly sync and push update](../../raw/sessions/2026-08-31-hourly-sync-and-push-update.md) — scheduling, secret placement, and push transport decision.
 - [Project YOLO mode capture](../../raw/sessions/2026-08-31-project-yolo-mode.md) — repository-local OMP approval policy.
-- Project conversation on 2026-09-01 — Google OAuth and deferred allowlist decision; no raw capture was added because `.wiki/raw` is human-owned.
+- Project conversation on 2026-09-01 — Google OAuth and deferred allowlist decision, superseded on 2026-09-18; no raw capture was added because `.wiki/raw` is human-owned.
+- Project conversation on 2026-09-18 — approval-gated access decision and the separation of the Resend provider choice from the product decision; no raw capture was added because `.wiki/raw` is human-owned.
+- [Resend documentation](https://resend.com/docs) — candidate transactional email provider for owner approval notifications.

@@ -2,8 +2,10 @@ import { AppShell } from "@/components/app-shell";
 import { GuruLink } from "@/components/guru-link";
 import { StanleyRefresh } from "@/components/stanley-refresh";
 import { Badge } from "@/components/ui/badge";
+import { isAdminRow } from "@/domain/access";
 import type { ArkView } from "@/domain/ark";
 import type { HousePtrView } from "@/domain/house";
+import { requireApprovedPage } from "@/server/access";
 import { getArkView } from "@/server/ark";
 import { getHousePtrView } from "@/server/house";
 import { getStanleyView } from "@/server/stanley";
@@ -35,6 +37,8 @@ const HOUSE_STATUS_LABELS: Record<HousePtrView["status"], string> = {
  * 캐시가 stale 또는 비어 있을 때만 클라이언트 갱신 제어부가 동기화를 요청한다.
  */
 export default async function HomePage() {
+  // 공시 자료를 읽기 전에 승인 상태를 서버에서 다시 확인한다. 승인되지 않은 요청은 여기서 끝난다.
+  const row = await requireApprovedPage();
   const [stanley, ark, house] = await Promise.all([
     getStanleyView(),
     getArkView(HOME_ARK_FUND),
@@ -45,7 +49,7 @@ export default async function HomePage() {
   const houseSnapshot = house.snapshot;
 
   return (
-    <AppShell current="home">
+    <AppShell admin={isAdminRow(row)} current="home">
       <div className="mb-[22px] grid gap-3 min-[761px]:mb-7 min-[761px]:flex min-[761px]:items-start min-[761px]:justify-between min-[761px]:gap-6">
         <div>
           <p className="mb-1.5 text-[11px] font-semibold tracking-[0.01em] text-muted-foreground">
@@ -95,7 +99,7 @@ export default async function HomePage() {
         <div className="grid">
           <GuruLink
             className="flex min-h-[68px] items-center gap-3 border-b border-border px-[14px] py-2.5 no-underline hover:bg-accent/30 min-[761px]:min-h-16 min-[761px]:px-[18px]"
-            href="/gurus/stanley-druckenmiller"
+            href="/main/gurus/stanley-druckenmiller"
           >
             <span
               className="grid size-[30px] shrink-0 place-items-center rounded-[7px] bg-accent text-[10px] font-bold text-accent-foreground"
@@ -124,7 +128,7 @@ export default async function HomePage() {
           </GuruLink>
           <GuruLink
             className="flex min-h-[68px] items-center gap-3 border-b border-border px-[14px] py-2.5 no-underline hover:bg-accent/30 min-[761px]:min-h-16 min-[761px]:px-[18px]"
-            href="/gurus/cathie-wood"
+            href="/main/gurus/cathie-wood"
           >
             <span
               className="grid size-[30px] shrink-0 place-items-center rounded-[7px] bg-accent text-[10px] font-bold text-accent-foreground"
@@ -155,7 +159,7 @@ export default async function HomePage() {
           </GuruLink>
           <GuruLink
             className="flex min-h-[68px] items-center gap-3 border-b border-border px-[14px] py-2.5 no-underline hover:bg-accent/30 min-[761px]:min-h-16 min-[761px]:px-[18px]"
-            href="/gurus/nancy-pelosi"
+            href="/main/gurus/nancy-pelosi"
           >
             <span
               className="grid size-[30px] shrink-0 place-items-center rounded-[7px] bg-accent text-[10px] font-bold text-accent-foreground"
