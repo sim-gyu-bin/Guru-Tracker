@@ -84,7 +84,7 @@ function AssetTicker({ transaction }: { transaction: HousePtrTransaction }) {
     );
   return (
     <>
-      <span className="font-mono tabular-nums">{ticker}</span>
+      <span className="font-sans tabular-nums">{ticker}</span>
       {transaction.assetTypeCode === OPTION_ASSET_TYPE_CODE ? (
         <span className="mt-1 block text-[11px] leading-4 font-normal text-muted-foreground">
           기초자산 티커
@@ -138,13 +138,13 @@ function TransactionCards({
             </div>
             <div className="min-w-0">
               <dt className="text-[11px] text-muted-foreground">거래일</dt>
-              <dd className="mt-1 break-all font-mono text-sm font-semibold tabular-nums">
+              <dd className="mt-1 break-all font-sans text-sm font-semibold tabular-nums">
                 {transaction.transactionDate}
               </dd>
             </div>
             <div className="min-w-0">
               <dt className="text-[11px] text-muted-foreground">통지일</dt>
-              <dd className="mt-1 break-all font-mono text-sm font-semibold tabular-nums">
+              <dd className="mt-1 break-all font-sans text-sm font-semibold tabular-nums">
                 {transaction.notificationDate ?? EMPTY}
               </dd>
             </div>
@@ -152,7 +152,7 @@ function TransactionCards({
               <dt className="text-[11px] text-muted-foreground">
                 거래금액 범위
               </dt>
-              <dd className="mt-1 font-mono text-sm font-semibold tabular-nums [overflow-wrap:anywhere]">
+              <dd className="mt-1 font-sans text-sm font-semibold tabular-nums [overflow-wrap:anywhere]">
                 {transaction.amountRange}
               </dd>
             </div>
@@ -257,7 +257,7 @@ function TransactionTable({
               <AssetTicker transaction={transaction} />
             </TableCell>
             <TableCell className="px-3">
-              <span className="font-mono tabular-nums">
+              <span className="font-sans tabular-nums">
                 {transaction.assetTypeCode}
               </span>
               <span className="mt-1 block text-[11px] leading-4 text-muted-foreground">
@@ -267,13 +267,13 @@ function TransactionTable({
             <TableCell className="px-3">
               {transactionTypeLabel(transaction.transactionType)}
             </TableCell>
-            <TableCell className="px-3 font-mono tabular-nums">
+            <TableCell className="px-3 font-sans tabular-nums">
               {transaction.transactionDate}
             </TableCell>
-            <TableCell className="px-3 font-mono tabular-nums">
+            <TableCell className="px-3 font-sans tabular-nums">
               {transaction.notificationDate ?? EMPTY}
             </TableCell>
-            <TableCell className="px-3 font-mono tabular-nums">
+            <TableCell className="px-3 font-sans tabular-nums">
               {transaction.amountRange}
             </TableCell>
             <TableCell className="px-3">
@@ -322,7 +322,7 @@ export default async function NancyPelosiPage() {
           <p className="mb-1.5 text-[11px] font-semibold tracking-[0.01em] text-muted-foreground">
             미국 하원 PTR · 최신 제출 1건
           </p>
-          <h1 className="mb-2 text-[25px] leading-8 font-semibold tracking-[-0.035em] text-foreground">
+          <h1 className="mb-2 text-3xl leading-9 font-semibold tracking-tight text-foreground">
             Nancy Pelosi
           </h1>
           <p className="mb-0 break-words leading-[21px] text-muted-foreground">
@@ -371,19 +371,19 @@ export default async function NancyPelosiPage() {
               <span className="text-[11px] text-muted-foreground">
                 문서번호
               </span>
-              <strong className="font-mono text-xs font-semibold tabular-nums">
+              <strong className="font-sans text-xs font-semibold tabular-nums">
                 {snapshot.documentId}
               </strong>
             </div>
             <div className="grid min-w-0 gap-1.5 border-b border-border p-4 min-[761px]:border-r min-[761px]:border-b-0">
               <span className="text-[11px] text-muted-foreground">제출일</span>
-              <strong className="font-mono text-xs font-semibold tabular-nums">
+              <strong className="font-sans text-xs font-semibold tabular-nums">
                 {snapshot.filingDate}
               </strong>
             </div>
             <div className="grid min-w-0 gap-1.5 border-r border-border p-4">
               <span className="text-[11px] text-muted-foreground">서명일</span>
-              <strong className="font-mono text-xs font-semibold tabular-nums">
+              <strong className="font-sans text-xs font-semibold tabular-nums">
                 {snapshot.signedAt ?? EMPTY}
               </strong>
             </div>
@@ -391,7 +391,7 @@ export default async function NancyPelosiPage() {
               <span className="text-[11px] text-muted-foreground">
                 수집 성공 시각
               </span>
-              <strong className="font-mono text-xs font-semibold tabular-nums">
+              <strong className="font-sans text-xs font-semibold tabular-nums">
                 {house.lastSuccessAt
                   ? `${collectedAtFormatter.format(new Date(house.lastSuccessAt))} KST`
                   : "기록 없음"}
@@ -416,7 +416,7 @@ export default async function NancyPelosiPage() {
                 </p>
                 <h2
                   id="house-transactions-heading"
-                  className="mb-0 text-base font-semibold tracking-[-0.02em]"
+                  className="mb-0 text-xl leading-7 font-semibold tracking-tight"
                 >
                   거래 내역
                 </h2>

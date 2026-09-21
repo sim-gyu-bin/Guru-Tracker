@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 
-/** 로그인·승인 정보 없이 서비스 소개와 정책만 렌더하는 공개 문서 프레임이다. */
+/** 로그인·승인 정보 없이 공개 문서를 렌더하는 프레임이다. 머리말에는 로그인 진입만 두고 바닥글에 정책 링크를 모은다. */
 export function PublicPage({
   title,
   description,
@@ -40,14 +40,14 @@ export function PublicPage({
       </main>
       <footer className="mx-auto max-w-3xl border-t border-border px-5 py-5">
         <nav
-          aria-label="서비스 정책"
+          aria-label="서비스 정책 및 로그인"
           className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground"
         >
           <Link
-            href="/"
+            href="/login"
             className="inline-flex min-h-11 items-center underline-offset-4 hover:underline"
           >
-            서비스 소개
+            로그인
           </Link>
           <Link
             href="/privacy"

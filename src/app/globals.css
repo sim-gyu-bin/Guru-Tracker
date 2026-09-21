@@ -2,41 +2,113 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/*
+ * 다크 변형은 운영체제 미디어 질의가 아니라 `<html>`의 `dark` 클래스로 결정한다.
+ * 이 클래스는 첫 페인트 전에 실행되는 사전 스크립트와 ThemeProvider만 소유한다.
+ * 사용자가 고른 라이트·다크 선택과 운영체제 설정이 어긋나도 화면 전체가 같은 결과를 내야 하므로,
+ * `dark:` 유틸리티도 같은 클래스를 기준으로 삼는다.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
 
-/* Linear 계열 라이트 테마의 공통 토큰만 둔다. 화면별 스타일은 Tailwind와 shadcn/ui에서 소유한다. */
+/*
+ * 공통 의미 토큰. 다크는 실측한 fintech 데모의 네이비·네온 그린·블루를 사용한다.
+ * 라이트는 한국어 본문과 버튼 대비를 위해 별도로 정한 팔레트다. 근거는 Wiki의 fintech-theme 결정에 둔다.
+ * 화면 스타일은 Tailwind와 shadcn/ui가 소유하며, 두 모드는 같은 토큰 집합을 유지한다.
+ */
 :root {
-  --background: #f7f7f8;
-  --foreground: #24252a;
+  /*
+   * 기본값은 라이트다. 스크립트를 실행하지 못하는 환경에서는 이 값이 그대로 남는다.
+   * 브라우저 기본 컨트롤(스크롤바·폼 요소) 색상도 실제 적용 모드와 같아야 하므로 color-scheme을 함께 바꾼다.
+   */
+  color-scheme: light;
+  --background: #f2f4f8;
+  --foreground: #0d1a2b;
   --card: #ffffff;
-  --card-foreground: #24252a;
-  --primary: #5e6ad2;
+  --card-foreground: #0d1a2b;
+  --primary: #137a08;
   --primary-foreground: #ffffff;
-  --secondary: #f3f3f5;
-  --secondary-foreground: #24252a;
-  --muted: #f3f3f5;
-  --muted-foreground: #6c6e78;
-  --accent: #eef0ff;
-  --accent-foreground: #3944a0;
-  --destructive: #c7344d;
-  --success: #367248;
-  --warning: #996b14;
-  --border: #e5e5e9;
-  --input: #cfd1d8;
-  --ring: #5e6ad2;
-  --sidebar: #fbfbfc;
-  --sidebar-foreground: #24252a;
-  --chart-1: #5e6ad2;
-  --chart-2: #388c85;
-  --chart-3: #c18a3a;
-  --chart-4: #9870ad;
-  --chart-5: #c4677c;
-  --chart-6: #a8aab3;
-  --radius: 0.625rem;
+  --secondary: #e9edf3;
+  --secondary-foreground: #0d1a2b;
+  --muted: #e9edf3;
+  --muted-foreground: #55617a;
+  --accent: #e2edf8;
+  --accent-foreground: #0066cc;
+  --destructive: #c0344d;
+  --success: #0f7b3f;
+  --warning: #8a6100;
+  --border: #d7dee8;
+  --input: #c2cbd9;
+  --ring: #137a08;
+  --sidebar: #fbfcfe;
+  --sidebar-foreground: #0d1a2b;
+  --chart-1: #0f7b3f;
+  --chart-2: #1f5f9e;
+  --chart-3: #b0761a;
+  --chart-4: #6f4f9c;
+  --chart-5: #b0446a;
+  --chart-6: #7b8798;
+  /* 배경 장식광. 정적인 방사형 그라디언트에만 쓰며, 애니메이션은 두지 않는다. */
+  --glow-blue: rgb(0 102 204 / 0.07);
+  --glow-green: rgb(19 122 8 / 0.09);
+  --interactive: #0066cc;
+  --interactive-subtle: rgb(0 102 204 / 0.07);
+  --glass: rgb(255 255 255 / 0.9);
+  --glass-border: rgb(215 222 232 / 0.8);
+  --primary-glow: 0 0 30px rgb(19 122 8 / 0.18);
+  --radius: 0.75rem;
+}
+
+/*
+ * 다크 토큰은 `<html class="dark">`에서만 켠다. 위 `:root`와 명시도가 같으므로 이 블록은 반드시 그 뒤에 둔다.
+ * "system" 선택일 때의 운영체제 판정은 CSS가 아니라 테마 스크립트가 맡는다. 그래야 실행 중 운영체제 설정
+ * 변경을 따르는 경우와 수동 선택을 고정하는 경우를 한 곳에서 구분할 수 있다.
+ */
+.dark {
+  color-scheme: dark;
+  --background: #0a0e27;
+  --foreground: #ffffff;
+  --card: #0f1635;
+  --card-foreground: #ffffff;
+  --primary: #39ff14;
+  --primary-foreground: #0a0e27;
+  --secondary: #141b42;
+  --secondary-foreground: #ffffff;
+  --muted: #141b42;
+  --muted-foreground: #8b92b3;
+  --accent: #141b42;
+  --accent-foreground: #ffffff;
+  --destructive: #f4879b;
+  --success: #5fd08a;
+  --warning: #eec26a;
+  --border: #1e2650;
+  --input: #1e2650;
+  --ring: #39ff14;
+  --sidebar: #0f1635;
+  --sidebar-foreground: #ffffff;
+  --chart-1: #5fd08a;
+  --chart-2: #6cb6ff;
+  --chart-3: #eec26a;
+  --chart-4: #c49bff;
+  --chart-5: #f4879b;
+  --chart-6: #8fa0b8;
+  --glow-blue: rgb(0 128 255 / 0.2);
+  --glow-green: rgb(57 255 20 / 0.1);
+  --interactive: #0080ff;
+  --interactive-subtle: rgb(0 128 255 / 0.1);
+  --glass: rgb(15 22 53 / 0.8);
+  --glass-border: rgb(30 38 80 / 0.5);
+  --primary-glow: 0 0 30px rgb(57 255 20 / 0.4);
 }
 
 @theme inline {
-  --font-sans: Arial, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  /*
+   * 폰트는 next/font/local이 layout.tsx의 `<html>`에 정의하는 변수를 가리킨다.
+   * `inline`을 쓰는 이유는 이 값이 빌드 시 생성된 폰트 패밀리 이름을 담고 있어서다.
+   * 서비스명·제목·본문은 Pretendard Variable로 통일한다. 외부 CDN 요청은 없다.
+   */
+  --font-sans:
+    var(--font-pretendard), "Apple SD Gothic Neo", "Malgun Gothic", system-ui,
+    sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -55,6 +127,11 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-interactive: var(--interactive);
+  --color-interactive-subtle: var(--interactive-subtle);
+  --color-glass: var(--glass);
+  --color-glass-border: var(--glass-border);
+  --shadow-primary-glow: var(--primary-glow);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-chart-1: var(--chart-1);
@@ -73,13 +150,17 @@
   * {
     border-color: var(--border);
   }
+  /* 문서 바탕도 같은 토큰을 사용해 body 밖의 스크롤 영역에 기본 흰색이 드러나지 않게 한다. */
+  html {
+    background: var(--background);
+  }
   body {
     min-width: 320px;
     margin: 0;
     background: var(--background);
     color: var(--foreground);
     font-family: var(--font-sans);
-    font-size: 0.875rem;
+    font-size: 1rem;
     text-rendering: optimizeLegibility;
   }
   :focus-visible {

@@ -5,7 +5,8 @@ source_capture: []
 decision_record:
   - project conversation, 2026-09-01
   - project conversation, 2026-09-18
-updated: 2026-09-18
+  - project conversation, 2026-09-21
+updated: 2026-09-21
 ---
 
 # Google OAuth Access Approval Policy
@@ -31,12 +32,20 @@ Exactly one owner exists. The owner is a verified Google identity bound to a dat
 
 The owner accepts, rejects, revokes, and re-approves requests from `/admin`, which lists the requests and their states.
 
+### Entry routing and sign-in surface
+
+There is no public introduction. `/` renders no product copy; it resolves by session and approval state — an `approved` member is sent to `/main`, any other signed-in member to `/pending`, and an unauthenticated visitor to `/login`. The public policy pages are `/privacy` and `/terms`; the sign-in surface and the OAuth start are reachable without approval as well, but they expose no member or disclosure data.
+
+Sign-in and first sign-up are the same Google OAuth flow: both start from a GET to `/auth/signin`, which carries the validated internal return path in `next`. There is no credential form, no separate sign-up screen, and no separate sign-up API; the first sign-in of a Google identity is what creates the `pending` request. The login surface only starts that flow.
+
 ### Routes
 
 | Route | Purpose |
 | --- | --- |
-| `/`, `/privacy`, `/terms` | Public introduction, privacy policy, and terms, accessible without sign-in or approval (superseding the root redirect on 2026-09-21). |
-| `/login` | Google sign-in entry point. |
+| `/` | State-based entry: `approved` → `/main`, other signed-in member → `/pending`, unauthenticated → `/login`. |
+| `/privacy`, `/terms` | Public policy pages, accessible without sign-in or approval. |
+| `/login` | Entry surface for unauthenticated visitors. |
+| `/auth/signin` | GET that starts the Google OAuth flow for both sign-in and first sign-up, preserving `next`. |
 | `/pending` | Status screen for a signed-in person who is awaiting a decision. |
 | `/admin` | Owner screen for accept, reject, revoke, and re-approve. |
 | `/main` | Browsing home; the current collection home moves here. |
@@ -56,18 +65,25 @@ Ordinary users are constrained by the server, API routes, and Row Level Security
 
 Owner, family, and acquaintance email addresses are private runtime data. They must be entered through Supabase or a protected owner operation and must not appear in Git history, README, this Wiki, code, logs, or migration seed data.
 
-## Superseded decision
+## Superseded decisions
+
+### 2026-09-01 — open admission
 
 The 2026-09-01 decision — every Google-authenticated account becomes an ordinary member without approval, with a database email allowlist as the only deferred restriction — is revoked. Distributing the deployment URL is not an access-control boundary, and open self-admission granted ordinary member access to any Google account. The deferred allowlist path is not carried forward; the owner approval workflow replaces it. The retained parts of that decision are the Google OAuth identity provider, the cookie-based SSR session flow with a public login route and an OAuth callback route, Proxy validation before protected routes, Row Level Security, and server-only mutation paths.
 
+### 2026-09-21 — root introduction page
+
+The 2026-09-21 decision that made `/` an unauthenticated introduction page with product copy is superseded: that copy is removed and `/` becomes the state-based entry described above. `/privacy` and `/terms` stay public, and the Google OAuth identity provider, the four approval states, and the owner administration surface are unaffected. The superseded wording is preserved in the append-only [change log](../log.md).
+
 ## Deferred / open questions
 
-The Google Cloud OAuth client, consent-screen publication state, Supabase Google provider and redirect allowlist, remote migration application, provider email credentials, and production verification are not complete. The exact screen a `rejected` or `revoked` person sees, decision-history retention, and notification message content remain undecided. This page records confirmed decisions; repository implementation status is tracked in the project README and is not asserted here.
+The Google Cloud OAuth client, consent-screen publication state, Supabase Google provider and redirect allowlist, remote migration application, provider email credentials, and production verification are not complete. The exact screen a `rejected` or `revoked` person sees, decision-history retention, and notification message content remain undecided. This page records confirmed decisions; repository implementation status is tracked in the project README and is not asserted here. The 2026-09-21 entry-routing and sign-in-surface change is decided and implemented locally: the anonymous root redirect and the state-to-route mapping were verified, and a Chromium run at desktop and mobile viewports confirmed the login surface renders without mobile horizontal overflow and that both entry buttons issue the `/auth/signin` GET with `next` preserved while the actual OAuth navigation is blocked in the probe. A real account OAuth sign-in through the login surface has not been verified.
 
 ## Sources
 
 - Project conversation on 2026-09-01 — initial Google OAuth admission decision, superseded on 2026-09-18. No raw capture was added because `.wiki/raw` is human-owned.
 - Project conversation on 2026-09-18 — confirmed approval-gated access, the four access states, single-owner administration, the route map, the GET/POST email safety rule, and the separation of the mail provider choice from the product decision. No raw capture was added because `.wiki/raw` is human-owned.
+- Project conversation and repository implementation on 2026-09-21 — removal of the public introduction, state-based root routing, and the single `/auth/signin` GET for sign-in and first sign-up. Verified locally: an anonymous browser request to `/` on localhost redirected to `/login`, and the root resolver mapped anonymous, unverified, and unresolved (`error`, `absent`, `unconfigured`) states to `/login`, `approved` to `/main`, and `pending`, `rejected`, and `revoked` to `/pending`. A real approved-account sign-in remains unverified. No raw capture was added because `.wiki/raw` is human-owned.
 - [Supabase Google login documentation](https://supabase.com/docs/guides/auth/social-login/auth-google) — provider and OAuth callback requirements.
 - [Supabase Next.js SSR documentation](https://supabase.com/docs/guides/auth/server-side/nextjs) — cookie clients, callback, claims validation, and Proxy responsibilities.
 - [Resend documentation](https://resend.com/docs) — candidate transactional email provider for owner notifications.

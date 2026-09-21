@@ -58,19 +58,21 @@ export function AllocationChart({
   return (
     <section
       aria-labelledby={headingId}
-      className="mb-5 rounded-lg border border-border bg-card p-4 sm:p-5"
+      className="mb-6 rounded-lg border border-border bg-card p-4 sm:p-6"
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3">
         <div className="min-w-0">
           <h2
             id={headingId}
-            className="text-base font-semibold tracking-tight text-foreground"
+            className="text-xl leading-7 font-semibold tracking-tight text-foreground"
           >
             {title}
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            {subtitle}
+          </p>
         </div>
-        <p className="max-w-full break-all font-mono text-sm tabular-nums text-muted-foreground">
+        <p className="max-w-full break-all font-sans text-sm tabular-nums text-muted-foreground">
           {totalLabel}
         </p>
       </div>
@@ -98,22 +100,22 @@ export function AllocationChart({
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline justify-between gap-3">
-                    <p className="min-w-0 break-words text-sm font-medium text-foreground">
+                    <p className="min-w-0 break-words text-base leading-6 font-medium text-foreground">
                       {slice.label}
                       {slice.ticker && (
-                        <span className="ml-2 font-mono text-xs font-medium tabular-nums text-muted-foreground">
+                        <span className="ml-2 font-sans text-sm font-medium tabular-nums text-muted-foreground">
                           {slice.ticker}
                         </span>
                       )}
                     </p>
-                    <p className="shrink-0 font-mono text-sm font-medium tabular-nums text-foreground">
+                    <p className="shrink-0 font-sans text-sm font-medium tabular-nums text-foreground">
                       {formatPercent(slice.percent)}
                     </p>
                   </div>
-                  <p className="mt-0.5 break-words font-mono text-xs leading-5 text-muted-foreground">
+                  <p className="mt-1 break-words font-sans text-sm leading-5 text-muted-foreground">
                     {slice.detail}
                   </p>
-                  <p className="mt-1 break-all font-mono text-xs tabular-nums text-muted-foreground">
+                  <p className="mt-1 break-all font-sans text-sm leading-5 tabular-nums text-muted-foreground">
                     {slice.amountLabel}
                   </p>
                 </div>
@@ -168,7 +170,7 @@ export function AllocationChart({
                             <span className="font-medium">
                               {payload.label}
                               {payload.ticker && (
-                                <span className="ml-2 font-mono text-xs font-medium tabular-nums text-muted-foreground">
+                                <span className="ml-2 font-sans text-xs font-medium tabular-nums text-muted-foreground">
                                   {payload.ticker}
                                 </span>
                               )}
@@ -176,7 +178,7 @@ export function AllocationChart({
                             <span className="text-muted-foreground">
                               {payload.detail}
                             </span>
-                            <span className="font-mono font-medium tabular-nums text-foreground">
+                            <span className="font-sans font-medium tabular-nums text-foreground">
                               {payload.amountLabel} ·{" "}
                               {formatPercent(payload.percent)}
                             </span>

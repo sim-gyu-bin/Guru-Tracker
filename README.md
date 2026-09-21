@@ -4,7 +4,7 @@
 
 ## 현재 상태
 
-**Linear 제품 내부 UI를 기준으로 홈, Stanley Druckenmiller·Cathie Wood·Nancy Pelosi 상세 조회를 구현했습니다.** Stanley의 SEC 13F와 ARK 6개 펀드의 공식 holdings, Nancy Pelosi의 미국 하원 공식 PTR 최신 1건 수집·검증, Supabase DB·Storage 저장, 멱등 동기화 조정자와 SQL 마이그레이션이 포함됩니다. Stanley는 원격 저장·재처리와 95개 보유 항목 표시를 확인했습니다. ARK도 공식 CSV 6개, 원격 저장·동일 원문 재처리와 실제 캐시 화면 조회를 확인했습니다. Nancy Pelosi는 공식 PTR 문서 1건(거래 7행)의 수집·검증과 화면 렌더를 격리 환경에서 확인했고, **운영 Supabase에는 `202609160001_house_ptr.sql`을 적용하고 Vercel에 배포했으며 ARK·House 시간별 Cron도 등록했습니다.** 이전 배포 함수에는 pdfjs 워커 파일(`pdf.worker.mjs`)이 빠져 운영 동기화가 503 `HOUSE_VALIDATION`으로 거절됐고, include를 pnpm 심링크 경로(`node_modules/pdfjs-dist/…`)로 넣은 수정은 Vercel이 `Deploying outputs` 단계에서 `invalid deployment package`로 거부했습니다. include를 심링크를 푼 실제 경로로 계산하도록 고친 수정은 **최신 배포에 성공했고 운영 조회 응답 HTTP 200을 사용자 확인으로 알고 있습니다. 다만 응답 본문의 `status` 값은 아직 확인하지 않았으므로 운영 수집이 `updated`·`unchanged`를 반환했다고도, 503으로 실패했다고도 단정하지 않습니다.** 나머지 네 대상(Burry·Laffont·Gerstner·Tepper)의 수집, ARK trades, 설치형 PWA와 Web Push는 **계획**입니다. **로그인과 소유자 승인 기반 접근 제한은 저장소에 구현되어 있지만 배포 설정과 실운영 검증은 끝나지 않았습니다**(아래 "접근 정책 (저장소 구현, 배포 설정 미완료)"). ARK·House 시간별 Cron 설정 SQL은 `supabase/ark-cron.sql`, `supabase/house-cron.sql`로 작성했고 두 job 모두 등록했습니다. job 등록은 실제 수집 성공과 별개이므로 각 엔드포인트의 응답으로 성공 여부를 따로 확인합니다.
+**공통 테마 토큰과 Tailwind CSS·shadcn/ui로 홈, Stanley Druckenmiller·Cathie Wood·Nancy Pelosi 상세 조회를 구현했습니다.** Stanley의 SEC 13F와 ARK 6개 펀드의 공식 holdings, Nancy Pelosi의 미국 하원 공식 PTR 최신 1건 수집·검증, Supabase DB·Storage 저장, 멱등 동기화 조정자와 SQL 마이그레이션이 포함됩니다. Stanley는 원격 저장·재처리와 95개 보유 항목 표시를 확인했습니다. ARK도 공식 CSV 6개, 원격 저장·동일 원문 재처리와 실제 캐시 화면 조회를 확인했습니다. Nancy Pelosi는 공식 PTR 문서 1건(거래 7행)의 수집·검증과 화면 렌더를 격리 환경에서 확인했고, **운영 Supabase에는 `202609160001_house_ptr.sql`을 적용하고 Vercel에 배포했으며 ARK·House 시간별 Cron도 등록했습니다.** 이전 배포 함수에는 pdfjs 워커 파일(`pdf.worker.mjs`)이 빠져 운영 동기화가 503 `HOUSE_VALIDATION`으로 거절됐고, include를 pnpm 심링크 경로(`node_modules/pdfjs-dist/…`)로 넣은 수정은 Vercel이 `Deploying outputs` 단계에서 `invalid deployment package`로 거부했습니다. include를 심링크를 푼 실제 경로로 계산하도록 고친 수정은 **최신 배포에 성공했고 운영 조회 응답 HTTP 200을 사용자 확인으로 알고 있습니다. 다만 응답 본문의 `status` 값은 아직 확인하지 않았으므로 운영 수집이 `updated`·`unchanged`를 반환했다고도, 503으로 실패했다고도 단정하지 않습니다.** 나머지 네 대상(Burry·Laffont·Gerstner·Tepper)의 수집, ARK trades, 설치형 PWA와 Web Push는 **계획**입니다. **로그인과 소유자 승인 기반 접근 제한은 저장소에 구현되어 있지만 배포 설정과 실운영 검증은 끝나지 않았습니다**(아래 "접근 정책 (저장소 구현, 배포 설정 미완료)"). ARK·House 시간별 Cron 설정 SQL은 `supabase/ark-cron.sql`, `supabase/house-cron.sql`로 작성했고 두 job 모두 등록했습니다. job 등록은 실제 수집 성공과 별개이므로 각 엔드포인트의 응답으로 성공 여부를 따로 확인합니다.
 
 ## 목적
 
@@ -84,7 +84,7 @@ Guru Tracker의 접근 방식은 **소유자 승인**으로 확정되었고, 그
 
 | 영역 | 구성 | 상태 |
 | --- | --- | --- |
-| 웹 애플리케이션 | Next.js App Router | Linear 스타일 홈·Stanley·Cathie·Nancy Pelosi 상세 조회(`/main`, `/main/gurus/...`)와 승인 화면(`/login`, `/pending`, `/admin`) 구현 |
+| 웹 애플리케이션 | Next.js App Router | 공시 조회 홈·Stanley·Cathie·Nancy Pelosi 상세 조회(`/main`, `/main/gurus/...`)와 승인 화면(`/login`, `/pending`, `/admin`) 구현 |
 | 개발 도구 | pnpm, TypeScript, Biome, Husky, Tailwind CSS | 구현 |
 | UI 컴포넌트 | Tailwind CSS 4, shadcn/ui (Radix 기반), Recharts | 버튼·배지·표·상태 안내·공시 비중 도넛 차트 구현 |
 | 호스팅 | Vercel Hobby | 배포 완료(워커 경로 수정 반영 최신 배포 성공, 운영 조회 HTTP 200은 사용자 확인 / 동기화 응답 본문은 미확인) |
@@ -95,6 +95,14 @@ Guru Tracker의 접근 방식은 **소유자 승인**으로 확정되었고, 그
 공시 원문은 비공개 Supabase Storage의 `sec-originals`·`ark-originals`·`house-originals` 버킷에 출처별로 구분해 저장합니다. 이 저장소의 LLM Wiki 원문 보관 영역을 운영 데이터 저장소로 사용하지 않습니다.
 
 화면 배치·반응형·상태 스타일은 JSX의 Tailwind 유틸리티로 작성합니다. `src/components/ui/`의 shadcn/ui 컴포넌트를 재사용하고, `globals.css`에는 Tailwind 로딩·공통 테마 토큰·최소 기본 스타일만 둡니다. 화면별 전역 CSS 클래스나 `@apply` 기반 별도 스타일 체계는 사용하지 않습니다. `components.json`에 CLI 설정, `src/lib/utils.ts`에 공통 클래스 병합 진입점을 둡니다.
+
+대표 화면 재설계는 `/main` 조회 홈과 Stanley 상세에 적용했습니다. 홈은 조회 가능한 세 대상과 미연결 네 대상을 구분하고, 상세는 공시 기준일·제출일·공식 원문을 우선 배치합니다. 사용자 확인 후 공통 모바일 탐색과 테마 선택을 추가했습니다. 760px 이하에서는 왼쪽 메뉴 버튼으로 전체 높이 탐색 패널을 열며, 관리자 메뉴는 기존 서버 판정을 따릅니다.
+
+프로젝트 폰트는 한글·영문·숫자 모두 **Pretendard Variable**로 통일하며 숫자는 `tabular-nums`로 정렬합니다. 기존 폰트 자산과 라이선스는 보존합니다. 본문 16px, 조회 홈·세 상세의 페이지 제목 30px/600, 섹션 제목 20px/600, 카드 제목과 도입 설명 18px, 표·보조 설명 14px를 사용합니다. 모바일 탐색 항목은 24px/500입니다. 초기 테마는 시스템을 따르고 수동 선택을 저장합니다. 수동 선택 전에는 OS 변경을 따릅니다. 사전 스크립트가 첫 화면의 색상 모드를 정하고 차트·브라우저 색도 같은 모드를 따릅니다.
+
+테마 컨트롤은 드롭다운 없이 실제 **라이트 ↔ 다크**를 전환하는 단일 버튼입니다. 초기 시스템 설정을 실제 모드로 해석하며 시스템 상태는 별도 표시하지 않습니다. Lucide의 Sun·Moon 아이콘으로 현재 모드를 표시하고 툴팁으로 다음 동작을 안내합니다. 테마 버튼은 형광색 없이 중립색 호버·키보드 포커스만 강조합니다. 다른 공통 주요 버튼은 형광색 채움, 보조 버튼은 형광색 테두리와 호버 채움을 사용하며 위험 동작은 기존 의미 색을 유지합니다.
+
+실제 페이지 컴포넌트를 합성 데이터로 렌더링한 격리 Chromium에서 320·390·844·1440px 너비, 라이트/다크, 빈 데이터·오류·미설정 상태와 가로 넘침을 확인했습니다. 조회 카드의 키보드 포커스와 Stanley 이동도 확인했으며 `pnpm lint`가 통과했습니다. 이는 실제 계정·DB·동기화 통합 검증이 아닙니다. 범위와 근거는 [디자인 결정 기록](.wiki/wiki/decisions/fintech-theme.md)에 남깁니다.
 
 내부 이동 링크는 `GuruLink`, 명령형 이동은 `useGuruRouter`를 사용합니다. 루트의 `NavigationProvider`가 Next.js의 링크 pending 상태와 React transition을 모아, 이동이 120ms 이상 걸릴 때 화면 최상단에 2px 진행 바를 표시합니다. 기존 화면은 유지하며 ARK의 `?fund=` 변경도 포함합니다. `refresh()`와 `prefetch()`는 진행 바를 시작하지 않으므로 캐시 동기화의 백그라운드 갱신은 조용하게 유지됩니다. 별도의 로딩 라이브러리는 추가하지 않았습니다.
 
@@ -108,7 +116,7 @@ Stanley 상세의 **13F 공시 평가금액 구성**은 저장된 스냅샷을 �
 
 이 비중은 **공시 기준일의 제출 금액 구성**이며 현재 전체 자산 배분을 뜻하지 않습니다. 옵션 금액은 매입원금·프리미엄·손익으로 해석하지 않습니다. 집계는 `src/domain/holding-allocation.ts`, 화면은 `src/components/holding-allocation-chart.tsx`가 담당하며 추가 수집이나 DB 저장은 하지 않습니다.
 
-보유 종목 목록은 1024px 미만 화면에서 단일 열 카드로, 그 이상에서는 표로 표시합니다. 카드에는 종목명·티커·증권 종류·USD 평가금액·수량과 단위·CUSIP을 표시하고, PUT/CALL은 배지로 구분합니다. Stanley·Cathie 화면은 공시 원문·정보표 새 탭 버튼을 제공하지 않지만, 내부 공식 원문 수집·검증·저장과 공시 기준일 표시는 유지합니다. Nancy Pelosi 화면은 거래 내역 옆에서 그 문서의 공식 원문 PDF 링크를 제공합니다.
+보유 종목 목록은 1024px 미만 화면에서 단일 열 카드로, 그 이상에서는 표로 표시합니다. 카드에는 종목명·티커·증권 종류·USD 평가금액·수량과 단위·CUSIP을 표시하고, PUT/CALL은 배지로 구분합니다. Stanley 상세는 저장된 공시의 공식 원문·정보표 새 탭 링크를 제공하며, Cathie 화면에는 이 버튼을 추가하지 않았습니다. 내부 공식 원문 수집·검증·저장과 공시 기준일 표시는 유지합니다. Nancy Pelosi 화면은 거래 내역 옆에서 그 문서의 공식 원문 PDF 링크를 제공합니다.
 
 Stanley 13F 보유 목록의 티커는 [OpenFIGI API](https://www.openfigi.com/api/documentation)의 **현재 미국 시장 참조 정보**입니다. 공시의 CUSIP·CINS를 정확히 조회하며, [CGS 식별자 규칙](https://www.cusip.com/identifiers.html)에 따라 첫 글자가 영문자인 CINS는 `ID_CINS`, 숫자로 시작하는 CUSIP은 `ID_CUSIP`으로 요청합니다. 미국 Equity의 유일한 티커·FIGI 조합만 표시하고, 이름 추측·다른 시장·비상장 식별자 대체는 하지 않습니다. 미매핑은 `—`, 일시적인 공급자 실패는 `일시 불가`로 구분합니다. SH와 옵션 기초자산에만 적용하며 PRN에는 적용하지 않습니다. **이 OpenFIGI 매핑은 Stanley 13F 보유 목록에만 적용하며 Pelosi PTR 화면의 `원문 티커` 열과는 무관합니다. PTR 화면은 원문에 적힌 표기만 쓰고 외부 식별자 조회를 하지 않습니다.**
 
@@ -207,7 +215,7 @@ Google 브랜딩의 홈페이지·개인정보처리방침·약관에는 배포�
 
 별도의 프로젝트 `.omp/config.yml` 없이 현재 프로필의 전역 설정을 상속합니다. 프로젝트 고유 작업 지침은 `.omp/AGENTS.md`, 공식 출처·동기화·코드 주석의 불변 조건은 `.omp/RULES.md`에서 관리합니다. 승인 정책과 명령 패턴은 프로젝트에서 중복 정의하지 않습니다.
 
-OMP 파일, 스킬, 에이전트, README, UI 문구와 커밋 메시지는 한국어로 작성하는 것을 원칙으로 합니다. 다만 구조 이름, 파일명, frontmatter 키, 코드·API·데이터베이스 식별자는 영어를 사용합니다.
+프로젝트가 작성하는 OMP 지침·스킬·에이전트, README, UI 문구와 커밋 메시지는 한국어로 작성하는 것을 원칙으로 합니다. 다만 구조 이름, 파일명, frontmatter 키, 코드·API·데이터베이스 식별자는 영어를 사용합니다. 공식 upstream의 로컬 설치본인 `ui-ux-pro-max`는 본문·스크립트·데이터·참조 자료와 원문의 영어를 보존하고 OMP 실행 경로만 최소 조정합니다. 프로젝트 고유 UI 제약은 스킬 원문이 아닌 `.omp/RULES.md`에서 관리합니다.
 
 ## 현재 저장소 구조
 

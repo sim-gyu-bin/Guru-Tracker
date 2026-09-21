@@ -46,7 +46,7 @@ export function HouseActivitySummary({
             <dt className="text-[11px] leading-4 text-muted-foreground">
               거래
             </dt>
-            <dd className="mb-0 font-mono text-base font-semibold tabular-nums">
+            <dd className="mb-0 font-sans text-base font-semibold tabular-nums">
               {summary.transactionCount}건
             </dd>
           </div>
@@ -54,7 +54,7 @@ export function HouseActivitySummary({
             <dt className="text-[11px] leading-4 text-muted-foreground">
               원문 자산
             </dt>
-            <dd className="mb-0 font-mono text-base font-semibold tabular-nums">
+            <dd className="mb-0 font-sans text-base font-semibold tabular-nums">
               {summary.items.length}개
             </dd>
           </div>
@@ -62,7 +62,7 @@ export function HouseActivitySummary({
             <dt className="text-[11px] leading-4 text-muted-foreground">
               옵션 거래
             </dt>
-            <dd className="mb-0 font-mono text-base font-semibold tabular-nums">
+            <dd className="mb-0 font-sans text-base font-semibold tabular-nums">
               {summary.optionTransactionCount}건
             </dd>
           </div>
@@ -85,7 +85,7 @@ export function HouseActivitySummary({
                       <span className="min-w-0 text-xs font-semibold [overflow-wrap:anywhere]">
                         {item.ticker ?? item.asset}
                       </span>
-                      <span className="shrink-0 font-mono text-xs font-semibold tabular-nums">
+                      <span className="shrink-0 font-sans text-xs font-semibold tabular-nums">
                         {item.transactionCount}건
                       </span>
                     </div>

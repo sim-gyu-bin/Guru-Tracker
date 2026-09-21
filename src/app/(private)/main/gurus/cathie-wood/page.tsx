@@ -61,7 +61,7 @@ function FundSelector({ current }: { current: ArkFund }) {
             }`}
             href={`/main/gurus/cathie-wood?fund=${fund.ticker}`}
           >
-            <span className="font-mono tabular-nums">{fund.ticker}</span>
+            <span className="font-sans tabular-nums">{fund.ticker}</span>
             <span className="ml-2 hidden text-xs min-[761px]:inline">
               {fund.name}
             </span>
@@ -86,11 +86,11 @@ function HoldingCards({ holdings }: { holdings: ArkHolding[] }) {
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">
             티커{" "}
-            <span className="font-mono text-xs font-medium tabular-nums text-foreground">
+            <span className="font-sans text-xs font-medium tabular-nums text-foreground">
               {holding.ticker ?? "—"}
             </span>
           </p>
-          <p className="mt-1 break-words font-mono text-xs leading-5 text-muted-foreground">
+          <p className="mt-1 break-words font-sans text-xs leading-5 text-muted-foreground">
             {holding.identifier.trim() || "—"}
           </p>
           <dl className="mt-4 grid grid-cols-1 gap-3 min-[360px]:grid-cols-2">
@@ -98,19 +98,19 @@ function HoldingCards({ holdings }: { holdings: ArkHolding[] }) {
               <dt className="text-[11px] text-muted-foreground">
                 평가금액 USD
               </dt>
-              <dd className="mt-1 break-all font-mono text-sm font-semibold tabular-nums">
+              <dd className="mt-1 break-all font-sans text-sm font-semibold tabular-nums">
                 {formatDecimalString(holding.valueUsd)}
               </dd>
             </div>
             <div className="min-w-0">
               <dt className="text-[11px] text-muted-foreground">수량</dt>
-              <dd className="mt-1 break-all font-mono text-sm font-semibold tabular-nums">
+              <dd className="mt-1 break-all font-sans text-sm font-semibold tabular-nums">
                 {formatDecimalString(holding.shares)}
               </dd>
             </div>
             <div className="min-w-0">
               <dt className="text-[11px] text-muted-foreground">공식 비중</dt>
-              <dd className="mt-1 break-all font-mono text-sm font-semibold tabular-nums">
+              <dd className="mt-1 break-all font-sans text-sm font-semibold tabular-nums">
                 {formatDecimalString(holding.weightPercent)}%
               </dd>
             </div>
@@ -174,19 +174,19 @@ function HoldingTable({ holdings }: { holdings: ArkHolding[] }) {
             <TableCell className="px-3">
               {holding.company.trim() || "—"}
             </TableCell>
-            <TableCell className="px-3 font-mono tabular-nums">
+            <TableCell className="px-3 font-sans tabular-nums">
               {holding.ticker ?? "—"}
             </TableCell>
-            <TableCell className="px-3 font-mono tabular-nums">
+            <TableCell className="px-3 font-sans tabular-nums">
               {holding.identifier.trim() || "—"}
             </TableCell>
-            <TableCell className="px-3 text-right font-mono tabular-nums">
+            <TableCell className="px-3 text-right font-sans tabular-nums">
               {formatDecimalString(holding.valueUsd)}
             </TableCell>
-            <TableCell className="px-3 text-right font-mono tabular-nums">
+            <TableCell className="px-3 text-right font-sans tabular-nums">
               {formatDecimalString(holding.shares)}
             </TableCell>
-            <TableCell className="px-3 text-right font-mono tabular-nums">
+            <TableCell className="px-3 text-right font-sans tabular-nums">
               {formatDecimalString(holding.weightPercent)}%
             </TableCell>
           </TableRow>
@@ -252,7 +252,7 @@ export default async function CathieWoodPage({
           <p className="mb-1.5 text-[11px] font-semibold tracking-[0.01em] text-muted-foreground">
             ARK 공식 보유 자료 · 펀드
           </p>
-          <h1 className="mb-2 text-[25px] leading-8 font-semibold tracking-[-0.035em] text-foreground">
+          <h1 className="mb-2 text-3xl leading-9 font-semibold tracking-tight text-foreground">
             Cathie Wood
           </h1>
           <p className="mb-0 break-words leading-[21px] text-muted-foreground">
@@ -308,7 +308,7 @@ export default async function CathieWoodPage({
               <span className="text-[11px] text-muted-foreground">
                 자료 기준일
               </span>
-              <strong className="font-mono text-xs font-semibold tabular-nums">
+              <strong className="font-sans text-xs font-semibold tabular-nums">
                 {snapshot.reportDate}
               </strong>
             </div>
@@ -316,7 +316,7 @@ export default async function CathieWoodPage({
               <span className="text-[11px] text-muted-foreground">
                 수집 성공 시각
               </span>
-              <strong className="font-mono text-xs font-semibold tabular-nums">
+              <strong className="font-sans text-xs font-semibold tabular-nums">
                 {ark.lastSuccessAt
                   ? `${collectedAtFormatter.format(new Date(ark.lastSuccessAt))} KST`
                   : "기록 없음"}
@@ -326,7 +326,7 @@ export default async function CathieWoodPage({
               <span className="text-[11px] text-muted-foreground">
                 보유 항목
               </span>
-              <strong className="font-mono text-xs font-semibold tabular-nums">
+              <strong className="font-sans text-xs font-semibold tabular-nums">
                 {snapshot.holdings.length}개
               </strong>
             </div>
@@ -349,7 +349,7 @@ export default async function CathieWoodPage({
                 </p>
                 <h2
                   id="ark-holdings-heading"
-                  className="mb-0 text-base font-semibold tracking-[-0.02em]"
+                  className="mb-0 text-xl leading-7 font-semibold tracking-tight"
                 >
                   보유 항목
                 </h2>
