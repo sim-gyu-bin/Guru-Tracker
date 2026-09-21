@@ -2,12 +2,31 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
 import { XMLParser, XMLValidator } from "fast-xml-parser";
-import type { SecHolding, SecSnapshot } from "../domain/sec";
+import type { SecHolding, SecManager, SecSnapshot } from "../domain/sec";
 
-// SEC 제출자 식별자는 Duquesne Family Office LLC이며 개인 계좌의 전 보유를 뜻하지 않는다.
-const CIK = "0001536411";
-const MANAGER = "Duquesne Family Office LLC";
-const SUBMISSIONS = `https://data.sec.gov/submissions/CIK${CIK}.json`;
+/**
+ * SEC 13F 수집 대상 설정이다. cik는 submissions 경로·제출자 자격에서 쓰는 10자리 0 패딩 형식이고,
+ * archiveCik은 EDGAR Archive 경로(/Archives/edgar/data/<archiveCik>/)에 쓰는 0 없는 숫자 형식이다.
+ * managerName은 submissions.name과 표지 filingManager.name에서 대소문자만 무시해 일치해야 하며,
+ * 다른 관리자(예: 같은 서류를 함께 제출한 다른 Scion 법인)의 이름으로는 통과하지 않는다.
+ */
+const MANAGERS: Record<
+  SecManager,
+  { cik: string; archiveCik: string; managerName: string }
+> = {
+  // Stanley Druckenmiller가 제출한 13F다. 개인 계좌의 전 보유를 뜻하지 않는다.
+  stanley: {
+    cik: "0001536411",
+    archiveCik: "1536411",
+    managerName: "Duquesne Family Office LLC",
+  },
+  // Michael Burry가 제출한 13F다. 옵션 행은 기초자산 기준 수량·평가금액만 기록하며 손익을 추정하지 않는다.
+  burry: {
+    cik: "0001649339",
+    archiveCik: "1649339",
+    managerName: "Scion Asset Management, LLC",
+  },
+};
 const parser = new XMLParser({
   ignoreAttributes: false,
   removeNSPrefix: true,
@@ -196,16 +215,25 @@ function parseTable(
   return holdings;
 }
 
-/** 최신 보고분기를 우선하고 그 분기의 원본→정정 순서로 해석한다. 과거분기 정정은 현재를 되돌리지 않는다. */
-export async function collectStanley(
+/**
+ * 대상 하나의 최신 보고분기를 우선하고 그 분기의 원본→정정 순서로 해석한다. 과거분기 정정은 현재를 되돌리지 않는다.
+ * manager로만 제출자 설정을 고르며 화면·요청에서 CIK나 제출자 이름을 받지 않는다. 검증 실패 시 스냅샷을 만들지 않는다.
+ */
+export async function collectSec(
+  manager: SecManager,
   userAgent: string,
   signal: AbortSignal,
 ): Promise<VerifiedSec> {
-  const submissions = await fetchSec(SUBMISSIONS, userAgent, signal);
+  const target = MANAGERS[manager];
+  const submissions = await fetchSec(
+    `https://data.sec.gov/submissions/CIK${target.cik}.json`,
+    userAgent,
+    signal,
+  );
   const source = json(submissions);
   if (
-    String(source.cik).padStart(10, "0") !== CIK ||
-    text(source.name).toLowerCase() !== MANAGER.toLowerCase()
+    String(source.cik).padStart(10, "0") !== target.cik ||
+    text(source.name).toLowerCase() !== target.managerName.toLowerCase()
   )
     return fail();
   const recent = record(record(source.filings).recent);
@@ -267,7 +295,7 @@ export async function collectStanley(
   let amendmentNumber = BigInt(0);
   const documentParts: string[] = [];
   for (const filing of chain) {
-    const base = `https://www.sec.gov/Archives/edgar/data/1536411/${filing.accession.replaceAll("-", "")}`;
+    const base = `https://www.sec.gov/Archives/edgar/data/${target.archiveCik}/${filing.accession.replaceAll("-", "")}`;
     const primary = await fetchSec(
       `${base}/${filing.primaryDocument}`,
       userAgent,
@@ -281,11 +309,11 @@ export async function collectStanley(
       text(header.submissionType) !== filing.form ||
       date(cover.reportCalendarOrQuarter) !== filing.reportDate ||
       text(record(cover.filingManager).name).toLowerCase() !==
-        MANAGER.toLowerCase()
+        target.managerName.toLowerCase()
     )
       return fail();
     const filer = record(record(header.filerInfo).filer);
-    if (text(record(filer.credentials).cik).padStart(10, "0") !== CIK)
+    if (text(record(filer.credentials).cik).padStart(10, "0") !== target.cik)
       return fail();
     if (text(cover.reportType) !== "13F HOLDINGS REPORT") return fail();
     const isAmendment = text(cover.isAmendment);
@@ -349,8 +377,8 @@ export async function collectStanley(
     documentParts.push(filing.accession, hash(primary), hash(table.raw));
     snapshot = {
       accession: filing.accession,
-      cik: CIK,
-      managerName: MANAGER,
+      cik: target.cik,
+      managerName: target.managerName,
       reportDate: filing.reportDate,
       filingDate: filing.filingDate,
       form: filing.form,

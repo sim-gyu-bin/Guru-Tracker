@@ -1,8 +1,8 @@
 import { cache, Suspense } from "react";
 import { AppShell } from "@/components/app-shell";
+import { BurryRefresh } from "@/components/burry-refresh";
 import { GuruLink } from "@/components/guru-link";
 import { HoldingAllocationChart } from "@/components/holding-allocation-chart";
-import { StanleyRefresh } from "@/components/stanley-refresh";
 import { Badge } from "@/components/ui/badge";
 import {
   Table,
@@ -22,7 +22,7 @@ import { getHoldingTickers } from "@/server/tickers";
 // 요청마다 저장된 공시와 동기화 상태를 읽으며 수집은 화면의 별도 보완 경로로 실행한다.
 export const dynamic = "force-dynamic";
 
-// 같은 요청의 Suspense 기본 화면과 티커 보강 화면은 동일한 BigInt 집계 결과를 공유한다.
+// Suspense 기본 화면과 티커 보강 화면에서 동일한 BigInt 공시 금액 집계를 공유한다.
 const getHoldingAllocation = cache(buildHoldingAllocation);
 
 const quantityFormatter = new Intl.NumberFormat("en-US", {
@@ -40,6 +40,52 @@ const EMPTY_TICKERS: TickerLookup = {
   unresolvedCusips: [],
   unavailableCusips: [],
 };
+
+/** 원문 putCall 값으로 옵션을 구분한다. 비옵션 행은 주식·우선주·PRN 등을 원문 그대로 보존한다. */
+type PositionType = "stock" | "put" | "call";
+
+/**
+ * 유형 표기를 한곳에서 정의해 표·카드가 같은 문구를 쓴다.
+ * PUT과 CALL은 같은 계열 색을 써서 색이 매수·매도 방향을 암시하지 않게 한다.
+ */
+const POSITION_TYPE_META: Record<
+  PositionType,
+  { label: string; badgeClass: string }
+> = {
+  stock: {
+    label: "주식 등",
+    badgeClass: "border-border bg-muted/40 text-muted-foreground",
+  },
+  put: {
+    label: "PUT",
+    badgeClass: "border-primary/25 bg-accent text-accent-foreground",
+  },
+  call: {
+    label: "CALL",
+    badgeClass: "border-primary/25 bg-accent text-accent-foreground",
+  },
+};
+
+/** 검증된 putCall 값으로 구분한다. 옵션이 없는 행에는 우선주·PRN 등도 포함될 수 있다. */
+function positionTypeOf(holding: SecHolding): PositionType {
+  if (holding.putCall === "PUT") return "put";
+  if (holding.putCall === "CALL") return "call";
+  return "stock";
+}
+
+/** 포지션 유형 배지다. 표·카드가 같은 클래스·문구를 쓰도록 컴포넌트로 고정한다. */
+function PositionTypeBadge({ type }: { type: PositionType }) {
+  const meta = POSITION_TYPE_META[type];
+
+  return (
+    <Badge
+      className={`h-auto shrink-0 rounded-full px-2 py-[3px] text-xs font-semibold ${meta.badgeClass}`}
+      variant="outline"
+    >
+      {meta.label}
+    </Badge>
+  );
+}
 
 /** SH(주식·ETF·ADR)와 그 옵션의 기초자산에만 확인된 현재 참조 티커를 표시한다. */
 function TickerValue({
@@ -68,7 +114,7 @@ function TickerValue({
   );
 }
 
-/** SEC 13F 금액·수량은 BigInt로 표시해 소수점 반올림과 큰 정수 정밀도 손실을 막는다. */
+/** 13F 금액·수량은 BigInt로 표시해 소수점 반올림과 큰 정수 정밀도 손실을 막는다. */
 function HoldingTable({
   holdings,
   tickers,
@@ -98,6 +144,12 @@ function HoldingTable({
             scope="col"
             className="px-3 text-sm font-semibold text-foreground"
           >
+            유형
+          </TableHead>
+          <TableHead
+            scope="col"
+            className="px-3 text-sm font-semibold text-foreground"
+          >
             종류
           </TableHead>
           <TableHead
@@ -110,7 +162,7 @@ function HoldingTable({
             scope="col"
             className="px-3 text-right text-sm font-semibold text-foreground"
           >
-            평가금액 USD
+            공시 금액 USD
           </TableHead>
           <TableHead
             scope="col"
@@ -123,12 +175,6 @@ function HoldingTable({
             className="px-3 text-sm font-semibold text-foreground"
           >
             단위
-          </TableHead>
-          <TableHead
-            scope="col"
-            className="px-3 text-sm font-semibold text-foreground"
-          >
-            PUT / CALL
           </TableHead>
         </TableRow>
       </TableHeader>
@@ -147,6 +193,9 @@ function HoldingTable({
                 tickers={tickers}
               />
             </TableCell>
+            <TableCell className="px-3 py-2.5">
+              <PositionTypeBadge type={positionTypeOf(holding)} />
+            </TableCell>
             <TableCell className="whitespace-normal break-words px-3 py-2.5">
               {holding.titleOfClass}
             </TableCell>
@@ -160,9 +209,6 @@ function HoldingTable({
               {quantityFormatter.format(BigInt(holding.shares))}
             </TableCell>
             <TableCell className="px-3 py-2.5">{holding.shareType}</TableCell>
-            <TableCell className="px-3 py-2.5">
-              {holding.putCall ?? "—"}
-            </TableCell>
           </TableRow>
         ))}
       </TableBody>
@@ -204,21 +250,14 @@ function HoldingCards({
                 />
               </p>
             </div>
-            {holding.putCall && (
-              <Badge
-                variant="outline"
-                className="shrink-0 border-primary/25 bg-accent text-xs font-semibold text-accent-foreground"
-              >
-                {holding.putCall}
-              </Badge>
-            )}
+            <PositionTypeBadge type={positionTypeOf(holding)} />
           </div>
           <p className="mt-2.5 break-words text-base leading-6 text-muted-foreground">
             {holding.titleOfClass}
           </p>
           <dl className="mt-4 grid grid-cols-1 gap-3 min-[400px]:grid-cols-2">
             <div className="min-w-0">
-              <dt className="text-sm text-muted-foreground">평가금액 USD</dt>
+              <dt className="text-sm text-muted-foreground">공시 금액 USD</dt>
               <dd className="mt-1 font-sans text-base font-semibold tabular-nums [overflow-wrap:anywhere]">
                 {quantityFormatter.format(BigInt(holding.valueUsd))}
               </dd>
@@ -242,7 +281,7 @@ function HoldingCards({
 }
 
 /**
- * 공시 보유 목록과 금액 집계는 즉시 렌더링하고, OpenFIGI 현재 참조 티커만 별도로 보강한다.
+ * 공시 보유 목록과 금액 구성 차트는 즉시 렌더링하고, OpenFIGI 현재 참조 티커만 별도로 보강한다.
  * 조회 실패는 SEC 공시 캐시를 실패로 바꾸지 않으며 unavailableCusips로만 표시한다.
  */
 function HoldingsContent({
@@ -301,7 +340,11 @@ function HoldingsContent({
         <div className="space-y-1.5 px-4 pt-2.5 pb-4 text-sm leading-6 text-muted-foreground">
           <p>
             티커는 OpenFIGI의 현재 미국 시장 참조 정보이며 SEC 공시 기준일의
-            티커가 아닙니다. PUT/CALL은 기초자산 티커를 표시합니다.
+            티커가 아닙니다. PUT·CALL 행은 기초자산 티커를 표시합니다.
+          </p>
+          <p>
+            수량 단위 SH는 주식 수, PRN은 원금액이며, 옵션 행의 수량은 계약 수가
+            아니라 원문이 기재한 값입니다.
           </p>
           {tickerLoading ? (
             <p>티커 참조 정보를 확인 중입니다.</p>
@@ -360,19 +403,19 @@ async function ResolvedHoldingsContent({
 }
 
 /**
- * Stanley Druckenmiller의 검증된 SEC 13F 스냅샷을 공식 출처 식별·공시 메타·평가금액 구성·반응형 보유 목록으로 보여 준다.
- * 머리에서 공시 주체와 저장된 공식 공시임을 밝히고, 메타 영역에서 공시 기준일·SEC 제출일과 접수번호를 먼저 식별시킨다.
+ * Michael Burry의 검증된 SEC 13F 스냅샷을 Stanley와 동일한 공시 메타·금액 구성 차트·반응형 목록으로 보여 준다.
+ * 주식과 옵션(PUT·CALL)을 유형 배지로 구분하고, 옵션 금액이 프리미엄·투자 원금·손익이 아님을 표와 안내에서 밝힌다.
  * 금액·수량은 원문 USD 정수 정밀도(BigInt)를 유지하며, 기존 캐시가 있으면 갱신 실패에도 보존한다.
  */
-export default async function StanleyDruckenmillerPage() {
+export default async function MichaelBurryPage() {
   // 공시 자료를 읽기 전에 승인 상태를 서버에서 다시 확인한다. 승인되지 않은 요청은 여기서 끝난다.
   const row = await requireApprovedPage();
-  // Stanley 화면도 Burry와 같은 공유 판독기를 쓰며, 수집 대상만 다르다.
-  const stanley = await getSecView("stanley");
-  const snapshot = stanley.snapshot;
+  // Stanley와 같은 공유 판독기를 쓰고 수집 대상만 Burry다.
+  const burry = await getSecView("burry");
+  const snapshot = burry.snapshot;
 
   return (
-    <AppShell admin={isAdminRow(row)} current="stanley">
+    <AppShell admin={isAdminRow(row)} current="burry">
       <nav
         aria-label="이동 경로"
         className="mb-5 flex gap-2.5 text-sm leading-5 text-muted-foreground"
@@ -387,7 +430,7 @@ export default async function StanleyDruckenmillerPage() {
           /
         </span>
         <span className="min-h-11 content-center text-foreground">
-          Stanley Druckenmiller
+          Michael Burry
         </span>
       </nav>
       <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -396,7 +439,7 @@ export default async function StanleyDruckenmillerPage() {
             SEC EDGAR 13F · 저장된 공식 공시
           </p>
           <h1 className="mb-2.5 text-3xl leading-9 font-semibold tracking-tight text-foreground">
-            Stanley Druckenmiller
+            Michael Burry
           </h1>
           <p className="mb-0 max-w-[680px] text-lg leading-7 text-muted-foreground">
             {snapshot
@@ -406,32 +449,32 @@ export default async function StanleyDruckenmillerPage() {
         </div>
         <Badge
           className={
-            stanley.status === "ready"
+            burry.status === "ready"
               ? "border-success/30 bg-success/10 text-success"
-              : stanley.status === "error"
+              : burry.status === "error"
                 ? "border-destructive/25 bg-destructive/10 text-destructive"
-                : stanley.status === "unconfigured"
+                : burry.status === "unconfigured"
                   ? "border-warning/30 bg-warning/10 text-warning"
                   : "border-border bg-card text-muted-foreground"
           }
           variant="outline"
         >
-          {stanley.status === "ready"
+          {burry.status === "ready"
             ? "캐시 준비됨"
-            : stanley.status === "unconfigured"
+            : burry.status === "unconfigured"
               ? "설정 필요"
-              : stanley.status === "error"
+              : burry.status === "error"
                 ? "조회 오류"
                 : "데이터 없음"}
         </Badge>
       </div>
 
-      <StanleyRefresh
-        lastAttemptAt={stanley.lastAttemptAt}
-        lastError={stanley.lastError}
-        stale={stanley.stale}
-        status={stanley.status}
-        syncing={stanley.syncing}
+      <BurryRefresh
+        lastAttemptAt={burry.lastAttemptAt}
+        lastError={burry.lastError}
+        stale={burry.stale}
+        status={burry.status}
+        syncing={burry.syncing}
       />
 
       {snapshot ? (
@@ -482,8 +525,8 @@ export default async function StanleyDruckenmillerPage() {
                 <div className="flex min-w-0 flex-wrap items-baseline gap-x-2">
                   <dt className="text-muted-foreground">수집 성공 시각</dt>
                   <dd className="min-w-0 font-sans tabular-nums [overflow-wrap:anywhere]">
-                    {stanley.lastSuccessAt
-                      ? `${collectedAtFormatter.format(new Date(stanley.lastSuccessAt))} KST`
+                    {burry.lastSuccessAt
+                      ? `${collectedAtFormatter.format(new Date(burry.lastSuccessAt))} KST`
                       : "기록 없음"}
                   </dd>
                 </div>
@@ -515,21 +558,21 @@ export default async function StanleyDruckenmillerPage() {
           aria-label="공시 캐시 없음"
         >
           <strong className="text-lg font-semibold">
-            {stanley.status === "error"
+            {burry.status === "error"
               ? "캐시 조회에 실패했습니다"
               : "표시할 SEC 13F 캐시가 없습니다"}
           </strong>
           <p className="mt-2 mb-0 max-w-xl text-sm leading-6 text-muted-foreground">
-            {stanley.status === "error"
-              ? (stanley.lastError ??
+            {burry.status === "error"
+              ? (burry.lastError ??
                 "기존 캐시를 읽지 못했습니다. 다시 시도해 주세요.")
-              : "동기화가 완료되면 검증된 보유 종목이 표시됩니다."}
+              : "동기화가 완료되면 검증된 보유 종목과 옵션이 표시됩니다. 캐시가 없다는 사실은 현재 보유가 없다는 뜻이 아닙니다."}
           </p>
         </section>
       )}
 
       <section
-        aria-label="SEC 13F 시차 안내"
+        aria-label="SEC 13F 시차와 옵션 해석 안내"
         className="mt-9 border-t border-border pt-5"
       >
         <strong className="text-sm font-semibold">13F 시차 주의</strong>
@@ -537,6 +580,15 @@ export default async function StanleyDruckenmillerPage() {
           13F는 분기 종료 후 제출되는 공시입니다. 기준일 이후의 매매, 현재 보유
           여부 또는 수익률을 이 데이터만으로 단정할 수 없습니다. 수량 단위 SH는
           주식 수, PRN은 원금액이며 PUT·CALL은 옵션 구분입니다.
+        </p>
+        <strong className="mt-4 block text-sm font-semibold">
+          옵션(PUT·CALL) 해석 주의
+        </strong>
+        <p className="mt-1.5 mb-0 max-w-3xl text-sm leading-6 text-muted-foreground">
+          옵션 행은 원문이 기재한 보유 옵션이며, 금액은 계약 프리미엄이나 투자
+          원금이 아니라 기초자산 공시금액입니다. 행사가·만기·프리미엄·계약 수와
+          옵션 손익은 이 공시에 없으므로 추정하지 않습니다. 차트의 비율은 공시
+          금액 구성일 뿐 실제 투자 원금이나 전체 자산 배분 비중이 아닙니다.
         </p>
       </section>
     </AppShell>

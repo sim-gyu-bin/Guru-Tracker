@@ -6,7 +6,10 @@ import { getSecView, syncSec } from "@/server/sec-state";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-/** 같은 출처 화면의 오래된 Stanley SEC 13F 캐시만 보완한다. 임의 대상·원문 URL을 받지 않으며 DB lease는 내부 경로와 공유한다. */
+/**
+ * 같은 출처 화면의 오래된 Michael Burry SEC 13F 캐시만 보완한다.
+ * 임의 대상·원문 URL을 받지 않고 수집 대상은 서버의 "burry" 설정으로 고정되며 DB lease는 내부 경로와 공유한다.
+ */
 export async function POST(request: Request) {
   if (!isSameOriginRequest(request.headers)) {
     return NextResponse.json(
@@ -18,7 +21,7 @@ export async function POST(request: Request) {
   const access = await approvedApi();
   if (!access.ok) return access.response;
 
-  const view = await getSecView("stanley");
+  const view = await getSecView("burry");
   if (view.status === "unconfigured") {
     return NextResponse.json(
       {
@@ -31,7 +34,7 @@ export async function POST(request: Request) {
   if (!view.stale && view.snapshot) {
     return NextResponse.json({ status: "fresh" });
   }
-  const result = await syncSec("stanley");
+  const result = await syncSec("burry");
   return NextResponse.json(result, {
     status: result.status === "failed" ? 503 : 200,
   });

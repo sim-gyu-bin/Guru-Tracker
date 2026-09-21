@@ -1,8 +1,16 @@
 import "server-only";
 import { createHash } from "node:crypto";
-import type { SecSnapshot, StanleyView } from "../domain/sec";
-import { collectStanley } from "./sec";
+import type { SecManager, SecSnapshot, SecView } from "../domain/sec";
+import { collectSec } from "./sec";
 
+/**
+ * 대상별 저장 이름은 manager 값에서 직접 만든다. manager는 닫힌 유니온("stanley" | "burry")이며
+ * 화면·요청·환경 변수에서 온 임의 문자열이 아니므로 테이블·RPC 식별자로 그대로 쓸 수 있다.
+ * 각 대상은 자기 캐시 테이블(<manager>_state), 변경 이벤트 표(<manager>_events),
+ * RPC(<manager>_acquire/commit/fail), Storage 원문 접두사(<manager>/)만 다루며
+ * 다른 대상의 스냅샷은 DB 검증에서 거부된다.
+ */
+const stateTable = (manager: SecManager) => `${manager}_state`;
 type Config = { url: string; secret: string };
 type State = {
   current_snapshot: SecSnapshot | null;
@@ -67,8 +75,8 @@ async function rpc(
 }
 
 /** 캐시만 읽으며 수집을 시작하지 않는다. 설정 누락·DB 장애·한 시간 stale·유효 lease를 구분한다. */
-export async function getStanleyView(): Promise<StanleyView> {
-  const empty: StanleyView = {
+export async function getSecView(manager: SecManager): Promise<SecView> {
+  const empty: SecView = {
     snapshot: null,
     previousSnapshot: null,
     status: "unconfigured",
@@ -86,7 +94,7 @@ export async function getStanleyView(): Promise<StanleyView> {
     return { ...empty, lastError: "Supabase 서버 설정이 필요합니다." };
   try {
     const response = await fetch(
-      `${settings.url}/rest/v1/stanley_state?id=eq.true&select=current_snapshot,previous_snapshot,last_attempt_at,last_success_at,last_error,lease_until`,
+      `${settings.url}/rest/v1/${stateTable(manager)}?id=eq.true&select=current_snapshot,previous_snapshot,last_attempt_at,last_success_at,last_error,lease_until`,
       {
         headers: headers(settings),
         cache: "no-store",
@@ -134,8 +142,8 @@ export async function getStanleyView(): Promise<StanleyView> {
   }
 }
 
-/** 모든 호출 경로가 공유하는 조정자. 원문을 먼저 저장하고 유효 펜싱 토큰으로만 원자 커밋한다. */
-export async function syncStanley(): Promise<{
+/** 대상 하나의 모든 호출 경로가 공유하는 조정자. 원문을 먼저 저장하고 유효 펜싱 토큰으로만 원자 커밋한다. */
+export async function syncSec(manager: SecManager): Promise<{
   status: "updated" | "unchanged" | "busy" | "failed";
   message?: string;
 }> {
@@ -157,7 +165,7 @@ export async function syncStanley(): Promise<{
   // 수집·업로드 35초 + 커밋 8초 + 실패 기록 8초로 네트워크 대기를 제한하고 60초까지 반환 여유를 남긴다.
   const deadline = AbortSignal.timeout(35_000);
   try {
-    const acquired = await rpc(settings, "stanley_acquire", {});
+    const acquired = await rpc(settings, `${manager}_acquire`, {});
     if (acquired === null)
       return { status: "busy", message: "다른 동기화가 진행 중입니다." };
     if (acquired === "cooldown")
@@ -170,10 +178,11 @@ export async function syncStanley(): Promise<{
       throw new Error("DATABASE_ERROR");
     fence = acquired;
     stage = "SEC_ACCESS";
-    const verified = await collectStanley(userAgent, deadline);
+    const verified = await collectSec(manager, userAgent, deadline);
     stage = "STORAGE_ERROR";
     // 문서·원문 내용으로 주소를 고정한다. 같은 원문 재처리는 기존 객체를 재사용하며 삭제·덮어쓰지 않는다.
-    const rawPrefix = `stanley/${verified.documentHash}`;
+    // 접두사는 대상별로 나누고 DB 커밋 검증이 같은 값을 요구하므로 다른 대상의 원문과 섞이지 않는다.
+    const rawPrefix = `${manager}/${verified.documentHash}`;
     for (const original of verified.originals) {
       const contentHash = createHash("sha256")
         .update(original.text)
@@ -233,7 +242,7 @@ export async function syncStanley(): Promise<{
     }
     deadline.throwIfAborted();
     stage = "DATABASE_ERROR";
-    const status = await rpc(settings, "stanley_commit", {
+    const status = await rpc(settings, `${manager}_commit`, {
       p_fence: fence,
       p_snapshot: verified.snapshot,
       p_document_hash: verified.documentHash,
@@ -250,7 +259,10 @@ export async function syncStanley(): Promise<{
         : stage;
     if (fence) {
       try {
-        await rpc(settings, "stanley_fail", { p_fence: fence, p_error: code });
+        await rpc(settings, `${manager}_fail`, {
+          p_fence: fence,
+          p_error: code,
+        });
       } catch {
         /* DB 장애로 실패 상태 기록까지 불가능해도 기존 스냅샷은 그대로 둔다. */
       }

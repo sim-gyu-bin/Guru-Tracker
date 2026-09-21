@@ -1,12 +1,12 @@
 import type * as React from "react";
 import { cn } from "@/lib/utils";
 
-/** 가로 스크롤을 표 내부로 제한하는 shadcn 표다. 상태·훅이 없어 서버 컴포넌트로 유지한다. */
+/** 가로 스크롤을 표 내부로 제한하고 테마 토큰으로 스크롤바를 표시한다. 상태·훅이 없어 서버 컴포넌트로 유지한다. */
 function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div
       data-slot="table-container"
-      className="relative w-full overflow-x-auto"
+      className="relative w-full overflow-x-auto [--scrollbar-thumb:color-mix(in_srgb,var(--muted-foreground)_40%,var(--card))] [scrollbar-color:var(--scrollbar-thumb)_transparent] [scrollbar-width:thin] dark:[--scrollbar-thumb:var(--muted-foreground)] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[var(--scrollbar-thumb)] [&::-webkit-scrollbar-track]:bg-transparent"
     >
       <table
         data-slot="table"

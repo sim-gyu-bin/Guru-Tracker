@@ -10,7 +10,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 /** 화면 식별자다. 데스크톱 사이드바와 좁은 화면 메뉴가 같은 값으로 선택 상태를 판단한다. */
-type CurrentScreen = "home" | "stanley" | "cathie" | "pelosi" | "admin";
+type CurrentScreen =
+  | "home"
+  | "stanley"
+  | "burry"
+  | "cathie"
+  | "pelosi"
+  | "admin";
 
 /**
  * 공식 출처가 연결된 추적 대상 목록이다.
@@ -22,6 +28,12 @@ const trackedGurus = [
     screen: "stanley",
     name: "Stanley Druckenmiller",
     href: "/main/gurus/stanley-druckenmiller",
+    source: "SEC 13F",
+  },
+  {
+    screen: "burry",
+    name: "Michael Burry",
+    href: "/main/gurus/michael-burry",
     source: "SEC 13F",
   },
   {
@@ -43,8 +55,8 @@ const trackedGurus = [
   source: string;
 }[];
 
+/** 공식 출처 수집 경로를 검증하기 전까지 조회 화면을 연결하지 않는 대상이다. */
 const unavailableGurus = [
-  "Michael Burry",
   "Philippe Laffont",
   "Brad Gerstner",
   "David Tepper",
@@ -60,7 +72,7 @@ type AppShellProps = Readonly<{
 /**
  * 공시 조회 화면의 공통 탐색 프레임이다.
  * 761px 이상은 고정 사이드바, 그보다 좁은 화면은 같은 목록을 담은 상단 메뉴 버튼으로 탐색한다.
- * 연결된 Stanley·Cathie·Nancy 경로만 링크로 제공하며, 나머지 대상은 미연결 상태를 명확히 표시한다.
+ * 연결된 Stanley·Burry·Cathie·Nancy 경로만 링크로 제공하며, 나머지 대상은 미연결 상태를 명확히 표시한다.
  * 로그인한 사용자의 로그아웃과 관리자의 승인 화면 이동은 넓은 화면에서 머리말에, 좁은 화면에서 메뉴 안에 둔다.
  */
 export function AppShell({

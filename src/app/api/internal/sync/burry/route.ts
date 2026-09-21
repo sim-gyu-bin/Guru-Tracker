@@ -5,7 +5,7 @@ import { syncSec } from "@/server/sec-state";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-/** Stanley SEC 13F 운영자·Supabase Cron용 진입점이다. 서버 비밀값이 없으면 닫고, 화면 접근 갱신과 같은 멱등 조정자를 호출한다. */
+/** Michael Burry SEC 13F 운영자·Supabase Cron용 진입점이다. 서버 비밀값이 없으면 닫고, 화면 접근 갱신과 같은 멱등 조정자를 호출한다. */
 export async function POST(request: Request) {
   const secret = process.env.SYNC_SECRET;
   if (!secret || secret.length < 32) {
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
       { status: 401 },
     );
   }
-  const result = await syncSec("stanley");
+  const result = await syncSec("burry");
   return NextResponse.json(result, {
     status: result.status === "failed" ? 503 : 200,
   });

@@ -1,17 +1,18 @@
 import { ChevronRight, Link2Off } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
+import { BurryRefresh } from "@/components/burry-refresh";
 import { GuruLink } from "@/components/guru-link";
 import { StanleyRefresh } from "@/components/stanley-refresh";
 import { Badge } from "@/components/ui/badge";
 import { isAdminRow } from "@/domain/access";
 import type { ArkView } from "@/domain/ark";
 import type { HousePtrView } from "@/domain/house";
-import type { StanleyView } from "@/domain/sec";
+import type { SecView } from "@/domain/sec";
 import { requireApprovedPage } from "@/server/access";
 import { getArkView } from "@/server/ark";
 import { getHousePtrView } from "@/server/house";
-import { getStanleyView } from "@/server/stanley";
+import { getSecView } from "@/server/sec-state";
 
 // 빌드 시 서버 설정이 없어도 '설정 필요' 화면이 정적 산출물로 고정되지 않게 한다.
 export const dynamic = "force-dynamic";
@@ -35,17 +36,16 @@ const HOUSE_STATUS_LABELS: Record<HousePtrView["status"], string> = {
   unconfigured: "PTR · 설정 필요",
 };
 
-/** Stanley SEC 13F 캐시 상태를 홈 카드 문구로 옮긴다. ready는 원문 검증을 통과한 스냅샷이 저장된 상태다. */
-const STANLEY_STATUS_LABELS: Record<StanleyView["status"], string> = {
+/** SEC 13F 캐시 상태를 홈 카드 문구로 옮긴다. ready는 원문 검증을 통과한 스냅샷이 저장된 상태다. */
+const SEC_STATUS_LABELS: Record<SecView["status"], string> = {
   ready: "SEC 13F · 공식 공시 저장됨",
   empty: "SEC 13F · 자료 없음",
   error: "SEC 13F · 조회 오류",
   unconfigured: "SEC 13F · 설정 필요",
 };
 
-/** 미연결 4인. 공식 출처 수집 경로를 검증하기 전까지 조회 화면을 연결하지 않는다. */
+/** 미연결 3인. 공식 출처 수집 경로를 검증하기 전까지 조회 화면을 연결하지 않는다. */
 const UNAVAILABLE_GURUS = [
-  { name: "Michael Burry", source: "SEC 13F" },
   { name: "Philippe Laffont", source: "SEC 13F" },
   { name: "Brad Gerstner", source: "SEC 13F" },
   { name: "David Tepper", source: "SEC 13F" },
@@ -134,18 +134,21 @@ function GuruCard({
 }
 
 /**
- * 저장된 Stanley SEC 13F와 ARK 펀드 보유, 하원 PTR 캐시를 조회 대상 카드로 보여 주는 홈 화면이다.
+ * 저장된 Stanley·Burry SEC 13F와 ARK 펀드 보유, 하원 PTR 캐시를 조회 대상 카드로 보여 주는 홈 화면이다.
  * 캐시가 stale 또는 비어 있을 때만 클라이언트 갱신 제어부가 동기화를 요청하며, 수집하지 못한 상태를 보유 자료로 바꾸지 않는다.
  */
 export default async function HomePage() {
   // 공시 자료를 읽기 전에 승인 상태를 서버에서 다시 확인한다. 승인되지 않은 요청은 여기서 끝난다.
   const row = await requireApprovedPage();
-  const [stanley, ark, house] = await Promise.all([
-    getStanleyView(),
+  // SEC 13F 두 대상은 같은 판독기를 쓰고 수집 대상만 다르다.
+  const [stanley, burry, ark, house] = await Promise.all([
+    getSecView("stanley"),
+    getSecView("burry"),
     getArkView(HOME_ARK_FUND),
     getHousePtrView(),
   ]);
   const snapshot = stanley.snapshot;
+  const burrySnapshot = burry.snapshot;
   const arkSnapshot = ark.snapshot;
   const houseSnapshot = house.snapshot;
 
@@ -177,7 +180,7 @@ export default async function HomePage() {
           className="h-auto self-start rounded-full border-border bg-card px-2.5 py-1 text-xs font-semibold text-muted-foreground"
           variant="outline"
         >
-          Stanley · Cathie · Nancy 조회 지원
+          Stanley · Burry · Cathie · Nancy 조회 지원
         </Badge>
       </div>
 
@@ -187,6 +190,18 @@ export default async function HomePage() {
         stale={stanley.stale}
         status={stanley.status}
         syncing={stanley.syncing}
+      />
+
+      {/*
+        SEC 13F 두 대상은 각자 다른 엔드포인트와 cooldown 키를 쓴다.
+        두 제어부 모두 조치가 필요할 때만 스스로 표시되므로 홈에서 한쪽 갱신이 다른 쪽을 막지 않는다.
+      */}
+      <BurryRefresh
+        lastAttemptAt={burry.lastAttemptAt}
+        lastError={burry.lastError}
+        stale={burry.stale}
+        status={burry.status}
+        syncing={burry.syncing}
       />
 
       <section aria-labelledby="connected-heading">
@@ -203,7 +218,7 @@ export default async function HomePage() {
             </p>
           </div>
           {/*
-            연결된 대상 수. 색만으로 구분하지 않도록 '3명' 문구를 그대로 둔다.
+            연결된 대상 수. 색만으로 구분하지 않도록 '4명' 문구를 그대로 둔다.
             배지는 페이지 배경 위 success/10 틴트라 text-success만으로는 4.25:1이므로,
             같은 success 토큰을 --foreground와 혼합해 4.5:1 이상을 확보한다(라이트 5.7:1, 다크 9.8:1).
           */}
@@ -211,16 +226,16 @@ export default async function HomePage() {
             className="h-auto shrink-0 rounded-full border-success/30 bg-success/10 px-2.5 py-1 text-sm font-semibold text-[color:color-mix(in_oklab,var(--success)_78%,var(--foreground))]"
             variant="outline"
           >
-            3명
+            4명
           </Badge>
         </div>
-        <div className="grid gap-3.5 min-[761px]:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3.5 min-[761px]:grid-cols-2">
           <GuruCard
             href="/main/gurus/stanley-druckenmiller"
             initials="SD"
             name="Stanley Druckenmiller"
             sourceLabel="SEC 13F"
-            statusLabel={STANLEY_STATUS_LABELS[stanley.status]}
+            statusLabel={SEC_STATUS_LABELS[stanley.status]}
             rows={[
               {
                 label: "운용 기관",
@@ -233,6 +248,31 @@ export default async function HomePage() {
               {
                 label: "제출일",
                 value: snapshot?.filingDate ?? "데이터 없음",
+              },
+            ]}
+          />
+          {/*
+            Burry 카드는 Stanley와 같은 SEC 13F 메타만 보여 준다.
+            옵션 비중·손익처럼 카드 한 줄로 뜻이 흐려지는 값은 넣지 않고 상세에서 유형과 단위를 밝힌다.
+          */}
+          <GuruCard
+            href="/main/gurus/michael-burry"
+            initials="MB"
+            name="Michael Burry"
+            sourceLabel="SEC 13F"
+            statusLabel={SEC_STATUS_LABELS[burry.status]}
+            rows={[
+              {
+                label: "운용 기관",
+                value: burrySnapshot?.managerName ?? "데이터 없음",
+              },
+              {
+                label: "자료 기준일",
+                value: burrySnapshot?.reportDate ?? "데이터 없음",
+              },
+              {
+                label: "제출일",
+                value: burrySnapshot?.filingDate ?? "데이터 없음",
               },
             ]}
           />
@@ -300,12 +340,12 @@ export default async function HomePage() {
               없습니다.
             </p>
           </div>
-          {/* 미연결 대상 수. 청록 배지와 대비되는 중립색으로 두되 '4명' 문구를 그대로 둔다. */}
+          {/* 미연결 대상 수. 청록 배지와 대비되는 중립색으로 두되 '3명' 문구를 그대로 둔다. */}
           <Badge
             className="h-auto shrink-0 rounded-full border-border bg-muted/40 px-2.5 py-1 text-sm font-semibold text-muted-foreground"
             variant="outline"
           >
-            4명
+            3명
           </Badge>
         </div>
         <ul className="m-0 grid list-none gap-2.5 p-0 min-[761px]:grid-cols-2">
@@ -344,6 +384,11 @@ export default async function HomePage() {
           <li className="text-sm leading-6 text-muted-foreground">
             SEC 13F는 기관 보유 현황 공시입니다. 실시간 거래 또는 개인 계좌를
             나타내지 않으며, 원문과 기준일을 함께 확인하세요.
+          </li>
+          <li className="text-sm leading-6 text-muted-foreground">
+            Michael Burry 공시에는 주식과 옵션(PUT·CALL)이 함께 표시됩니다.
+            옵션의 공시 금액은 계약 프리미엄이 아니라 기초자산 공시금액이며,
+            행사가·만기·계약 수·손익은 원문에 없어 추정하지 않습니다.
           </li>
           <li className="text-sm leading-6 text-muted-foreground">
             ARK 보유 자료는 펀드가 공개한 공식 자료이며 개인 계좌나 실시간
