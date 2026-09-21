@@ -19,9 +19,9 @@ type GuruRouter = Pick<
 
 /**
  * 프로그램 이동을 GuruLink와 같은 Provider 전이·이동 중 표시에 묶는 클라이언트 훅이다.
- * push·replace와 프로그램 back·forward만 중앙 전이로 감싸고, prefetch·refresh는 이동 표시를
- * 만들지 않으므로 그대로 전달한다.
- * 입력: 없음. 출력: useRouter와 동일한 6개 메서드. 새 탭·외부 URL 분기는 만들지 않는다.
+ * push·replace는 중앙 전이로 감싸고, back·forward는 실제 popstate가 발생할 때 Provider가 표시한다.
+ * 이동할 방문 기록이 없는 back·forward와 prefetch·refresh는 거짓 진행 표시를 만들지 않는다.
+ * 입력: 없음. 출력: useRouter와 동일한 6개 메서드.
  */
 export function useGuruRouter(): GuruRouter {
   const nextRouter = useRouter();
@@ -30,14 +30,10 @@ export function useGuruRouter(): GuruRouter {
   return useMemo<GuruRouter>(
     () => ({
       back(): void {
-        transition(() => {
-          nextRouter.back();
-        });
+        nextRouter.back();
       },
       forward(): void {
-        transition(() => {
-          nextRouter.forward();
-        });
+        nextRouter.forward();
       },
       refresh(): void {
         nextRouter.refresh();
@@ -45,12 +41,12 @@ export function useGuruRouter(): GuruRouter {
       push(href: string, options?: NavigateOptions): void {
         transition(() => {
           nextRouter.push(href, options);
-        });
+        }, href);
       },
       replace(href: string, options?: NavigateOptions): void {
         transition(() => {
           nextRouter.replace(href, options);
-        });
+        }, href);
       },
       prefetch(href: string, options?: PrefetchOptions): void {
         nextRouter.prefetch(href, options);

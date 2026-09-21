@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { GuruLink } from "@/components/guru-link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -134,18 +134,18 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             aria-label="서비스 정책"
             className="mt-4 flex flex-wrap justify-center gap-x-4 text-xs text-muted-foreground"
           >
-            <Link
+            <GuruLink
               href="/privacy"
               className="inline-flex min-h-11 items-center hover:underline"
             >
               개인정보처리방침
-            </Link>
-            <Link
+            </GuruLink>
+            <GuruLink
               href="/terms"
               className="inline-flex min-h-11 items-center hover:underline"
             >
               이용약관
-            </Link>
+            </GuruLink>
           </nav>
         </section>
       </div>

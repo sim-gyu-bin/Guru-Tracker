@@ -1,5 +1,4 @@
 import { headers } from "next/headers";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import {
@@ -7,6 +6,7 @@ import {
   AdminDecisionForm,
 } from "@/components/admin-decision-forms";
 import { AppShell } from "@/components/app-shell";
+import { GuruLink } from "@/components/guru-link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -301,7 +301,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
                 {`${ACCESS_ACTION_LABELS[confirm.action]} 확정`}
               </Button>
               <Button asChild size="sm" variant="ghost">
-                <Link href="/admin">취소</Link>
+                <GuruLink href="/admin">취소</GuruLink>
               </Button>
             </AdminDecisionForm>
           </div>

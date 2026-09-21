@@ -9,6 +9,8 @@ import {
   useTransition,
 } from "react";
 
+import { useNavigationController } from "@/components/navigation-provider";
+
 type DecisionAction = (data: FormData) => Promise<void>;
 type SubmitDecision = (
   event: FormEvent<HTMLFormElement>,
@@ -20,6 +22,7 @@ const DecisionContext = createContext<SubmitDecision | null>(null);
 export function AdminDecisionBoundary({ children }: { children: ReactNode }) {
   const locked = useRef(false);
   const [pending, startTransition] = useTransition();
+  const { transition } = useNavigationController();
 
   const submit: SubmitDecision = (event, action) => {
     event.preventDefault();
@@ -27,12 +30,15 @@ export function AdminDecisionBoundary({ children }: { children: ReactNode }) {
     if (locked.current) return;
     const data = new FormData(event.currentTarget);
     locked.current = true;
-    startTransition(async () => {
-      try {
-        await action(data);
-      } finally {
-        locked.current = false;
-      }
+    // 로컬 잠금과 루트 전이를 함께 유지해 서버 redirect 후 화면 커밋까지 공통 표시가 살아 있다.
+    transition(() => {
+      startTransition(async () => {
+        try {
+          await action(data);
+        } finally {
+          locked.current = false;
+        }
+      });
     });
   };
 

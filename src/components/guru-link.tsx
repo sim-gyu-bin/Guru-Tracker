@@ -1,38 +1,52 @@
 "use client";
 
-import Link, { useLinkStatus } from "next/link";
-import { type ComponentPropsWithRef, useId } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { type ComponentPropsWithRef, useRef } from "react";
 
-import { usePendingNavigationRegistration } from "@/components/navigation-provider";
-
-/**
- * 링크 이동이 진행 중인 동안 자기 id로 표시를 등록하는 내부 관찰자다.
- * useLinkStatus는 해당 Link가 제공하는 컨텍스트를 읽으므로 반드시 그 Link의 자식으로 렌더링한다.
- * pending이 끝나거나 이 링크가 사라지면 자기 소유분만 해제한다.
- */
-function GuruLinkPendingObserver() {
-  const { pending } = useLinkStatus();
-  const id = useId();
-
-  usePendingNavigationRegistration(id, pending);
-
-  return null;
-}
+import { useNavigationController } from "@/components/navigation-provider";
 
 /**
- * next/link에 이동 중 표시 등록만 더한 클라이언트 래퍼다.
- * props·ref·children·이벤트·prefetch·접근성 속성을 그대로 넘기고, 새 탭·수정 키 클릭·외부 URL·
- * hash·동일 URL 판단은 next/link가 처리하도록 대신 가로채지 않는다.
- * 관찰자는 null만 렌더링하므로 기존 레이아웃과 DOM 구조를 바꾸지 않는다.
+ * Next Link의 ref·prefetch·클릭 판별을 유지하되 실제 이동 전이는 루트에 귀속한다.
+ * onNavigate 사용자 취소를 먼저 존중하며, 새 탭·수정키·다운로드는 Next가 걸러낸다.
+ * DOM에서 해석한 URL을 사용하므로 object href와 as도 Next가 만든 주소 그대로 이동한다.
  */
 export function GuruLink({
-  children,
+  onClick,
+  onNavigate,
+  replace,
+  scroll,
   ...props
 }: ComponentPropsWithRef<typeof Link>) {
+  const router = useRouter();
+  const { transition } = useNavigationController();
+  const destination = useRef("");
+
   return (
-    <Link {...props}>
-      {children}
-      <GuruLinkPendingObserver />
-    </Link>
+    <Link
+      {...props}
+      replace={replace}
+      scroll={scroll}
+      onClick={(event) => {
+        destination.current = event.currentTarget.href;
+        onClick?.(event);
+      }}
+      onNavigate={(event) => {
+        let cancelled = false;
+        onNavigate?.({
+          preventDefault() {
+            cancelled = true;
+            event.preventDefault();
+          },
+        });
+        if (cancelled) return;
+        event.preventDefault();
+        const href = destination.current;
+        transition(() => {
+          if (replace) router.replace(href, { scroll });
+          else router.push(href, { scroll });
+        }, href);
+      }}
+    />
   );
 }
