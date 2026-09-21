@@ -7,6 +7,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Guru Tracker",
   description: "공식 투자 공시를 한곳에서 확인하는 PWA 우선 추적 서비스",
+  // Search Console 소유권 확인용 공개 값이며, 인증 유지에 필요하므로 배포 후에도 보존한다.
+  verification: {
+    google: "mVFeXUOs488kFyOqGqwzu8UY25ow2C4rb9hJX7U5UvQ",
+  },
 };
 
 export const viewport: Viewport = {
