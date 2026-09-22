@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/app-shell";
+import { GuruDetailHeader } from "@/components/guru-detail-header";
 import { GuruLink } from "@/components/guru-link";
 import { HouseActivitySummary } from "@/components/house-activity-summary";
 import { HouseRefresh } from "@/components/house-refresh";
@@ -319,22 +320,22 @@ export default async function NancyPelosiPage() {
 
       <div className="mb-[22px] flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="mb-1.5 text-[11px] font-semibold tracking-[0.01em] text-muted-foreground">
-            미국 하원 PTR · 최신 제출 1건
-          </p>
-          <h1 className="mb-2 text-3xl leading-9 font-semibold tracking-tight text-foreground">
-            Nancy Pelosi
-          </h1>
-          <p className="mb-0 break-words leading-[21px] text-muted-foreground">
+          <GuruDetailHeader
+            introduction="미국 하원의원으로, 본인·배우자의 공개 거래 신고를 추적"
+            name="Nancy Pelosi"
+            source="미국 하원 PTR · 최신 제출 1건"
+          />
+          <p className="mt-1.5 mb-0 break-words text-sm leading-5 text-muted-foreground">
             {snapshot
               ? `미국 하원에 제출된 ${snapshot.filerName}(${snapshot.filerStatus} · ${snapshot.stateDistrict})의 공식 PTR 최신 1건입니다.`
               : "미국 하원에 제출된 공식 PTR(정기거래보고서) 최신 1건을 보여 줍니다."}
           </p>
         </div>
+        {/* 캐시 준비됨만 네온 초록으로 강조하고, 오류·설정 필요·빈 상태는 의미 색을 유지한다. */}
         <Badge
           className={
             house.status === "ready"
-              ? "border-success/30 bg-success/10 text-success"
+              ? "border-primary/25 bg-primary/5 text-[color:color-mix(in_oklab,var(--primary)_82%,var(--foreground))] dark:border-primary/40 dark:bg-primary/10 dark:text-primary dark:shadow-primary-glow-soft"
               : house.status === "error"
                 ? "border-destructive/25 bg-destructive/10 text-destructive"
                 : house.status === "unconfigured"

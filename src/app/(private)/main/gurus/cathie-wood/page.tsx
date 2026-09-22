@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { ArkAllocationChart } from "@/components/ark-allocation-chart";
 import { ArkRefresh } from "@/components/ark-refresh";
+import { GuruDetailHeader } from "@/components/guru-detail-header";
 import { GuruLink } from "@/components/guru-link";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -249,20 +250,20 @@ export default async function CathieWoodPage({
 
       <div className="mb-[22px] flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="mb-1.5 text-[11px] font-semibold tracking-[0.01em] text-muted-foreground">
-            ARK 공식 보유 자료 · 펀드
-          </p>
-          <h1 className="mb-2 text-3xl leading-9 font-semibold tracking-tight text-foreground">
-            Cathie Wood
-          </h1>
-          <p className="mb-0 break-words leading-[21px] text-muted-foreground">
+          <GuruDetailHeader
+            introduction="AI·로봇·바이오 등 파괴적 혁신에 집중하는 성장주 투자자"
+            name="Cathie Wood"
+            source="ARK 공식 보유 자료 · 펀드"
+          />
+          <p className="mt-1.5 mb-0 break-words text-sm leading-5 text-muted-foreground">
             개인 계좌가 아니라 {fundName}({fund})의 공식 보유 자료입니다.
           </p>
         </div>
+        {/* 캐시 준비됨만 네온 초록으로 강조하고, 오류·설정 필요·빈 상태는 의미 색을 유지한다. */}
         <Badge
           className={
             ark.status === "ready"
-              ? "border-success/30 bg-success/10 text-success"
+              ? "border-primary/25 bg-primary/5 text-[color:color-mix(in_oklab,var(--primary)_82%,var(--foreground))] dark:border-primary/40 dark:bg-primary/10 dark:text-primary dark:shadow-primary-glow-soft"
               : ark.status === "error"
                 ? "border-destructive/25 bg-destructive/10 text-destructive"
                 : ark.status === "unconfigured"

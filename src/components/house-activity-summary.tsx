@@ -89,13 +89,13 @@ export function HouseActivitySummary({
                         {item.transactionCount}건
                       </span>
                     </div>
-                    {/* 막대는 장식이며 값을 전달하지 않는다. 건수는 위 텍스트로 읽는다. */}
+                    {/* 건수는 위 텍스트로 읽는다. 도넛의 초록 그라데이션 토큰을 공유하고 다크에서만 약하게 발광한다. */}
                     <span
                       aria-hidden="true"
-                      className="block h-1.5 w-full overflow-hidden rounded-full bg-muted"
+                      className="block h-1.5 w-full rounded-full bg-muted"
                     >
                       <span
-                        className="block h-full min-w-[2px] rounded-full bg-primary/60"
+                        className="block h-full min-w-[2px] rounded-full bg-linear-to-r from-[var(--chart-1)] to-[var(--chart-1-highlight)] dark:shadow-[0_0_6px_color-mix(in_srgb,var(--chart-1)_28%,transparent)]"
                         style={{
                           width: `${(item.transactionCount / summary.maxTransactionCount) * 100}%`,
                         }}

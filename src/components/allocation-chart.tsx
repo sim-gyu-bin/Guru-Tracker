@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Pie, PieChart } from "recharts";
+import { useId, useState } from "react";
+import { Cell, Pie, PieChart } from "recharts";
 
 import {
   type ChartConfig,
@@ -12,6 +12,11 @@ import {
 import type { AllocationChartView } from "@/domain/portfolio-allocation";
 import { formatPercent } from "@/lib/decimal";
 
+/**
+ * 도넛 조각·범례 점 색이다. 상위 조각 순서(1~5)대로 붙는 범주형 토큰이며, 상위 밖을 묶은 "기타" 조각은 `--chart-6` 중립색을 쓴다.
+ * 색은 비중 순서만 나타내고 수익·손실 같은 의미를 담지 않는다. 다크는 네온 계열, 라이트는 같은 계열을 짙게 쓴 값이 `globals.css`에 있다.
+ * 조각과 범례는 같은 그라데이션과 발광 정의를 공유한다. 다크 주요 항목만 약하게 발광하고 기타는 중립색으로 남긴다.
+ */
 const CHART_COLORS = [
   "var(--chart-1)",
   "var(--chart-2)",
@@ -46,6 +51,8 @@ export function AllocationChart({
   view: AllocationChartView;
   footnotes: string[];
 }) {
+  // 같은 화면에 여러 차트가 있어도 SVG paint server가 충돌하지 않도록 인스턴스별 ID를 쓴다.
+  const gradientId = useId().replace(/:/g, "");
   const [keyboardFocused, setKeyboardFocused] = useState(false);
   const [tooltipTrigger, setTooltipTrigger] = useState<"hover" | "click">(
     "hover",
@@ -53,6 +60,7 @@ export function AllocationChart({
   const chartData = view.slices.map((slice, index) => ({
     ...slice,
     fill: slice.isOther ? "var(--chart-6)" : CHART_COLORS[index],
+    highlight: `var(--chart-${slice.isOther ? 6 : index + 1}-highlight)`,
   }));
 
   return (
@@ -88,16 +96,26 @@ export function AllocationChart({
       ) : (
         <div className="mt-5 grid gap-5 lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-center">
           <ul className="order-2 min-w-0 divide-y divide-border">
-            {chartData.map((slice) => (
+            {chartData.map((slice, index) => (
               <li
                 key={slice.key}
                 className="flex gap-3 py-3 first:pt-3 last:pb-3"
               >
-                <span
+                <svg
                   aria-hidden="true"
-                  className="mt-1.5 size-2.5 shrink-0 rounded-full"
-                  style={{ backgroundColor: slice.fill }}
-                />
+                  className="mt-1.5 size-2.5 shrink-0 overflow-visible"
+                  viewBox="0 0 10 10"
+                >
+                  <circle
+                    cx="5"
+                    cy="5"
+                    r="5"
+                    fill={`url(#${gradientId}-${index})`}
+                    filter={
+                      slice.isOther ? undefined : `url(#${gradientId}-glow)`
+                    }
+                  />
+                </svg>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline justify-between gap-3">
                     <p className="min-w-0 break-words text-base leading-6 font-medium text-foreground">
@@ -153,6 +171,43 @@ export function AllocationChart({
                 accessibilityLayer
                 aria-label="평가금액 비중 차트. 좌우 방향키로 항목 이동"
               >
+                <defs>
+                  {chartData.map((slice, index) => (
+                    <linearGradient
+                      key={slice.key}
+                      id={`${gradientId}-${index}`}
+                      x1="0%"
+                      y1="100%"
+                      x2="100%"
+                      y2="0%"
+                    >
+                      <stop offset="0%" stopColor={slice.fill} />
+                      <stop offset="100%" stopColor={slice.highlight} />
+                    </linearGradient>
+                  ))}
+                  <filter
+                    id={`${gradientId}-glow`}
+                    x="-20%"
+                    y="-20%"
+                    width="140%"
+                    height="140%"
+                  >
+                    <feGaussianBlur
+                      in="SourceGraphic"
+                      stdDeviation="2"
+                      result="blur"
+                    />
+                    <feFlood
+                      floodColor="white"
+                      style={{ floodOpacity: "var(--chart-glow)" }}
+                    />
+                    <feComposite in="blur" operator="in" />
+                    <feMerge>
+                      <feMergeNode />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
                 <ChartTooltip
                   // Recharts의 item 툴팁은 최초 포인터 선택 전 계열을 찾지 못하므로 키보드 포커스 중에만 초기 항목을 제공한다.
                   defaultIndex={keyboardFocused ? 0 : undefined}
@@ -200,7 +255,17 @@ export function AllocationChart({
                   stroke="var(--card)"
                   strokeWidth={2}
                   isAnimationActive={false}
-                />
+                >
+                  {chartData.map((slice, index) => (
+                    <Cell
+                      key={slice.key}
+                      fill={`url(#${gradientId}-${index})`}
+                      filter={
+                        slice.isOther ? undefined : `url(#${gradientId}-glow)`
+                      }
+                    />
+                  ))}
+                </Pie>
                 <text
                   x="50%"
                   y="43%"

@@ -17,6 +17,8 @@ export default async function DavidTepperPage() {
         manager: "tepper",
         screen: "tepper",
         name: "David Tepper",
+        introduction:
+          "위기 속 저평가 자산과 부실채권 투자로 유명한 아팔루사 창업자",
         managerName: "Appaloosa LP",
       }}
       view={view}

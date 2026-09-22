@@ -18,6 +18,8 @@ export default async function StanleyDruckenmillerPage() {
         manager: "stanley",
         screen: "stanley",
         name: "Stanley Druckenmiller",
+        introduction:
+          "거시경제 흐름을 바탕으로 투자하는 전설적인 매크로 투자자",
         managerName: "Duquesne Family Office LLC",
       }}
       view={view}

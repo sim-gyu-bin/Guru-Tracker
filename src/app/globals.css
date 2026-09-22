@@ -14,6 +14,8 @@
  * 공통 의미 토큰. 다크는 실측한 fintech 데모의 네이비·네온 그린·블루를 사용한다.
  * 라이트는 한국어 본문과 버튼 대비를 위해 별도로 정한 팔레트다. 근거는 Wiki의 fintech-theme 결정에 둔다.
  * 화면 스타일은 Tailwind와 shadcn/ui가 소유하며, 두 모드는 같은 토큰 집합을 유지한다.
+ * 상세 머리말의 소개 문장 그라데이션은 `--interactive`에서 `--primary`로 가는 값이라 모드별로 승인된 파랑→초록이 그대로 나온다.
+ * 인물 이름은 `--foreground`를 그대로 써서 라이트 네이비·다크 화이트로 읽히게 한다.
  */
 :root {
   /*
@@ -41,12 +43,24 @@
   --ring: #137a08;
   --sidebar: #fbfcfe;
   --sidebar-foreground: #0d1a2b;
-  --chart-1: #0f7b3f;
-  --chart-2: #1f5f9e;
-  --chart-3: #b0761a;
-  --chart-4: #6f4f9c;
-  --chart-5: #b0446a;
+  /*
+   * 차트 범주형 색 6개. 상위 조각 순서(1~5)대로 붙고, 상위 밖을 묶은 "기타" 조각은 중립색 6번을 쓴다.
+   * 수익·손실 같은 의미를 담지 않으며, 라이트는 다크 네온과 같은 색 계열을 짙게 내려 흰 카드에서도 조각이 구분되게 한다.
+   */
+  --chart-1: #1f8b0f;
+  --chart-2: #0b6f9e;
+  --chart-3: #8a6100;
+  --chart-4: #6d3bb0;
+  --chart-5: #b02663;
   --chart-6: #7b8798;
+  /* 조각별 그라데이션의 밝은 끝. 라이트에서는 흰 카드 위 경계를 유지한다. */
+  --chart-1-highlight: #6a8500;
+  --chart-2-highlight: #008378;
+  --chart-3-highlight: #a04409;
+  --chart-4-highlight: #a3319a;
+  --chart-5-highlight: #bc423c;
+  --chart-6-highlight: #8995a5;
+  --chart-glow: 0;
   /* 배경 장식광. 정적인 방사형 그라디언트에만 쓰며, 애니메이션은 두지 않는다. */
   --glow-blue: rgb(0 102 204 / 0.07);
   --glow-green: rgb(19 122 8 / 0.09);
@@ -55,6 +69,11 @@
   --glass: rgb(255 255 255 / 0.9);
   --glass-border: rgb(215 222 232 / 0.8);
   --primary-glow: 0 0 30px rgb(19 122 8 / 0.18);
+  /*
+   * 준비 상태 배지용 약한 형광광. 다크에서만 실제로 빛나고 라이트는 투명한 0 크기 그림자로 둔다.
+   * 라이트의 옅은 초록 배경 위에서는 glow가 번짐으로 보이므로, 라이트 강조는 짙은 초록 글자·테두리가 맡는다.
+   */
+  --primary-glow-soft: 0 0 0 0 rgb(19 122 8 / 0);
   --radius: 0.75rem;
 }
 
@@ -85,12 +104,23 @@
   --ring: #39ff14;
   --sidebar: #0f1635;
   --sidebar-foreground: #ffffff;
-  --chart-1: #5fd08a;
-  --chart-2: #6cb6ff;
-  --chart-3: #eec26a;
-  --chart-4: #c49bff;
-  --chart-5: #f4879b;
+  /*
+   * 차트 범주형 색 6개. 다크 도넛은 네온 계열로 밝게 두고 라이트는 같은 계열을 짙게 쓴다.
+   * 카드색 2px 경계를 유지하고, 주요 조각에만 약한 정적 발광을 적용한다.
+   */
+  --chart-1: #39ff14;
+  --chart-2: #35c9ff;
+  --chart-3: #ffd23f;
+  --chart-4: #c77dff;
+  --chart-5: #ff5fa2;
   --chart-6: #8fa0b8;
+  --chart-1-highlight: #e4ff38;
+  --chart-2-highlight: #56ffe1;
+  --chart-3-highlight: #fff58a;
+  --chart-4-highlight: #f89bff;
+  --chart-5-highlight: #ffa16c;
+  --chart-6-highlight: #a3b0c3;
+  --chart-glow: 0.28;
   --glow-blue: rgb(0 128 255 / 0.2);
   --glow-green: rgb(57 255 20 / 0.1);
   --interactive: #0080ff;
@@ -98,6 +128,8 @@
   --glass: rgb(15 22 53 / 0.8);
   --glass-border: rgb(30 38 80 / 0.5);
   --primary-glow: 0 0 30px rgb(57 255 20 / 0.4);
+  /* 준비 상태 배지에 쓰는 절제된 정적 형광광. 버튼 호버의 `--primary-glow`보다 좁고 옅게 둔다. */
+  --primary-glow-soft: 0 0 12px rgb(57 255 20 / 0.15);
 }
 
 @theme inline {
@@ -132,6 +164,7 @@
   --color-glass: var(--glass);
   --color-glass-border: var(--glass-border);
   --shadow-primary-glow: var(--primary-glow);
+  --shadow-primary-glow-soft: var(--primary-glow-soft);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-chart-1: var(--chart-1);
