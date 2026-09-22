@@ -4,7 +4,7 @@
 
 ## 제품 범위
 
-Guru Tracker는 가족·지인만 사용하는 PWA 우선 투자 공시 추적 서비스다. 추적 대상은 Stanley Druckenmiller, Cathie Wood, Nancy Pelosi, Michael Burry, Philippe Laffont, Brad Gerstner, David Tepper의 일곱 명이다. 계획된 구성은 Next.js App Router, Vercel Hobby, Supabase PostgreSQL 및 Storage다. 구현되지 않은 기능을 구현된 것처럼 서술하지 않는다.
+Guru Tracker는 가족·지인만 사용하는 PWA 우선 투자 공시 추적 서비스다. 추적 대상은 Stanley Druckenmiller, Cathie Wood, Nancy Pelosi, Michael Burry, Philippe Laffont, Brad Gerstner, David Tepper, Leopold Aschenbrenner의 여덟 명이다. 계획된 구성은 Next.js App Router, Vercel Hobby, Supabase PostgreSQL 및 Storage다. 구현되지 않은 기능을 구현된 것처럼 서술하지 않는다.
 
 ## 원본과 Wiki
 

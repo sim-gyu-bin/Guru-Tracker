@@ -10,7 +10,8 @@ decision_record:
   - project conversation, 2026-09-01
   - project conversation, 2026-09-18
   - project conversation, 2026-09-21
-updated: 2026-09-21
+  - project conversation, 2026-09-22
+updated: 2026-09-22
 ---
 
 # Guru Tracker Wiki Index
@@ -24,6 +25,8 @@ Authentication is decided at the policy level and is now approval-gated: Supabas
 The 2026-09-21 public-page decision added an unauthenticated introduction at `/`, privacy policy at `/privacy`, and terms at `/terms`; the introduction part is superseded on the same day. `/` now renders no product copy and routes by session and approval state — `approved` to `/main`, any other signed-in member to `/pending`, unauthenticated to `/login` — and `/privacy` and `/terms` remain the public policy pages. Sign-in and first sign-up share the single Google OAuth start at `/auth/signin`, which preserves `next`; no separate sign-up screen or API is added. Browsing and administration remain approval-gated; see [system overview](architecture/system-overview.md) and [Google OAuth access approval policy](decisions/google-oauth-access.md).
 
 The same 2026-09-21 direction retires a fixed external design reference: reproducing Linear's product UI is no longer the visual standard, while the shared theme tokens, Tailwind CSS utilities, and shadcn/ui components are retained and design decisions follow the project-local `ui-ux-pro-max` skill; see [technology stack](decisions/technology-stack.md). The root routing and sign-in surface are implemented locally and verified for the anonymous root redirect, the state-to-route mapping, and the login surface's `GET /auth/signin` entry with `next` preservation (desktop and mobile Chromium, with the actual OAuth navigation blocked in the probe); a real account OAuth sign-in remains unverified. Google brand verification and production publication remain separate, unverified operations.
+
+The tracked set now has eight people. On 2026-09-22 Leopold Aschenbrenner, whose 13F is filed by Situational Awareness LP, was added as the eighth and the sixth SEC 13F-backed manager; the set, sources, and remaining open questions stay in [tracked people](decisions/tracked-people.md) and [source provenance](concepts/source-provenance.md).
 
 The locally installed `ui-ux-pro-max` preserves official upstream content and its original English, with only OMP execution-path adaptation. Project-specific UI constraints live separately in `.omp/RULES.md`; they must not be attributed to or inserted into upstream guidance. See `.omp/AGENTS.md` for the preservation policy.
 
@@ -86,5 +89,6 @@ Future evidence captures, additional pages, and their index categories must be a
 - Project conversation on 2026-09-18 — approval-gated access decision; no raw capture was added because `.wiki/raw` is human-owned.
 - Project conversation on 2026-09-21 — public introduction and policy pages, later superseded the same day for the introduction part; no raw capture was added because `.wiki/raw` is human-owned.
 - Project conversation and repository implementation on 2026-09-21 — removal of the public introduction, state-based root routing, the shared `/auth/signin` entry for sign-in and first sign-up, and the retired fixed design reference; no raw capture was added because `.wiki/raw` is human-owned.
+- Project conversation and repository implementation on 2026-09-22 — the eighth tracked target (Leopold Aschenbrenner, SEC 13F) added to the home, desktop and mobile navigation, and detail route on the shared SEC 13F coordinator; no raw capture was added because `.wiki/raw` is human-owned.
 - Repository `.omp/skills/ui-ux-pro-max/SKILL.md` — official upstream UI guidance installed locally.
 - Repository `.omp/AGENTS.md` and `.omp/RULES.md`, and project conversation on 2026-09-21 — current approval-policy documentation and separation of upstream guidance from project-specific rules.

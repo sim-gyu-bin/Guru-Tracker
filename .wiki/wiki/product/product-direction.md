@@ -8,14 +8,15 @@ decision_record:
   - project conversation, 2026-09-01
   - project conversation, 2026-09-18
   - project conversation, 2026-09-21
-updated: 2026-09-21
+  - project conversation, 2026-09-22
+updated: 2026-09-22
 ---
 
 # Product Direction
 
 ## Decided facts
 
-Guru Tracker is a private product for family and acquaintances. It follows seven public figures and makes their disclosed positions or transactions comparable with source context: [tracked people](../decisions/tracked-people.md). The product is PWA-first. **Scheduled synchronization is primary; access synchronization is fallback:** access displays cached data first and requests the shared sync only when data is stale or the scheduled job is behind; see [system overview](../architecture/system-overview.md).
+Guru Tracker is a private product for family and acquaintances. It follows eight public figures and makes their disclosed positions or transactions comparable with source context: [tracked people](../decisions/tracked-people.md). The product is PWA-first. **Scheduled synchronization is primary; access synchronization is fallback:** access displays cached data first and requests the shared sync only when data is stale or the scheduled job is behind; see [system overview](../architecture/system-overview.md).
 
 The planned PWA may offer opt-in change notifications through [Web Push](../concepts/web-push-notifications.md). The project must describe planned behavior honestly until implementation and source samples exist.
 

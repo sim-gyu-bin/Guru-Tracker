@@ -4,11 +4,11 @@
 
 ## 현재 상태
 
-**홈과 일곱 대상의 상세 조회를 공통 Tailwind CSS·shadcn/ui로 구현했습니다.** Stanley·Burry·Laffont·Gerstner·Tepper의 공식 SEC 13F, ARK 6개 펀드의 공식 holdings, Nancy Pelosi의 미국 하원 공식 PTR 최신 1건 수집·검증과 Supabase DB·Storage 저장, 멱등 동기화 조정자가 포함됩니다. Laffont·Gerstner·Tepper는 원격 마이그레이션과 최초 저장·동일 원문 재처리를 확인했습니다. 세 대상의 Cron은 배포된 보호 API 검증 후 활성화하도록 등록했습니다. Nancy Pelosi는 운영 배포와 시간별 Cron 등록을 마쳤으며 2026-09-22 최근 `unchanged` 응답을 확인했습니다. ARK Cron의 일부 503 응답은 아래 운영 기록을 참고합니다. Burry의 최초 운영 수집·앱 배포 확인·Cron 등록, ARK trades, 설치형 PWA와 Web Push는 남아 있습니다. 로그인·소유자 승인 기반 접근 제한의 실운영 검증은 별도 범위입니다. job 등록과 실제 수집 성공은 구분합니다.
+**홈과 여덟 대상의 상세 조회를 공통 Tailwind CSS·shadcn/ui로 구현했습니다.** Stanley·Burry·Laffont·Gerstner·Tepper·Aschenbrenner의 공식 SEC 13F, ARK 6개 펀드의 공식 holdings, Nancy Pelosi의 미국 하원 공식 PTR 최신 1건 수집·검증과 Supabase DB·Storage 저장, 멱등 동기화 조정자가 포함됩니다. Laffont·Gerstner·Tepper·Aschenbrenner는 원격 마이그레이션과 최초 저장·동일 원문 재처리를 확인했습니다. 네 대상의 Cron은 배포된 보호 API 검증 후 활성화하도록 비활성 등록했습니다. Nancy Pelosi는 운영 배포와 시간별 Cron 등록을 마쳤으며 2026-09-22 최근 `unchanged` 응답을 확인했습니다. ARK Cron의 일부 503 응답은 아래 운영 기록을 참고합니다. Leopold Aschenbrenner의 홈·상세·데스크톱·모바일 탐색 연결과 격리 화면을 검증했으며 앱 배포와 Cron 활성화는 남아 있습니다. Burry의 최초 운영 수집·앱 배포 확인·Cron 등록, ARK trades, 설치형 PWA와 Web Push는 남아 있습니다. 로그인·소유자 승인 기반 접근 제한의 실운영 검증은 별도 범위입니다. job 등록과 실제 수집 성공은 구분합니다.
 
 ## 목적
 
-Guru Tracker는 서로 다른 공개 공시 형식을 한곳에서 읽기 쉽게 정리해, 다음 일곱 인물·기관의 공개 보유·거래 정보를 확인할 수 있게 하려는 서비스입니다.
+Guru Tracker는 서로 다른 공개 공시 형식을 한곳에서 읽기 쉽게 정리해, 다음 여덟 인물·기관의 공개 보유·거래 정보를 확인할 수 있게 하려는 서비스입니다.
 
 | 추적 대상 | 공식 출처 |
 | --- | --- |
@@ -19,16 +19,17 @@ Guru Tracker는 서로 다른 공개 공시 형식을 한곳에서 읽기 쉽게
 | Philippe Laffont | SEC Form 13F |
 | Brad Gerstner | SEC Form 13F |
 | David Tepper | SEC Form 13F |
+| Leopold Aschenbrenner | SEC Form 13F |
 
 이는 매매 추천이나 성과 비교 서비스가 아닙니다. 공개 공시의 원문과 그 한계를 우선하는 열람 도구를 목표로 합니다.
 
 ## 공시 출처와 해석상의 한계
 
-- **SEC Form 13F**: Stanley Druckenmiller, Michael Burry, Philippe Laffont, Brad Gerstner, David Tepper의 기관 보유 현황에는 분기별 13F 공시를 사용합니다. 13F는 실시간 보유·거래 정보가 아니며, 분기 종료 뒤 공개되는 보고서입니다. 특히 Michael Burry의 옵션 포지션에서 정확한 손익을 추정하거나 표시하지 않습니다.
+- **SEC Form 13F**: Stanley Druckenmiller, Michael Burry, Philippe Laffont, Brad Gerstner, David Tepper, Leopold Aschenbrenner의 기관 보유 현황에는 분기별 13F 공시를 사용합니다. 13F는 실시간 보유·거래 정보가 아니며, 분기 종료 뒤 공개되는 보고서입니다. 특히 Michael Burry의 옵션 포지션에서 정확한 손익을 추정하거나 표시하지 않습니다.
 - **ARK Invest 공식 holdings/trades**: 현재 Cathie Wood 화면은 ARK가 공개한 6개 펀드의 holdings만 사용하며 trades 수집은 계획입니다. 개인 계좌나 실시간 거래 내역이 아닙니다. 접근 공백 중 놓친 일별 이력은 나중에 접속해서 재구성할 수 없습니다.
 - **U.S. House PTR**: Nancy Pelosi 관련 데이터에는 U.S. House가 공개하는 Periodic Transaction Report(정기 거래 보고서)를 사용합니다. PTR은 **거래 내역**이며 보유 목록·현재 보유 여부·수익률이 아니고, 거래 시점·공개 범위와 시차를 그대로 따릅니다. 금액은 원문이 구간으로 적은 값이므로 화면에서도 **거래금액 범위**로만 표시하고 합계·중간값·비중을 계산하지 않습니다. 거래유형 `P`·`S`·`S (partial)`·`E`와 소유자 코드 `SP`·`DC`·`JT`는 하원 윤리위원회 지침이 정의한 코드에 한해서만 한국어와 원문 코드를 함께 표시하며, 그 밖의 값은 해석하지 않고 수집을 실패시킵니다. 화면의 `원문 티커` 열은 제출자가 원문 자산명 끝에 함께 적은 괄호 표기를 그대로 옮긴 값이며, 원문 밖에서 조회한 현재 티커나 상장 여부의 근거가 아닙니다.
 
-다섯 SEC 수집기는 공식 SEC 제출 목록과 원문, ARK 수집기는 공식 holdings CSV, Nancy Pelosi 수집기는 하원 공개 색인과 원문 PDF만 사용합니다. 13F를 실시간 데이터처럼 표시하거나 불완전한 공시에서 사실을 단정하지 않습니다.
+여섯 SEC 수집기는 공식 SEC 제출 목록과 원문, ARK 수집기는 공식 holdings CSV, Nancy Pelosi 수집기는 하원 공개 색인과 원문 PDF만 사용합니다. 13F를 실시간 데이터처럼 표시하거나 불완전한 공시에서 사실을 단정하지 않습니다.
 
 ## 동기화 구현과 운영 계획
 
@@ -43,6 +44,10 @@ Laffont·Gerstner·Tepper는 `supabase/migrations/202609220001_sec_managers.sql`
 2026-09-22 실제 SEC 원문에서 세 대상 모두 기준일 `2026-06-30`, 제출일 `2026-08-14`를 확인했습니다. Laffont(CIK `0001135730`) 211행·USD 48,629,053,706, Gerstner(`0001541617`) 20행·USD 9,829,676,383, Tepper(`0001656456`) 27행·USD 7,725,383,349의 정보표 행 수와 합계가 표지와 일치했습니다. 원격 최초 저장 후 세 대상 모두 재처리 `unchanged`, version 1·이벤트 1건을 확인했습니다. 원본 13F-HR의 선택 항목 `isAmendment` 생략은 허용하되 정정 공시와 정정 메타데이터의 모순은 거부합니다.
 
 로컬 통합 검증은 `pnpm biome`과 `pnpm test` 59/59 통과입니다. 실제 저장 스냅샷을 사용한 격리 Chromium에서 세 상세의 데스크톱·모바일 배치, 모바일 탐색과 라이트·다크 보유 카드를 확인했습니다. 격리 렌더러의 티커 참조 조회는 대역이며 실제 Google 로그인 검증을 대신하지 않습니다. 원격 여섯 state/events 테이블은 RLS가 활성화되어 있고 익명·로그인 역할의 직접 SELECT 권한이 없습니다.
+
+Leopold Aschenbrenner도 같은 SEC 13F 조정자·DB lease 경로를 씁니다. `supabase/migrations/202609220002_aschenbrenner.sql`을 원격 적용했고, `supabase/sec-managers-cron.sql`의 `guru_tracker_aschenbrenner_hourly` job을 매시 43분으로 비활성 등록했습니다. 앱 배포와 운영 보호 API 검증 후 활성화해야 합니다. 운용사는 Situational Awareness LP(CIK `0002045724`)이며 제출 대행 accession도 submissions의 제출자 CIK·이름과 표지 `filingManager.name`으로 검증합니다.
+
+공식 공시 `0000935836-26-000418`(기준일 `2026-06-30`, 제출일 `2026-08-14`)의 26행·USD 20,242,292,228을 실제 수집·저장했습니다. 최초 `updated`, 재처리 `unchanged` 후 version 1·이벤트 1건·직전 스냅샷 없음이 유지됩니다. 로컬 실제 Next.js API에서 인증 누락 401·다른 Origin 403·인증된 내부 호출 200 `unchanged`를 확인했습니다. `pnpm biome`과 전체 테스트 64/64가 통과했습니다.
 
 Stanley·ARK·Nancy Pelosi는 각각 접근 갱신과 보호된 내부 진입점이 같은 멱등 조정자·DB lease를 공유합니다. ARK의 lease와 캐시는 펀드별로 분리되고, Nancy Pelosi는 최신 PTR 문서 1건을 스냅샷 단위로 삼아 lease도 하나입니다. 화면은 저장된 데이터를 먼저 읽고, 마지막 성공 후 한 시간이 지났거나 캐시가 비었을 때 접근 갱신을 요청합니다. lease는 90초, 재시도 간격은 최소 60초이며 만료된 작업의 뒤늦은 커밋은 펜싱 토큰으로 차단합니다. 공통 갱신 컴포넌트는 펀드를 바꿀 때 요청 상태를 초기화하고 펀드별 쿨다운을 적용합니다. House 시간별 Cron은 등록되어 매시 13분에 호출합니다. 과거 배포는 PDF 워커 파일 누락으로 503 `HOUSE_VALIDATION`을 반환했고, 워커 경로를 고친 최신 배포는 성공했으며 운영 조회 HTTP 200을 사용자 확인으로 알고 있습니다. 다만 동기화 응답 본문(`status`)은 아직 확인하지 않았으므로 수집이 `updated`·`unchanged`를 반환했다고 단정하지 않습니다. ARK 시간별 job도 등록되어 매시 7분에 호출하며, 그 실제 수집 성공 여부는 이번 확인 범위가 아니므로 각 엔드포인트 응답으로 따로 확인합니다.
 
@@ -92,7 +97,7 @@ Guru Tracker의 접근 방식은 **소유자 승인**으로 확정되었고, 그
 
 | 영역 | 구성 | 상태 |
 | --- | --- | --- |
-| 웹 애플리케이션 | Next.js App Router | 일곱 대상의 공시 조회 홈·상세(`/main`, `/main/gurus/...`)와 승인 화면(`/login`, `/pending`, `/admin`) 구현 |
+| 웹 애플리케이션 | Next.js App Router | 여덟 대상의 공시 조회 홈·상세(`/main`, `/main/gurus/...`)와 승인 화면(`/login`, `/pending`, `/admin`) 구현 |
 | 개발 도구 | pnpm, TypeScript, Biome, Husky, Tailwind CSS | 구현 |
 | UI 컴포넌트 | Tailwind CSS 4, shadcn/ui (Radix 기반), Recharts | 버튼·배지·표·상태 안내·공시 비중 도넛 차트 구현 |
 | 호스팅 | Vercel Hobby | 배포 완료(워커 경로 수정 반영 최신 배포 성공, 운영 조회 HTTP 200은 사용자 확인 / 동기화 응답 본문은 미확인) |
@@ -104,11 +109,11 @@ Guru Tracker의 접근 방식은 **소유자 승인**으로 확정되었고, 그
 
 화면 배치·반응형·상태 스타일은 JSX의 Tailwind 유틸리티로 작성합니다. `src/components/ui/`의 shadcn/ui 컴포넌트를 재사용하고, `globals.css`에는 Tailwind 로딩·공통 테마 토큰·최소 기본 스타일만 둡니다. 화면별 전역 CSS 클래스나 `@apply` 기반 별도 스타일 체계는 사용하지 않습니다. `components.json`에 CLI 설정, `src/lib/utils.ts`에 공통 클래스 병합 진입점을 둡니다.
 
-대표 화면 재설계는 `/main` 조회 홈과 상세 화면에 적용했습니다. 홈과 데스크톱·모바일 탐색에서 일곱 대상 모두 상세로 연결됩니다. Laffont·Gerstner·Tepper는 Stanley에서 추출한 공통 상세 컴포넌트로 공시 기준일·제출일, 평가금액 구성 차트와 반응형 보유 목록을 표시합니다. Burry도 동일한 시각 체계를 사용하며 주식 등·PUT·CALL을 구분합니다. 차트 비율은 실제 투자 원금이나 전체 자산 배분 비중이 아닙니다. 760px 이하에서는 왼쪽 메뉴 버튼으로 전체 높이 탐색 패널을 열며, 관리자 메뉴는 기존 서버 판정을 따릅니다.
+대표 화면 재설계는 `/main` 조회 홈과 상세 화면에 적용했습니다. 홈과 데스크톱·모바일 탐색에서 여덟 대상 모두 상세로 연결됩니다. Laffont·Gerstner·Tepper·Aschenbrenner는 Stanley에서 추출한 공통 상세 컴포넌트로 공시 기준일·제출일, 평가금액 구성 차트와 반응형 보유 목록을 표시합니다. Burry도 동일한 시각 체계를 사용하며 주식 등·PUT·CALL을 구분합니다. 차트 비율은 실제 투자 원금이나 전체 자산 배분 비중이 아닙니다. 760px 이하에서는 왼쪽 메뉴 버튼으로 전체 높이 탐색 패널을 열며, 관리자 메뉴는 기존 서버 판정을 따릅니다.
 
-프로젝트 폰트는 한글·영문·숫자 모두 **Pretendard Variable**로 통일하며 숫자는 `tabular-nums`로 정렬합니다. 기존 폰트 자산과 라이선스는 보존합니다. 본문 16px, 조회 홈·일곱 상세의 페이지 제목 30px/600, 섹션 제목 20px/600, 카드 제목과 도입 설명 18px, 표·보조 설명 14px를 사용합니다. 모바일 탐색 항목은 24px/500입니다. 초기 테마는 시스템을 따르고 수동 선택을 저장합니다. 수동 선택 전에는 OS 변경을 따릅니다. 사전 스크립트가 첫 화면의 색상 모드를 정하고 차트·브라우저 색도 같은 모드를 따릅니다.
+프로젝트 폰트는 한글·영문·숫자 모두 **Pretendard Variable**로 통일하며 숫자는 `tabular-nums`로 정렬합니다. 기존 폰트 자산과 라이선스는 보존합니다. 본문 16px, 조회 홈·여덟 상세의 페이지 제목 30px/600, 섹션 제목 20px/600, 카드 제목과 도입 설명 18px, 표·보조 설명 14px를 사용합니다. 모바일 탐색 항목은 24px/500입니다. 초기 테마는 시스템을 따르고 수동 선택을 저장합니다. 수동 선택 전에는 OS 변경을 따릅니다. 사전 스크립트가 첫 화면의 색상 모드를 정하고 차트·브라우저 색도 같은 모드를 따릅니다.
 
-일곱 상세는 인물 이름 바로 아래에 18px 소개를 표시하고, 공시 범위 안내는 14px 보조 설명으로 구분합니다. 소개는 빈 데이터·조회 오류에서도 유지하며 모바일에서는 단어 단위로 줄바꿈합니다. 실제 페이지 컴포넌트의 격리 Chromium 렌더링으로 일곱 소개와 데스크톱·모바일 배치, 라이트·다크 대표 화면을 확인했습니다. 이 검증의 인증·데이터 조회는 대역이며 운영 로그인 검증은 아닙니다.
+여덟 상세는 인물 이름 바로 아래에 18px 소개를 표시하고, 공시 범위 안내는 14px 보조 설명으로 구분합니다. 소개는 빈 데이터·조회 오류에서도 유지하며 모바일에서는 단어 단위로 줄바꿈합니다. 기존 일곱 소개에 이어 Leopold Aschenbrenner의 실제 페이지 컴포넌트와 공식 수집 스냅샷을 격리 Chromium에서 확인했습니다. 1440·390·320px 상세, 라이트·다크, 홈 여덟 카드와 모바일 탐색 목록에서 가로 넘침이 없었습니다. 인증·티커 조회·라우터는 대역이므로 실제 승인 세션의 페이지 전환과 상단 진행 표시 완료 검증을 대신하지 않습니다.
 
 공통 `GuruDetailHeader`는 출처를 옅은 초록 배지로, 인물 이름을 다크 화이트·라이트 네이비로, 소개를 블루→그린 그라데이션으로 표시합니다. 캐시 준비됨 배지는 다크에서 형광 초록과 약한 정적 발광, 라이트에서 짙은 초록과 옅은 배경을 사용합니다. 차트 조각과 범례 점은 다크 네온·라이트 짙은 계열의 공통 팔레트에서 항목별 SVG 그라데이션과 발광 정의를 공유합니다. 다크의 주요 항목에만 약한 정적 발광을 적용하고 라이트에서는 끕니다. 기타 항목은 발광 없는 중립 회색 그라데이션으로 구분하며 빈 데이터·오류의 상태 배지는 기존 의미 색을 유지합니다.
 
@@ -126,19 +131,19 @@ Nancy Pelosi의 자산별 활동 요약 막대도 공통 초록→연두 그라�
 
 실제 Next.js의 개인정보처리방침→이용약관 이동을 지연시켜 390px·1440px에서 진행 표시, 기존 화면 유지와 완료 후 숨김을 확인했습니다. 빠른 뒤로·앞으로 이동에서도 시작·100% 완료·숨김을 확인했습니다. 로그인 폼은 브라우저에서 제출 이벤트와 Escape 취소를 별도 스모크 검증했습니다. 실제 OAuth 인증·로그아웃과 관리자 데이터 변경은 실행하지 않았습니다. `pnpm biome`의 TypeScript 검사와 Biome 검사가 통과했습니다.
 
-다섯 SEC 상세의 **13F 공시 평가금액 구성**은 저장된 스냅샷을 상위 5개와 기타로 집계합니다. CUSIP·증권 종류·PUT/CALL·수량 단위가 같은 항목만 합치며, 금액 합산·순위는 `BigInt`로 계산합니다. 도넛 옆 목록에 비중과 USD 금액을 항상 표시하고, 모바일에서는 차트 아래로 배치합니다. 차트에 키보드 포커스를 둔 뒤 좌우 방향키로 툴팁 항목을 이동할 수 있습니다. 빈 공시·총액 0은 차트를 그리지 않습니다.
+여섯 SEC 상세의 **13F 공시 평가금액 구성**은 저장된 스냅샷을 상위 5개와 기타로 집계합니다. CUSIP·증권 종류·PUT/CALL·수량 단위가 같은 항목만 합치며, 금액 합산·순위는 `BigInt`로 계산합니다. 도넛 옆 목록에 비중과 USD 금액을 항상 표시하고, 모바일에서는 차트 아래로 배치합니다. 차트에 키보드 포커스를 둔 뒤 좌우 방향키로 툴팁 항목을 이동할 수 있습니다. 빈 공시·총액 0은 차트를 그리지 않습니다.
 
 마우스를 올리거나 모바일에서 조각을 탭하면 세부 툴팁을 확인할 수 있습니다. 화면의 텍스트 목록은 툴팁 사용 여부와 관계없이 유지됩니다.
 
 이 비중은 **공시 기준일의 제출 금액 구성**이며 현재 전체 자산 배분을 뜻하지 않습니다. 옵션 금액은 매입원금·프리미엄·손익으로 해석하지 않습니다. 집계는 `src/domain/holding-allocation.ts`, 화면은 `src/components/holding-allocation-chart.tsx`가 담당하며 추가 수집이나 DB 저장은 하지 않습니다.
 
-보유 종목 목록은 1024px 미만 화면에서 단일 열 카드로, 그 이상에서는 표로 표시합니다. 카드에는 종목명·티커·증권 종류·USD 평가금액·수량과 단위·CUSIP을 표시하고, PUT/CALL은 배지로 구분합니다. 다섯 SEC 상세에는 SEC 원문·정보표 열기 링크를 표시하지 않습니다. 내부 공식 원문 수집·검증·저장과 공시 기준일 표시는 유지합니다. Nancy Pelosi 화면은 거래 내역 옆에서 그 문서의 공식 원문 PDF 링크를 제공합니다.
+보유 종목 목록은 1024px 미만 화면에서 단일 열 카드로, 그 이상에서는 표로 표시합니다. 카드에는 종목명·티커·증권 종류·USD 평가금액·수량과 단위·CUSIP을 표시하고, PUT/CALL은 배지로 구분합니다. 여섯 SEC 상세에는 SEC 원문·정보표 열기 링크를 표시하지 않습니다. 내부 공식 원문 수집·검증·저장과 공시 기준일 표시는 유지합니다. Nancy Pelosi 화면은 거래 내역 옆에서 그 문서의 공식 원문 PDF 링크를 제공합니다.
 
 공통 SEC 상세의 티커는 [OpenFIGI API](https://www.openfigi.com/api/documentation)의 **현재 미국 시장 참조 정보**입니다. 공시의 CUSIP·CINS를 정확히 조회하며, [CGS 식별자 규칙](https://www.cusip.com/identifiers.html)에 따라 첫 글자가 영문자인 CINS는 `ID_CINS`, 숫자로 시작하는 CUSIP은 `ID_CUSIP`으로 요청합니다. 미국 Equity의 유일한 티커·FIGI 조합만 표시하고, 이름 추측·다른 시장·비상장 식별자 대체는 하지 않습니다. 미매핑은 `—`, 일시적인 공급자 실패는 `일시 불가`로 구분합니다. SH와 옵션 기초자산에만 적용하며 PRN에는 적용하지 않습니다. **Pelosi PTR 화면의 `원문 티커` 열과는 무관합니다. PTR 화면은 원문에 적힌 표기만 쓰고 외부 식별자 조회를 하지 않습니다.**
 
 `src/server/tickers.ts`는 Stanley 13F 화면을 위해 API 키 없이 최대 10건씩 순차 조회하고, 검증된 배치 결과를 Next 데이터 캐시에 24시간 저장합니다. 최초 조회 중에도 기존 공시 목록·차트를 먼저 표시하며, 매핑 결과는 카드·표·차트 범례와 툴팁에 반영합니다. 실패한 배치는 정상 미매핑으로 캐시하지 않고, 다른 배치의 결과와 재검증 전 정상 캐시는 보존합니다. 참조 티커는 공시 기준일 당시의 티커가 아니며 SEC 스냅샷·dataset version·변경 이벤트를 수정하지 않습니다.
 
-Laffont·Gerstner·Tepper의 공통 상세에도 같은 OpenFIGI 참조 조회를 적용합니다. SEC 원문과 저장 스냅샷은 그대로 유지합니다.
+Laffont·Gerstner·Tepper·Aschenbrenner의 공통 상세에도 같은 OpenFIGI 참조 조회를 적용합니다. SEC 원문과 저장 스냅샷은 그대로 유지합니다.
 
 Cathie 상세(`/main/gurus/cathie-wood`)는 **ARKK를 기본값**으로 ARKQ·ARKW·ARKG·ARKF·ARKX를 선택합니다. 공식 CSV의 원문 티커를 그대로 표시하므로 `RKLB UQ` 같은 표기도 유지하며, 빈 티커와 비표준 식별자를 추측·제외하지 않습니다. ARK에는 OpenFIGI 매핑이나 SEC의 SH/PRN 단위를 적용하지 않습니다.
 
@@ -163,9 +168,9 @@ Nancy Pelosi 상세(`/main/gurus/nancy-pelosi`)는 **최신 PTR 문서 1건**만
    - `RESEND_API_KEY`·`RESEND_FROM`: 승인 요청 알림을 보내는 Resend 자격 증명과 발신 주소. 없으면 메일만 생략되고 요청은 `pending`으로 남습니다.
    - Supabase **Authentication → URL Configuration → Redirect URLs**에 개발용 `http://localhost:*/auth/callback`과 `http://127.0.0.1:*/auth/callback`을 등록합니다. 운영은 `https://실제서비스도메인/auth/callback`을 정확히 등록하고 Site URL도 운영 origin으로 설정합니다.
    - Vercel **Production** 환경의 `APP_URL`은 실제 서비스 origin으로 설정한 뒤 재배포합니다. Preview에서 로그인까지 사용할 경우 그 배포의 고정 origin과 정확한 callback 허용 목록을 별도로 설정합니다. `NODE_ENV`는 직접 설정하지 않습니다.
-2. Supabase SQL Editor 또는 인증된 마이그레이션 도구에서 `supabase/migrations/`의 Stanley(`202609140001`), ARK(`202609150001`), House(`202609160001`), 접근 승인(`202609180001`), Burry(`202609210001_burry.sql`)를 순서대로 한 번씩 적용합니다. 기존 DB를 초기화하지 않으며 이미 적용된 파일은 재실행하지 않습니다. Burry는 기존 Stanley의 비공개 `sec-originals` 버킷을 사용합니다. 접근 승인 마이그레이션 또는 `ADMIN_EMAIL`이 없으면 승인 화면에 설정 안내가 표시됩니다.
-3. `pnpm install`, `pnpm dev`로 실행합니다. 승인된 사용자는 조회 홈 `/main`에서 Stanley·Burry·Cathie·Nancy Pelosi 항목으로 이동합니다. 마이그레이션이 누락된 상세는 설정 안내를 표시합니다. Cathie의 펀드 선택은 `?fund=ARKQ`처럼 URL에 유지되며 지원하지 않는 값·중복 펀드 선택은 404입니다.
-4. 빈 캐시·오래된 캐시에서 `POST /api/sync/stanley`, `/api/sync/burry`, `/api/sync/ark?fund=ARKK`, `/api/sync/house`가 자동 요청됩니다. 브라우저의 같은 Origin만 허용합니다. 대응하는 `/api/internal/sync/...`는 `Authorization: Bearer <SYNC_SECRET>`이 필요하며 각각 같은 조정자를 사용합니다. ARK 요청에는 6개 중 하나의 대문자 펀드 코드가 필요합니다.
+2. Supabase SQL Editor 또는 인증된 마이그레이션 도구에서 `supabase/migrations/`의 Stanley(`202609140001`), ARK(`202609150001`), House(`202609160001`), 접근 승인(`202609180001`), Burry(`202609210001_burry.sql`), SEC 관리자(`202609220001_sec_managers.sql`), Leopold Aschenbrenner(`202609220002_aschenbrenner.sql`)를 순서대로 한 번씩 적용합니다. 기존 DB를 초기화하지 않으며 이미 적용된 파일은 재실행하지 않습니다. Burry는 기존 Stanley의 비공개 `sec-originals` 버킷을 사용합니다. 접근 승인 마이그레이션 또는 `ADMIN_EMAIL`이 없으면 승인 화면에 설정 안내가 표시됩니다.
+3. `pnpm install`, `pnpm dev`로 실행합니다. 승인된 사용자는 조회 홈 `/main`에서 Stanley·Burry·Cathie·Nancy Pelosi·Leopold Aschenbrenner 항목으로 이동합니다. 마이그레이션이 누락된 상세는 설정 안내를 표시합니다. Cathie의 펀드 선택은 `?fund=ARKQ`처럼 URL에 유지되며 지원하지 않는 값·중복 펀드 선택은 404입니다.
+4. 빈 캐시·오래된 캐시에서 `POST /api/sync/stanley`, `/api/sync/burry`, `/api/sync/laffont`, `/api/sync/gerstner`, `/api/sync/tepper`, `/api/sync/aschenbrenner`, `/api/sync/ark?fund=ARKK`, `/api/sync/house`가 자동 요청됩니다. 브라우저의 같은 Origin만 허용합니다. 대응하는 `/api/internal/sync/...`는 `Authorization: Bearer <SYNC_SECRET>`이 필요하며 각각 같은 조정자를 사용합니다. ARK 요청에는 6개 중 하나의 대문자 펀드 코드가 필요합니다.
 
 키·연락처를 클라이언트 코드나 로그·대화·저장소에 붙여 넣지 않습니다. 설정 누락이나 공식 출처 차단 응답은 성공으로 처리하지 않으며 가짜 종목을 표시하지 않습니다. 로그인과 승인 기반 접근 제한은 저장소에 구현되어 있지만 Google Cloud·Supabase OAuth 설정, `APP_URL`·`ADMIN_EMAIL`·`RESEND_*` 값, 원격 마이그레이션 적용과 실운영 검증이 끝나지 않았으므로 현재 상태를 가족·지인용 운영 서비스로 공개하지 않습니다. 접근 계약과 구현·배포 설정의 구분은 위 "접근 정책" 절을 따릅니다.
 
@@ -262,7 +267,7 @@ Google 브랜딩의 홈페이지·개인정보처리방침·약관에는 배포�
 │   ├── hooks/            # Guru 전용 명령형 라우터
 │   ├── lib/              # 십진 금액·클래스 병합 유틸리티
 │   └── server/           # SEC·ARK·PTR 수집·검증·Supabase 조정자·가입 승인 저장소·메일
-├── supabase/             # 마이그레이션과 ARK·House Cron 운영 SQL, 접근 승인 테이블
+├── supabase/             # 마이그레이션과 ARK·House·Burry·SEC 관리자 Cron 운영 SQL, 접근 승인 테이블
 ├── tests/                # 공시 정규화·DB 무결성·가입 승인 회귀 검증
 ├── biome.json
 ├── components.json      # shadcn/ui 설정
@@ -270,7 +275,7 @@ Google 브랜딩의 홈페이지·개인정보처리방침·약관에는 배포�
 └── pnpm-lock.yaml
 ```
 
-Stanley·Burry 흐름은 `src/server/sec.ts`, `src/server/sec-state.ts`와 각각 `supabase/migrations/202609140001_stanley.sql`, `supabase/migrations/202609210001_burry.sql`이 담당합니다. ARK 흐름은 `src/server/ingestion/ark/`, `src/server/ark.ts`, Nancy Pelosi 흐름은 `src/server/ingestion/house/`, `src/server/house.ts`, `src/components/house-refresh.tsx`가 담당합니다. 시간별 설정은 `supabase/ark-cron.sql`, `supabase/house-cron.sql`, `supabase/burry-cron.sql`에 있습니다. 가입 승인 흐름은 `src/proxy.ts`, `src/domain/access.ts`, `src/server/access.ts`·`src/server/access-store.ts`, `src/server/mail.ts`와 `supabase/migrations/202609180001_access_approval.sql`이 담당합니다.
+Stanley·Burry 흐름은 `src/server/sec.ts`, `src/server/sec-state.ts`와 각각 `supabase/migrations/202609140001_stanley.sql`, `supabase/migrations/202609210001_burry.sql`이 담당합니다. Laffont·Gerstner·Tepper·Aschenbrenner는 같은 모듈을 공유하고 대상별 마이그레이션 `supabase/migrations/202609220001_sec_managers.sql`·`supabase/migrations/202609220002_aschenbrenner.sql`과 `supabase/sec-managers-cron.sql`의 job으로 분리합니다. ARK 흐름은 `src/server/ingestion/ark/`, `src/server/ark.ts`, Nancy Pelosi 흐름은 `src/server/ingestion/house/`, `src/server/house.ts`, `src/components/house-refresh.tsx`가 담당합니다. 시간별 설정은 `supabase/ark-cron.sql`, `supabase/house-cron.sql`, `supabase/burry-cron.sql`, `supabase/sec-managers-cron.sql`에 있습니다. 가입 승인 흐름은 `src/proxy.ts`, `src/domain/access.ts`, `src/server/access.ts`·`src/server/access-store.ts`, `src/server/mail.ts`와 `supabase/migrations/202609180001_access_approval.sql`이 담당합니다.
 
 ## 이용 안내
 

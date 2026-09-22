@@ -38,6 +38,11 @@ const TARGETS: Record<
     archiveCik: "1656456",
     name: "Appaloosa LP",
   },
+  aschenbrenner: {
+    cik: "0002045724",
+    archiveCik: "2045724",
+    name: "Situational Awareness LP",
+  },
 };
 
 type RowFixture = {
@@ -589,10 +594,20 @@ test("제출자 목록이 맞아도 표지의 관리자 이름·CIK가 다르면
   );
 });
 
-for (const manager of ["laffont", "gerstner", "tepper"] as const) {
+// 각 대상이 실제로 올리는 13F의 accession 접두사를 쓴다. Aschenbrenner(Situational Awareness LP)의 13F는
+// 제출 대행 접수(0000935836)로 올라와 접수 번호 앞자리와 제출자 CIK가 다르므로, 제출자 신원은 submissions의
+// 제출자 CIK·이름과 표지 filingManager.name으로만 판정되어야 한다.
+const MANAGER_FILINGS = [
+  { manager: "laffont", accession: "0001135730-26-000001" },
+  { manager: "gerstner", accession: "0001541617-26-000001" },
+  { manager: "tepper", accession: "0001656456-26-000001" },
+  { manager: "aschenbrenner", accession: "0000935836-26-000418" },
+] as const;
+
+for (const { manager, accession } of MANAGER_FILINGS) {
   test(`${manager}는 자기 공식 제출자를 수집하고 다른 기관의 목록·표지는 거부한다`, async (t) => {
     const target = TARGETS[manager];
-    const filing = { ...recent, accession: `${target.cik}-26-000001` };
+    const filing = { ...recent, accession };
     // Tepper 공식 표지는 APPALOOSA LP다. 대소문자 차이만 허용하고 DB에는 설정의 정식 이름을 기록한다.
     const source = documents(manager, [filing], {
       coverName: manager === "tepper" ? "APPALOOSA LP" : target.name,
