@@ -317,34 +317,6 @@ export default async function HomePage() {
               },
             ]}
           />
-          {ADDITIONAL_SEC_GURUS.map((guru, index) => {
-            const view = additionalSecViews[index];
-            const detail = view.snapshot;
-            return (
-              <GuruCard
-                href={guru.href}
-                initials={guru.initials}
-                key={guru.manager}
-                name={guru.name}
-                sourceLabel="SEC 13F"
-                statusLabel={SEC_STATUS_LABELS[view.status]}
-                rows={[
-                  {
-                    label: "운용 기관",
-                    value: detail?.managerName ?? guru.managerName,
-                  },
-                  {
-                    label: "자료 기준일",
-                    value: detail?.reportDate ?? "데이터 없음",
-                  },
-                  {
-                    label: "제출일",
-                    value: detail?.filingDate ?? "데이터 없음",
-                  },
-                ]}
-              />
-            );
-          })}
           <GuruCard
             href="/main/gurus/cathie-wood"
             initials="CW"
@@ -388,6 +360,34 @@ export default async function HomePage() {
               },
             ]}
           />
+          {ADDITIONAL_SEC_GURUS.map((guru, index) => {
+            const view = additionalSecViews[index];
+            const detail = view.snapshot;
+            return (
+              <GuruCard
+                href={guru.href}
+                initials={guru.initials}
+                key={guru.manager}
+                name={guru.name}
+                sourceLabel="SEC 13F"
+                statusLabel={SEC_STATUS_LABELS[view.status]}
+                rows={[
+                  {
+                    label: "운용 기관",
+                    value: detail?.managerName ?? guru.managerName,
+                  },
+                  {
+                    label: "자료 기준일",
+                    value: detail?.reportDate ?? "데이터 없음",
+                  },
+                  {
+                    label: "제출일",
+                    value: detail?.filingDate ?? "데이터 없음",
+                  },
+                ]}
+              />
+            );
+          })}
         </div>
       </section>
 
