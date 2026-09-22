@@ -48,13 +48,19 @@ const chartConfig = {
 export type AllocationChartPresentation = Readonly<{
   /** 사진이 있으면 도넛 아래에, 없으면 중앙에 표시할 사람·운용사 이름이다. */
   name: string;
+  /** true일 때만 같은 반지름에서 0·90·180·270도, 이어 45·135·225·315도 순으로 여백을 탐색한다. 미지정은 기존 0도다. */
+  autoRotate?: boolean;
   /** 중앙 인물 사진이다. 없으면 이름만 표시한다. */
   portrait?: Readonly<{
     src: string;
+    /** 원형 클립 안에서 확대하는 배율이다. 기본 1이며 1 미만·비유한 값은 확대하지 않는다. */
+    zoom?: number;
+    /** 중앙 정사각형 사진의 세로 초점(0~1)이다. 기본 .5이며 빈 가장자리가 드러나지 않는 범위에서 중심에 맞춘다. */
+    focusY?: number;
   }>;
 }>;
 
-/** 바깥 두 줄 라벨이 모두 들어가는 가장 큰 도넛을 선택한다. 비중·조각 각도는 바꾸지 않는다. */
+/** 바깥 두 줄 라벨이 모두 들어가는 가장 큰 도넛을 선택한다. 회전하더라도 비중·조각별 각도 폭은 바꾸지 않는다. */
 const INFOGRAPHIC_OUTER_RADIUS_STEPS = [
   0.86, 0.82, 0.78, 0.74, 0.7, 0.66, 0.62, 0.58, 0.54, 0.5, 0.46, 0.42, 0.38,
   0.34, 0.3,
@@ -319,7 +325,7 @@ function planSliceLabel(
 
 /**
  * 바깥 라벨은 조각 방향에 가까운 위·아래·좌·우에 나누고 이웃 사이의 간격만 벌린다.
- * 글자 상자 전체를 원 밖에 두며 직선이 원을 관통하거나 화면 밖으로 나가면 더 작은 도넛으로 다시 계산한다.
+ * 글자 상자 전체를 원 밖에 두며 직선이 원을 관통하거나 화면 밖으로 나가면 다음 회전·반지름 후보로 다시 계산한다.
  */
 function placeOutsideLabels(labels: SliceLabelPlan[]): boolean {
   const outside = labels.filter((label) => label.outside);
@@ -470,12 +476,13 @@ function outsideArrowPath(label: SliceLabelPlan): string {
   return `${body} M ${point(upper)} L ${point(tip)} L ${point(lower)}`;
 }
 
-/** 같은 크기·비중에는 같은 배치를 쓰고, 모든 라벨이 여백 안에 들어가는 가장 큰 반지름을 선택한다. */
+/** 반지름을 우선하고 허용한 시작각 순서로 탐색한다. 모든 회전이 실패할 때만 축소하며 비중·조각 순서·간격은 유지한다. */
 function planInfographicLabels(
   slices: readonly AllocationSlice[],
   width: number,
   height: number,
   measure: MeasureLabelText,
+  autoRotate = false,
 ) {
   const total = slices.reduce((sum, slice) => sum + slice.percent, 0);
   // Recharts는 전원형의 양수 조각이 여러 개일 때 마지막 조각과 첫 조각 사이에도 간격을 둔다.
@@ -484,7 +491,9 @@ function planInfographicLabels(
   let labels: SliceLabelPlan[] = [];
   let outerRadius = 0;
   let innerRadius = 0;
-  for (const ratio of INFOGRAPHIC_OUTER_RADIUS_STEPS) {
+  let startAngle = 0;
+  const rotations = autoRotate ? [0, 90, 180, 270, 45, 135, 225, 315] : [0];
+  candidates: for (const ratio of INFOGRAPHIC_OUTER_RADIUS_STEPS) {
     outerRadius = (Math.min(width, height) * ratio) / 2;
     // 작은 화면에서도 두 줄 상자가 들어갈 두께를 먼저 확보하되 중앙 구멍의 지름은 도넛의 40% 이상 남긴다.
     innerRadius =
@@ -493,36 +502,41 @@ function planInfographicLabels(
         outerRadius * 0.6,
         Math.max(60, outerRadius * (1 - INFOGRAPHIC_INNER_RADIUS_RATIO)),
       );
-    let angle = 0;
-    labels = slices.map((slice) => {
-      const span = (availableAngle * slice.percent) / total;
-      const midAngle = angle + span / 2;
-      angle += span + INFOGRAPHIC_PADDING_ANGLE;
-      const midRadius = (innerRadius + outerRadius) / 2;
-      return planSliceLabel(
-        slice,
-        {
-          cx: width / 2,
-          cy: height / 2,
-          innerRadius,
-          outerRadius,
-          boxWidth: width,
-          boxHeight: height,
-          midAngle,
-          halfAngle: span / 2,
-          midRadius,
-          arcWidth: (span * Math.PI * midRadius) / 180,
-        },
-        measure,
-      );
-    });
-    if (placeOutsideLabels(labels)) break;
+    for (const rotation of rotations) {
+      startAngle = rotation;
+      let angle = startAngle;
+      labels = slices.map((slice) => {
+        const span = (availableAngle * slice.percent) / total;
+        // 회전으로 360도를 넘더라도 라벨 배치와 화살표의 사분면은 같은 0~360도 범위를 쓴다.
+        const midAngle = (angle + span / 2) % 360;
+        angle += span + INFOGRAPHIC_PADDING_ANGLE;
+        const midRadius = (innerRadius + outerRadius) / 2;
+        return planSliceLabel(
+          slice,
+          {
+            cx: width / 2,
+            cy: height / 2,
+            innerRadius,
+            outerRadius,
+            boxWidth: width,
+            boxHeight: height,
+            midAngle,
+            halfAngle: span / 2,
+            midRadius,
+            arcWidth: (span * Math.PI * midRadius) / 180,
+          },
+          measure,
+        );
+      });
+      if (placeOutsideLabels(labels)) break candidates;
+    }
   }
   for (const label of labels) {
     if (label.outside) label.arrow = outsideArrowPath(label);
   }
   return {
     labels,
+    startAngle,
     outerRadius,
     innerRadius,
     portraitRadius: Math.max(0, innerRadius - width * 0.02),
@@ -641,9 +655,34 @@ export function AllocationChart({
             chartSize.width,
             chartSize.height,
             measureText,
+            presentation?.autoRotate,
           )
         : null,
-    [infographic, view.slices, chartSize, measureText],
+    [
+      infographic,
+      view.slices,
+      chartSize,
+      measureText,
+      presentation?.autoRotate,
+    ],
+  );
+  const portraitRadius = layout?.portraitRadius ?? 0;
+  const requestedZoom = presentation?.portrait?.zoom ?? 1;
+  const portraitZoom = Number.isFinite(requestedZoom)
+    ? Math.max(1, requestedZoom)
+    : 1;
+  const requestedFocusY = presentation?.portrait?.focusY ?? 0.5;
+  const portraitFocusY = Number.isFinite(requestedFocusY)
+    ? Math.min(1, Math.max(0, requestedFocusY))
+    : 0.5;
+  const portraitSize = portraitRadius * 2 * portraitZoom;
+  // 지정한 초점을 중앙에 맞추되 확대 사진의 위·아래가 원형 클립 안으로 들어오지 않도록 이동을 제한한다.
+  const portraitY = Math.max(
+    chartSize.height / 2 + portraitRadius - portraitSize,
+    Math.min(
+      chartSize.height / 2 - portraitRadius,
+      chartSize.height / 2 - portraitSize * portraitFocusY,
+    ),
   );
   const centerLines = presentation ? splitNameLines(presentation.name) : [];
   const chartData = view.slices.map((slice, index) => ({
@@ -943,6 +982,8 @@ export function AllocationChart({
                   rootTabIndex={-1}
                   innerRadius={layout?.innerRadius ?? "64%"}
                   outerRadius={layout?.outerRadius ?? "88%"}
+                  startAngle={layout?.startAngle ?? 0}
+                  endAngle={(layout?.startAngle ?? 0) + 360}
                   // 안쪽 라벨과 바깥 지시선을 함께 배치하므로 Recharts의 개별 라벨·지시선을 쓰지 않는다.
                   label={infographic ? renderSliceLabel : false}
                   labelLine={false}
@@ -971,10 +1012,10 @@ export function AllocationChart({
                   <g className="drop-shadow-lg dark:drop-shadow-black/35">
                     <image
                       href={presentation.portrait.src}
-                      x={chartSize.width / 2 - (layout?.portraitRadius ?? 0)}
-                      y={chartSize.height / 2 - (layout?.portraitRadius ?? 0)}
-                      width={(layout?.portraitRadius ?? 0) * 2}
-                      height={(layout?.portraitRadius ?? 0) * 2}
+                      x={chartSize.width / 2 - portraitSize / 2}
+                      y={portraitY}
+                      width={portraitSize}
+                      height={portraitSize}
                       preserveAspectRatio="xMidYMid slice"
                       clipPath={`url(#${gradientId}-portrait)`}
                     />

@@ -38,84 +38,100 @@ export function HouseActivitySummary({
         </h2>
       </div>
 
-      {/* 좁은 화면은 지표 3칸을 위에, 막대 목록을 아래에 둔다. 넓은 화면에서는 지표를 좁은 왼쪽 열에 세로로 쌓아
-          카드가 세로로 길어지지 않게 하고 막대 목록에 가로 폭을 준다. */}
-      <div className="grid gap-4 p-4 min-[761px]:grid-cols-[14rem_minmax(0,1fr)] min-[761px]:gap-5">
-        <dl className="mb-0 grid grid-cols-3 gap-3 min-[761px]:grid-cols-1 min-[761px]:gap-2.5">
-          <div className="grid min-w-0 gap-0.5">
-            <dt className="text-[11px] leading-4 text-muted-foreground">
-              거래
-            </dt>
-            <dd className="mb-0 font-sans text-base font-semibold tabular-nums">
-              {summary.transactionCount}건
-            </dd>
-          </div>
-          <div className="grid min-w-0 gap-0.5">
-            <dt className="text-[11px] leading-4 text-muted-foreground">
-              원문 자산
-            </dt>
-            <dd className="mb-0 font-sans text-base font-semibold tabular-nums">
-              {summary.items.length}개
-            </dd>
-          </div>
-          <div className="grid min-w-0 gap-0.5">
-            <dt className="text-[11px] leading-4 text-muted-foreground">
-              옵션 거래
-            </dt>
-            <dd className="mb-0 font-sans text-base font-semibold tabular-nums">
-              {summary.optionTransactionCount}건
-            </dd>
-          </div>
-        </dl>
+      {/* 761px 미만에서는 프로필 행·지표·막대를 한 열로 차례로 두어 좁은 화면에서도 가로 넘침을 막는다.
+          그 이상에서는 176px 원형 프로필을 왼쪽에 고정하고, 오른쪽에서 지표와 자산별 목록을 함께 읽는다. */}
+      <div className="grid gap-4 p-4 min-[761px]:grid-cols-[11rem_minmax(0,1fr)] min-[761px]:gap-5">
+        <div className="flex items-center gap-3 min-[761px]:flex-col min-[761px]:items-center min-[761px]:gap-3">
+          <img
+            alt="낸시 펠로시 공식 프로필 사진"
+            className="h-20 w-20 shrink-0 rounded-full object-cover [object-position:50%_35%] min-[761px]:h-44 min-[761px]:w-44"
+            decoding="async"
+            height={176}
+            src="/nancy-pelosi.webp"
+            width={176}
+          />
+          <p className="mb-0 text-sm font-semibold tracking-[-0.01em] min-[761px]:text-center min-[761px]:text-base">
+            낸시 펠로시
+          </p>
+        </div>
 
         <div className="min-w-0">
-          {summary.items.length > 0 ? (
-            <>
-              <p className="mb-0 text-[11px] leading-4 text-muted-foreground">
-                막대는 최다 {summary.maxTransactionCount}건 기준 상대 길이
-              </p>
-              <ul
-                aria-label="자산별 신고 건수"
-                className="mt-2.5 mb-0 space-y-3"
-              >
-                {summary.items.map((item) => (
-                  <li className="grid gap-1.5" key={item.key}>
-                    <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                      {/* 원문 티커 표기가 있으면 티커를 주표제로 두고, 없으면 원문 자산명을 주표제로 쓴다. */}
-                      <span className="min-w-0 text-xs font-semibold [overflow-wrap:anywhere]">
-                        {item.ticker ?? item.asset}
-                      </span>
-                      <span className="shrink-0 font-sans text-xs font-semibold tabular-nums">
-                        {item.transactionCount}건
-                      </span>
-                    </div>
-                    {/* 건수는 위 텍스트로 읽는다. 도넛의 초록 그라데이션 토큰을 공유하고 다크에서만 약하게 발광한다. */}
-                    <span
-                      aria-hidden="true"
-                      className="block h-1.5 w-full rounded-full bg-muted"
-                    >
+          <dl className="mb-0 grid grid-cols-3 gap-3 min-[761px]:gap-4">
+            <div className="grid min-w-0 gap-0.5">
+              <dt className="text-[11px] leading-4 text-muted-foreground">
+                거래
+              </dt>
+              <dd className="mb-0 font-sans text-base font-semibold tabular-nums">
+                {summary.transactionCount}건
+              </dd>
+            </div>
+            <div className="grid min-w-0 gap-0.5">
+              <dt className="text-[11px] leading-4 text-muted-foreground">
+                원문 자산
+              </dt>
+              <dd className="mb-0 font-sans text-base font-semibold tabular-nums">
+                {summary.items.length}개
+              </dd>
+            </div>
+            <div className="grid min-w-0 gap-0.5">
+              <dt className="text-[11px] leading-4 text-muted-foreground">
+                옵션 거래
+              </dt>
+              <dd className="mb-0 font-sans text-base font-semibold tabular-nums">
+                {summary.optionTransactionCount}건
+              </dd>
+            </div>
+          </dl>
+
+          <div className="mt-4 min-w-0">
+            {summary.items.length > 0 ? (
+              <>
+                <p className="mb-0 text-[11px] leading-4 text-muted-foreground">
+                  막대는 최다 {summary.maxTransactionCount}건 기준 상대 길이
+                </p>
+                <ul
+                  aria-label="자산별 신고 건수"
+                  className="mt-2.5 mb-0 space-y-3"
+                >
+                  {summary.items.map((item) => (
+                    <li className="grid gap-1.5" key={item.key}>
+                      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                        {/* 원문 티커 표기가 있으면 티커를 주표제로 두고, 없으면 원문 자산명을 주표제로 쓴다. */}
+                        <span className="min-w-0 text-xs font-semibold [overflow-wrap:anywhere]">
+                          {item.ticker ?? item.asset}
+                        </span>
+                        <span className="shrink-0 font-sans text-xs font-semibold tabular-nums">
+                          {item.transactionCount}건
+                        </span>
+                      </div>
+                      {/* 건수는 위 텍스트로 읽는다. 도넛의 초록 그라데이션 토큰을 공유하고 다크에서만 약하게 발광한다. */}
                       <span
-                        className="block h-full min-w-[2px] rounded-full bg-linear-to-r from-[var(--chart-1)] to-[var(--chart-1-highlight)] dark:shadow-[0_0_6px_color-mix(in_srgb,var(--chart-1)_28%,transparent)]"
-                        style={{
-                          width: `${(item.transactionCount / summary.maxTransactionCount) * 100}%`,
-                        }}
-                      />
-                    </span>
-                    {/* 티커를 주표제로 쓴 항목은 보조줄에 원문 자산명 전체를 남긴다. */}
-                    <p className="mb-0 text-[11px] leading-4 text-muted-foreground [overflow-wrap:anywhere]">
-                      {item.ticker ? item.asset : null}
-                      {item.ticker ? " · 자산유형 " : "자산유형 "}
-                      {item.assetTypeCodes.join(" · ")}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : (
-            <p className="mt-2.5 mb-0 text-xs leading-5 text-muted-foreground">
-              공식 원문 1건에 표시할 거래 건이 없습니다.
-            </p>
-          )}
+                        aria-hidden="true"
+                        className="block h-1.5 w-full rounded-full bg-muted"
+                      >
+                        <span
+                          className="block h-full min-w-[2px] rounded-full bg-linear-to-r from-[var(--chart-1)] to-[var(--chart-1-highlight)] dark:shadow-[0_0_6px_color-mix(in_srgb,var(--chart-1)_28%,transparent)]"
+                          style={{
+                            width: `${(item.transactionCount / summary.maxTransactionCount) * 100}%`,
+                          }}
+                        />
+                      </span>
+                      {/* 티커를 주표제로 쓴 항목은 보조줄에 원문 자산명 전체를 남긴다. */}
+                      <p className="mb-0 text-[11px] leading-4 text-muted-foreground [overflow-wrap:anywhere]">
+                        {item.ticker ? item.asset : null}
+                        {item.ticker ? " · 자산유형 " : "자산유형 "}
+                        {item.assetTypeCodes.join(" · ")}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p className="mt-2.5 mb-0 text-xs leading-5 text-muted-foreground">
+                공식 원문 1건에 표시할 거래 건이 없습니다.
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
