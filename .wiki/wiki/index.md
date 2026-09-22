@@ -32,6 +32,8 @@ The locally installed `ui-ux-pro-max` preserves official upstream content and it
 
 The 2026-09-22 approved cleanup removes the unused Space Grotesk asset and license while retaining active Pretendard assets; see the [theme decision](decisions/fintech-theme.md). Unused dropdown and Stanley refresh modules and two uncalled server helpers were also removed; no dependency or routing-policy change was made.
 
+The [2026-09-22 enhancement plan](product/enhancement-plan-2026-09-22.md) records five prioritized proposals. Only item 1—complete hourly scheduling and administrator synchronization visibility—was implemented and verified. List controls, row-level comparisons, installation, and Web Push remain deferred.
+
 ## Pages
 
 ### Governance and evidence
@@ -45,6 +47,7 @@ The 2026-09-22 approved cleanup removes the unused Space Grotesk asset and licen
 ### Product
 
 - [Product direction](product/product-direction.md)
+- [Enhancement plan — 2026-09-22](product/enhancement-plan-2026-09-22.md) — operational evidence, five priorities, item-1-only approval, and verification boundaries.
 
 ### Architecture
 
@@ -92,5 +95,6 @@ Future evidence captures, additional pages, and their index categories must be a
 - Project conversation on 2026-09-21 — public introduction and policy pages, later superseded the same day for the introduction part; no raw capture was added because `.wiki/raw` is human-owned.
 - Project conversation and repository implementation on 2026-09-21 — removal of the public introduction, state-based root routing, the shared `/auth/signin` entry for sign-in and first sign-up, and the retired fixed design reference; no raw capture was added because `.wiki/raw` is human-owned.
 - Project conversation and repository implementation on 2026-09-22 — the eighth tracked target (Leopold Aschenbrenner, SEC 13F) added to the home, desktop and mobile navigation, and detail route on the shared SEC 13F coordinator; no raw capture was added because `.wiki/raw` is human-owned.
+- Project conversation and read-only production state/Cron inspection on 2026-09-22 — dated enhancement plan, item-1-only implementation approval, and requested develop/main delivery; no raw evidence was created.
 - Repository `.omp/skills/ui-ux-pro-max/SKILL.md` — official upstream UI guidance installed locally.
 - Repository `.omp/AGENTS.md` and `.omp/RULES.md`, and project conversation on 2026-09-21 — current approval-policy documentation and separation of upstream guidance from project-specific rules.
