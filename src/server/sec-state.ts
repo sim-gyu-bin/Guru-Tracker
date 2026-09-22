@@ -4,7 +4,7 @@ import type { SecManager, SecSnapshot, SecView } from "../domain/sec";
 import { collectSec } from "./sec";
 
 /**
- * 대상별 저장 이름은 manager 값에서 직접 만든다. manager는 닫힌 유니온("stanley" | "burry")이며
+ * 대상별 저장 이름은 manager 값에서 직접 만든다. manager는 SEC 다섯 기관만 허용하는 닫힌 유니온이며
  * 화면·요청·환경 변수에서 온 임의 문자열이 아니므로 테이블·RPC 식별자로 그대로 쓸 수 있다.
  * 각 대상은 자기 캐시 테이블(<manager>_state), 변경 이벤트 표(<manager>_events),
  * RPC(<manager>_acquire/commit/fail), Storage 원문 접두사(<manager>/)만 다루며

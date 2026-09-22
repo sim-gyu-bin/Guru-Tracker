@@ -9,7 +9,7 @@ import type { SecManager, SecSnapshot } from "../src/domain/sec";
  * 대상 분리 검증과 실제 설정 값이 어긋나면 이 테스트가 먼저 깨지게 한다.
  */
 const MANAGERS: Record<
-  SecManager,
+  Extract<SecManager, "stanley" | "burry">,
   { cik: string; archiveCik: string; managerName: string }
 > = {
   burry: {
@@ -39,7 +39,7 @@ const filing = (
   accession: string,
   value = "100",
   reportDate = "2026-06-30",
-  manager: SecManager = "burry",
+  manager: Extract<SecManager, "stanley" | "burry"> = "burry",
 ): Omit<SecSnapshot, "version"> => ({
   accession,
   cik: MANAGERS[manager].cik,

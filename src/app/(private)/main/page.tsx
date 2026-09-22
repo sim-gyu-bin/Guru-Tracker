@@ -1,9 +1,9 @@
-import { ChevronRight, Link2Off } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
 import { BurryRefresh } from "@/components/burry-refresh";
 import { GuruLink } from "@/components/guru-link";
-import { StanleyRefresh } from "@/components/stanley-refresh";
+import { SecRefresh } from "@/components/sec-refresh";
 import { Badge } from "@/components/ui/badge";
 import { isAdminRow } from "@/domain/access";
 import type { ArkView } from "@/domain/ark";
@@ -44,11 +44,29 @@ const SEC_STATUS_LABELS: Record<SecView["status"], string> = {
   unconfigured: "SEC 13F · 설정 필요",
 };
 
-/** 미연결 3인. 공식 출처 수집 경로를 검증하기 전까지 조회 화면을 연결하지 않는다. */
-const UNAVAILABLE_GURUS = [
-  { name: "Philippe Laffont", source: "SEC 13F" },
-  { name: "Brad Gerstner", source: "SEC 13F" },
-  { name: "David Tepper", source: "SEC 13F" },
+/** 홈 카드가 쓰는 SEC 13F 대상 설정이다. 서버의 닫힌 manager 유니온 확장과 같은 식별자·경로를 유지한다. */
+const ADDITIONAL_SEC_GURUS = [
+  {
+    manager: "laffont",
+    name: "Philippe Laffont",
+    initials: "PL",
+    href: "/main/gurus/philippe-laffont",
+    managerName: "COATUE MANAGEMENT LLC",
+  },
+  {
+    manager: "gerstner",
+    name: "Brad Gerstner",
+    initials: "BG",
+    href: "/main/gurus/brad-gerstner",
+    managerName: "Altimeter Capital Management, LP",
+  },
+  {
+    manager: "tepper",
+    name: "David Tepper",
+    initials: "DT",
+    href: "/main/gurus/david-tepper",
+    managerName: "Appaloosa LP",
+  },
 ] as const;
 
 /** 카드가 표시하는 공식 메타데이터 한 행이다. 값은 저장된 캐시에서만 오며 없으면 '데이터 없음'이다. */
@@ -134,21 +152,26 @@ function GuruCard({
 }
 
 /**
- * 저장된 Stanley·Burry SEC 13F와 ARK 펀드 보유, 하원 PTR 캐시를 조회 대상 카드로 보여 주는 홈 화면이다.
+ * 저장된 SEC 13F와 ARK 펀드 보유, 하원 PTR 캐시를 조회 대상 카드로 보여 주는 홈 화면이다.
  * 캐시가 stale 또는 비어 있을 때만 클라이언트 갱신 제어부가 동기화를 요청하며, 수집하지 못한 상태를 보유 자료로 바꾸지 않는다.
  */
 export default async function HomePage() {
   // 공시 자료를 읽기 전에 승인 상태를 서버에서 다시 확인한다. 승인되지 않은 요청은 여기서 끝난다.
   const row = await requireApprovedPage();
-  // SEC 13F 두 대상은 같은 판독기를 쓰고 수집 대상만 다르다.
-  const [stanley, burry, ark, house] = await Promise.all([
-    getSecView("stanley"),
-    getSecView("burry"),
-    getArkView(HOME_ARK_FUND),
-    getHousePtrView(),
-  ]);
+  // SEC 13F 대상은 같은 판독기를 쓰고 수집 대상만 다르다.
+  const [stanley, burry, laffont, gerstner, tepper, ark, house] =
+    await Promise.all([
+      getSecView("stanley"),
+      getSecView("burry"),
+      getSecView("laffont"),
+      getSecView("gerstner"),
+      getSecView("tepper"),
+      getArkView(HOME_ARK_FUND),
+      getHousePtrView(),
+    ]);
   const snapshot = stanley.snapshot;
   const burrySnapshot = burry.snapshot;
+  const additionalSecViews = [laffont, gerstner, tepper] as const;
   const arkSnapshot = ark.snapshot;
   const houseSnapshot = house.snapshot;
 
@@ -180,22 +203,34 @@ export default async function HomePage() {
           className="h-auto self-start rounded-full border-border bg-card px-2.5 py-1 text-xs font-semibold text-muted-foreground"
           variant="outline"
         >
-          Stanley · Burry · Cathie · Nancy 조회 지원
+          Stanley · Burry · Cathie · Nancy · Philippe · Brad · David 조회 지원
         </Badge>
       </div>
 
-      <StanleyRefresh
+      <SecRefresh
         lastAttemptAt={stanley.lastAttemptAt}
         lastError={stanley.lastError}
+        manager="stanley"
+        name="Stanley Druckenmiller"
         stale={stanley.stale}
         status={stanley.status}
         syncing={stanley.syncing}
       />
-
-      {/*
-        SEC 13F 두 대상은 각자 다른 엔드포인트와 cooldown 키를 쓴다.
-        두 제어부 모두 조치가 필요할 때만 스스로 표시되므로 홈에서 한쪽 갱신이 다른 쪽을 막지 않는다.
-      */}
+      {ADDITIONAL_SEC_GURUS.map((guru, index) => {
+        const view = additionalSecViews[index];
+        return (
+          <SecRefresh
+            key={guru.manager}
+            lastAttemptAt={view.lastAttemptAt}
+            lastError={view.lastError}
+            manager={guru.manager}
+            name={guru.name}
+            stale={view.stale}
+            status={view.status}
+            syncing={view.syncing}
+          />
+        );
+      })}
       <BurryRefresh
         lastAttemptAt={burry.lastAttemptAt}
         lastError={burry.lastError}
@@ -217,16 +252,11 @@ export default async function HomePage() {
               공식 원문을 대조해 저장한 캐시 기준입니다.
             </p>
           </div>
-          {/*
-            연결된 대상 수. 색만으로 구분하지 않도록 '4명' 문구를 그대로 둔다.
-            배지는 페이지 배경 위 success/10 틴트라 text-success만으로는 4.25:1이므로,
-            같은 success 토큰을 --foreground와 혼합해 4.5:1 이상을 확보한다(라이트 5.7:1, 다크 9.8:1).
-          */}
           <Badge
             className="h-auto shrink-0 rounded-full border-success/30 bg-success/10 px-2.5 py-1 text-sm font-semibold text-[color:color-mix(in_oklab,var(--success)_78%,var(--foreground))]"
             variant="outline"
           >
-            4명
+            7명
           </Badge>
         </div>
         <div className="grid gap-3.5 min-[761px]:grid-cols-2">
@@ -276,6 +306,34 @@ export default async function HomePage() {
               },
             ]}
           />
+          {ADDITIONAL_SEC_GURUS.map((guru, index) => {
+            const view = additionalSecViews[index];
+            const detail = view.snapshot;
+            return (
+              <GuruCard
+                href={guru.href}
+                initials={guru.initials}
+                key={guru.manager}
+                name={guru.name}
+                sourceLabel="SEC 13F"
+                statusLabel={SEC_STATUS_LABELS[view.status]}
+                rows={[
+                  {
+                    label: "운용 기관",
+                    value: detail?.managerName ?? guru.managerName,
+                  },
+                  {
+                    label: "자료 기준일",
+                    value: detail?.reportDate ?? "데이터 없음",
+                  },
+                  {
+                    label: "제출일",
+                    value: detail?.filingDate ?? "데이터 없음",
+                  },
+                ]}
+              />
+            );
+          })}
           <GuruCard
             href="/main/gurus/cathie-wood"
             initials="CW"
@@ -320,57 +378,6 @@ export default async function HomePage() {
             ]}
           />
         </div>
-      </section>
-
-      <section className="mt-8" aria-labelledby="unavailable-heading">
-        <div className="mb-4 flex items-end justify-between gap-3">
-          <div>
-            <h2
-              className="m-0 flex items-center gap-1.5 text-xl leading-7 font-semibold tracking-tight"
-              id="unavailable-heading"
-            >
-              <Link2Off
-                aria-hidden="true"
-                className="size-4 shrink-0 text-muted-foreground"
-              />
-              미연결 대상
-            </h2>
-            <p className="mt-1 mb-0 max-w-[720px] text-sm leading-5 text-muted-foreground">
-              공식 출처 수집 경로를 검증한 뒤 연결합니다. 현재는 조회 화면이
-              없습니다.
-            </p>
-          </div>
-          {/* 미연결 대상 수. 청록 배지와 대비되는 중립색으로 두되 '3명' 문구를 그대로 둔다. */}
-          <Badge
-            className="h-auto shrink-0 rounded-full border-border bg-muted/40 px-2.5 py-1 text-sm font-semibold text-muted-foreground"
-            variant="outline"
-          >
-            3명
-          </Badge>
-        </div>
-        <ul className="m-0 grid list-none gap-2.5 p-0 min-[761px]:grid-cols-2">
-          {UNAVAILABLE_GURUS.map((guru) => (
-            <li
-              className="flex items-center justify-between gap-3 rounded-[9px] border border-border/70 bg-muted/25 px-4 py-3"
-              key={guru.name}
-            >
-              <span className="grid min-w-0 gap-1">
-                <span className="text-sm leading-5 font-medium text-muted-foreground">
-                  {guru.name}
-                </span>
-                <span className="text-sm leading-5 text-muted-foreground">
-                  {guru.source}
-                </span>
-              </span>
-              <Badge
-                className="h-auto shrink-0 rounded-full px-2 py-[3px] text-xs font-semibold text-muted-foreground"
-                variant="ghost"
-              >
-                미연결
-              </Badge>
-            </li>
-          ))}
-        </ul>
       </section>
 
       <section

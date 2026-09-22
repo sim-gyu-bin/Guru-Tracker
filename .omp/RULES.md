@@ -1,5 +1,9 @@
 # 프로젝트 불변 조건
 
+## 브랜치 작업
+
+- 모든 작업은 `develop` 브랜치에서 수행한다. `main` 병합·푸시를 마치면 반드시 `develop`으로 돌아온다.
+
 ## 공식 출처
 
 - Stanley Druckenmiller, Michael Burry, Philippe Laffont, Brad Gerstner, David Tepper는 공식 SEC 13F만 사용한다. 13F를 실시간 데이터로 표현하지 않으며 Burry 옵션의 정확한 손익을 추론하거나 단정하지 않는다.

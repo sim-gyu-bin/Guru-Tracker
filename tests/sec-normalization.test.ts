@@ -23,6 +23,21 @@ const TARGETS: Record<
     archiveCik: "1649339",
     name: "Scion Asset Management, LLC",
   },
+  laffont: {
+    cik: "0001135730",
+    archiveCik: "1135730",
+    name: "COATUE MANAGEMENT LLC",
+  },
+  gerstner: {
+    cik: "0001541617",
+    archiveCik: "1541617",
+    name: "Altimeter Capital Management, LP",
+  },
+  tepper: {
+    cik: "0001656456",
+    archiveCik: "1656456",
+    name: "Appaloosa LP",
+  },
 };
 
 type RowFixture = {
@@ -322,6 +337,71 @@ test("추가 보유 정정은 기존 표에 합치고 재작성 정정은 이전
   );
 });
 
+test("정정 표시 생략은 정정 메타데이터 없는 원본에서만 허용한다", async (t) => {
+  const source = documents("stanley", [recent]);
+  const primaryUrl =
+    "https://www.sec.gov/Archives/edgar/data/1536411/000153641126000006/primary_doc.xml";
+  const original = source.get(primaryUrl)!;
+  const omitted = original.replace("<isAmendment>false</isAmendment>", "");
+  mocked(t, source);
+  const explicit = await collectSec(
+    "stanley",
+    "GuruTracker test@example.com",
+    AbortSignal.timeout(15_000),
+  );
+  source.set(primaryUrl, omitted);
+  const implicit = await collectSec(
+    "stanley",
+    "GuruTracker test@example.com",
+    AbortSignal.timeout(15_000),
+  );
+  // 표지의 false 생략은 원본의 보유·정규화 결과를 바꾸지 않는다.
+  assert.deepEqual(implicit.snapshot, explicit.snapshot);
+  assert.equal(implicit.normalizedHash, explicit.normalizedHash);
+
+  const amended = documents("stanley", [
+    { ...recent, amendment: "RESTATEMENT" },
+  ]);
+  amended.set(
+    primaryUrl,
+    amended.get(primaryUrl)!.replace("<isAmendment>true</isAmendment>", ""),
+  );
+  source.clear();
+  for (const [url, body] of amended) source.set(url, body);
+  await assert.rejects(
+    collectSec(
+      "stanley",
+      "GuruTracker test@example.com",
+      AbortSignal.timeout(15_000),
+    ),
+    /SEC_VALIDATION/,
+    "13F-HR/A는 번호·유형이 있어도 명시적인 정정 표시가 필요하다",
+  );
+
+  source.clear();
+  for (const [url, body] of documents("stanley", [recent]))
+    source.set(url, body);
+  // 번호와 정정 정보는 독립적인 모순이다. 둘 중 하나만 있어도 생략된 표시를 원본으로 해석하지 않는다.
+  for (const metadata of [
+    "<amendmentNo>1</amendmentNo>",
+    "<amendmentInfo><amendmentType>RESTATEMENT</amendmentType></amendmentInfo>",
+  ]) {
+    source.set(
+      primaryUrl,
+      omitted.replace("</coverPage>", `${metadata}</coverPage>`),
+    );
+    await assert.rejects(
+      collectSec(
+        "stanley",
+        "GuruTracker test@example.com",
+        AbortSignal.timeout(15_000),
+      ),
+      /SEC_VALIDATION/,
+      "원본의 정정 표시 생략과 정정 메타데이터는 함께 허용하지 않는다",
+    );
+  }
+});
+
 test("잘린 정보표와 DTD는 검증에 실패하고 SEC 접근 실패를 데이터로 해석하지 않는다", async (t) => {
   let source = documents("stanley", [
     { ...recent, tableOverride: "<informationTable></informationTable>" },
@@ -508,3 +588,42 @@ test("제출자 목록이 맞아도 표지의 관리자 이름·CIK가 다르면
     /SEC_VALIDATION/,
   );
 });
+
+for (const manager of ["laffont", "gerstner", "tepper"] as const) {
+  test(`${manager}는 자기 공식 제출자를 수집하고 다른 기관의 목록·표지는 거부한다`, async (t) => {
+    const target = TARGETS[manager];
+    const filing = { ...recent, accession: `${target.cik}-26-000001` };
+    // Tepper 공식 표지는 APPALOOSA LP다. 대소문자 차이만 허용하고 DB에는 설정의 정식 이름을 기록한다.
+    const source = documents(manager, [filing], {
+      coverName: manager === "tepper" ? "APPALOOSA LP" : target.name,
+    });
+    mocked(t, source);
+    const result = await collectSec(
+      manager,
+      "GuruTracker test@example.com",
+      AbortSignal.timeout(15_000),
+    );
+    assert.equal(result.snapshot.cik, target.cik);
+    assert.equal(result.snapshot.managerName, target.name);
+    assert.equal(result.snapshot.holdings[0].valueUsd, recent.value);
+    // CIK와 이름은 각각 독립적으로 검증해야 한다. 한 필드만 다른 문서도 수집할 수 없다.
+    for (const override of [
+      { submissionsCik: TARGETS.burry.cik },
+      { submissionsName: TARGETS.burry.name },
+      { coverCik: TARGETS.burry.cik },
+      { coverName: TARGETS.burry.name },
+    ]) {
+      const invalid = documents(manager, [filing], override);
+      source.clear();
+      for (const [url, body] of invalid) source.set(url, body);
+      await assert.rejects(
+        collectSec(
+          manager,
+          "GuruTracker test@example.com",
+          AbortSignal.timeout(15_000),
+        ),
+        /SEC_VALIDATION/,
+      );
+    }
+  });
+}

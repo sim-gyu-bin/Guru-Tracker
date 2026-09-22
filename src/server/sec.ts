@@ -26,6 +26,22 @@ const MANAGERS: Record<
     archiveCik: "1649339",
     managerName: "Scion Asset Management, LLC",
   },
+  // 아래 세 대상도 개인 계좌가 아닌 해당 기관의 공식 13F만 수집한다.
+  laffont: {
+    cik: "0001135730",
+    archiveCik: "1135730",
+    managerName: "COATUE MANAGEMENT LLC",
+  },
+  gerstner: {
+    cik: "0001541617",
+    archiveCik: "1541617",
+    managerName: "Altimeter Capital Management, LP",
+  },
+  tepper: {
+    cik: "0001656456",
+    archiveCik: "1656456",
+    managerName: "Appaloosa LP",
+  },
 };
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -316,10 +332,15 @@ export async function collectSec(
     if (text(record(filer.credentials).cik).padStart(10, "0") !== target.cik)
       return fail();
     if (text(cover.reportType) !== "13F HOLDINGS REPORT") return fail();
-    const isAmendment = text(cover.isAmendment);
+    // SEC ISAMENDMENT는 nullable이며 원본 13F-HR 표지에서 생략될 수 있다.
+    // https://www.sec.gov/files/form_13f.pdf (Form 13F Data Sets Contents)
+    // 미표시를 정정의 false로 일괄 변환하지 않는다. 제출 유형과 정정 메타데이터를 함께 검증한다.
+    const isAmendment =
+      cover.isAmendment === undefined ? null : text(cover.isAmendment);
     let mode = "RESTATEMENT";
     if (filing.form === "13F-HR/A") {
-      if (!["true", "1"].includes(isAmendment)) return fail();
+      if (isAmendment === null || !["true", "1"].includes(isAmendment))
+        return fail();
       const nextNumber = integer(cover.amendmentNo);
       mode = text(record(cover.amendmentInfo).amendmentType);
       if (mode !== "RESTATEMENT" && mode !== "NEW HOLDINGS") return fail();
@@ -329,7 +350,13 @@ export async function collectSec(
       )
         return fail();
       amendmentNumber = nextNumber;
-    } else if (!["false", "0"].includes(isAmendment) || holdings !== null)
+    } else if (
+      (isAmendment !== null && !["false", "0"].includes(isAmendment)) ||
+      (isAmendment === null &&
+        (cover.amendmentNo !== undefined ||
+          cover.amendmentInfo !== undefined)) ||
+      holdings !== null
+    )
       return fail();
     const indexRaw = await fetchSec(`${base}/index.json`, userAgent, signal);
     const items = list(record(json(indexRaw).directory).item);

@@ -3,7 +3,12 @@
  * 값은 저장 테이블·RPC 접두사(stanley_state, burry_commit 등)와 Storage 원문 접두사에 그대로 쓰이므로
  * 소문자 식별자만 두며 화면·요청에서 임의 문자열을 받지 않는다.
  */
-export type SecManager = "stanley" | "burry";
+export type SecManager =
+  | "stanley"
+  | "burry"
+  | "laffont"
+  | "gerstner"
+  | "tepper";
 
 /** SEC 13F 공시 금액은 USD, 수량은 원문 단위다. 개인 계좌나 실시간 거래를 나타내지 않는다. */
 export interface SecHolding {

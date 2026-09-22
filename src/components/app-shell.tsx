@@ -16,6 +16,9 @@ type CurrentScreen =
   | "burry"
   | "cathie"
   | "pelosi"
+  | "laffont"
+  | "gerstner"
+  | "tepper"
   | "admin";
 
 /**
@@ -48,19 +51,30 @@ const trackedGurus = [
     href: "/main/gurus/nancy-pelosi",
     source: "하원 PTR",
   },
+  {
+    screen: "laffont",
+    name: "Philippe Laffont",
+    href: "/main/gurus/philippe-laffont",
+    source: "SEC 13F",
+  },
+  {
+    screen: "gerstner",
+    name: "Brad Gerstner",
+    href: "/main/gurus/brad-gerstner",
+    source: "SEC 13F",
+  },
+  {
+    screen: "tepper",
+    name: "David Tepper",
+    href: "/main/gurus/david-tepper",
+    source: "SEC 13F",
+  },
 ] as const satisfies readonly {
   screen: CurrentScreen;
   name: string;
   href: string;
   source: string;
 }[];
-
-/** 공식 출처 수집 경로를 검증하기 전까지 조회 화면을 연결하지 않는 대상이다. */
-const unavailableGurus = [
-  "Philippe Laffont",
-  "Brad Gerstner",
-  "David Tepper",
-] as const;
 
 type AppShellProps = Readonly<{
   children: ReactNode;
@@ -72,8 +86,7 @@ type AppShellProps = Readonly<{
 /**
  * 공시 조회 화면의 공통 탐색 프레임이다.
  * 761px 이상은 고정 사이드바, 그보다 좁은 화면은 같은 목록을 담은 상단 메뉴 버튼으로 탐색한다.
- * 연결된 Stanley·Burry·Cathie·Nancy 경로만 링크로 제공하며, 나머지 대상은 미연결 상태를 명확히 표시한다.
- * 로그인한 사용자의 로그아웃과 관리자의 승인 화면 이동은 넓은 화면에서 머리말에, 좁은 화면에서 메뉴 안에 둔다.
+ * 연결된 일곱 대상의 경로만 링크로 제공한다. 로그인한 사용자의 로그아웃과 관리자의 승인 화면 이동은 넓은 화면에서 머리말에, 좁은 화면에서 메뉴 안에 둔다.
  */
 export function AppShell({
   children,
@@ -130,20 +143,6 @@ export function AppShell({
               </Badge>
             </GuruLink>
           ))}
-          {unavailableGurus.map((guru) => (
-            <span
-              className="flex min-h-9 cursor-default items-center justify-between gap-2 rounded-md px-2 py-[7px] text-[13px] leading-[18px] text-muted-foreground"
-              key={guru}
-            >
-              <span>{guru}</span>
-              <Badge
-                className="h-auto px-0 py-0 text-[10px] font-medium text-muted-foreground"
-                variant="ghost"
-              >
-                미연결
-              </Badge>
-            </span>
-          ))}
         </nav>
 
         <p className="mx-2 mt-auto mb-1 text-[11px] leading-[17px] text-muted-foreground">
@@ -155,11 +154,7 @@ export function AppShell({
       <div className="min-h-dvh min-[761px]:ml-[248px]">
         <header className="sticky top-0 z-1 flex min-h-[50px] items-center gap-2 border-b border-border bg-card/92 px-4 py-2 backdrop-blur-[10px] min-[761px]:min-h-[52px] min-[761px]:px-8">
           {/* 좁은 화면의 주 탐색 입구다. 761px 이상에서는 사이드바가 그 역할을 대신한다. */}
-          <MobileNavigation
-            admin={admin}
-            targets={targets}
-            unavailable={unavailableGurus}
-          />
+          <MobileNavigation admin={admin} targets={targets} unavailable={[]} />
           <GuruLink
             className="inline-flex min-h-11 items-center text-xl font-bold min-[761px]:hidden"
             href="/main"
