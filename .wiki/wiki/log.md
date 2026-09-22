@@ -10,7 +10,8 @@ decision_record:
   - project conversation, 2026-09-01
   - project conversation, 2026-09-18
   - project conversation, 2026-09-21
-updated: 2026-09-21
+  - project conversation, 2026-09-22
+updated: 2026-09-22
 ---
 
 # Guru Tracker Wiki Change Log
@@ -115,3 +116,11 @@ Updated [tracked people](decisions/tracked-people.md), [source provenance](conce
 ## 2026-09-22 — Approved unused asset and source cleanup
 
 Following a reference audit and explicit user approval, removed the unused Space Grotesk font/license, `dropdown-menu.tsx`, `stanley-refresh.tsx`, `adminApi`, and `bridgedSessionClient`, including the latter's unused type import. Updated font provenance, README, the theme decision, and index. Active Pretendard assets, dependencies, and the required `useGuruRouter` contract remain unchanged. TypeScript/Biome passed for 116 files and all 64 existing tests passed. The local login browser check timed out; a separate HTTP probe also received no response within 15 seconds, so live-page rendering was not verified. No raw evidence or remote data changed.
+
+## 2026-09-22 — Dated enhancement plan; item 1 approved
+
+Added the [enhancement plan](product/enhancement-plan-2026-09-22.md) and index entry. Read-only operational evidence showed five active target schedules, missing Stanley/Burry jobs, and an inactive Aschenbrenner job, while all thirteen collection units had recent successful checks. The owner approved completing the schedules and administrator synchronization visibility only. Search/filter/sort, row-level comparisons, installable PWA, and Web Push remain proposals. The subsequent request authorizes develop commit/push and main merge/push after verification, followed by a return to develop. Implementation and production verification are not yet claimed complete. Human-owned raw evidence is unchanged.
+
+## 2026-09-22 — Enhancement item 1 implemented and verified
+
+Completed the approved scope in the [dated plan](product/enhancement-plan-2026-09-22.md): all eight hourly target jobs are active after protected endpoint verification, and saved Cron commands returned HTTP 200 `unchanged` for all thirteen collection units. Stanley/Burry registration and Aschenbrenner activation preserved the existing schedules; unchanged reprocessing preserved versions, hashes, and event counts. Applied the sanitized service-role-only status RPC, added the read-only administrator status panel, and updated the current README and synchronization decision without treating Web Push as implemented. The actual migration and server loader were exercised, role restrictions were checked locally and remotely, 70 tests passed, and 72 desktop/mobile/theme/state combinations passed in isolated Chromium. Real-account Google-owner UI verification is not claimed. Items 2–5 remain deferred, human-owned raw evidence is unchanged, and no files or stored disclosure data were deleted.

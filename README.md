@@ -4,7 +4,7 @@
 
 ## 현재 상태
 
-**홈과 여덟 대상의 상세 조회를 공통 Tailwind CSS·shadcn/ui로 구현했습니다.** Stanley·Burry·Laffont·Gerstner·Tepper·Aschenbrenner의 공식 SEC 13F, ARK 6개 펀드의 공식 holdings, Nancy Pelosi의 미국 하원 공식 PTR 최신 1건 수집·검증과 Supabase DB·Storage 저장, 멱등 동기화 조정자가 포함됩니다. Laffont·Gerstner·Tepper·Aschenbrenner는 원격 마이그레이션과 최초 저장·동일 원문 재처리를 확인했습니다. 네 대상의 Cron은 배포된 보호 API 검증 후 활성화하도록 비활성 등록했습니다. Nancy Pelosi는 운영 배포와 시간별 Cron 등록을 마쳤으며 2026-09-22 최근 `unchanged` 응답을 확인했습니다. ARK Cron의 일부 503 응답은 아래 운영 기록을 참고합니다. Leopold Aschenbrenner의 홈·상세·데스크톱·모바일 탐색 연결과 격리 화면을 검증했으며 앱 배포와 Cron 활성화는 남아 있습니다. Burry의 최초 운영 수집·앱 배포 확인·Cron 등록, ARK trades, 설치형 PWA와 Web Push는 남아 있습니다. 로그인·소유자 승인 기반 접근 제한의 실운영 검증은 별도 범위입니다. job 등록과 실제 수집 성공은 구분합니다.
+**홈과 여덟 대상의 상세 조회를 공통 Tailwind CSS·shadcn/ui로 구현했습니다.** 여섯 SEC 13F 대상, ARK 6개 펀드의 공식 holdings, Nancy Pelosi의 하원 공식 PTR 최신 1건 수집·검증과 Supabase DB·Storage 저장, 멱등 동기화 조정자가 포함됩니다. **2026-09-22 여덟 대상의 시간별 Cron을 모두 활성화했고, 저장된 job 명령을 실행해 13개 수집 단위 모두 HTTP 200 `unchanged`를 확인했습니다.** 관리자용 동기화 상태판과 서버 전용 읽기 RPC도 구현·검증했습니다. ARK trades, 설치형 PWA와 Web Push는 남아 있으며, 이번 범위에는 포함하지 않았습니다. 로그인·소유자 승인 기반 접근 제한의 실운영 검증은 별도 범위입니다. job 활성 상태와 실제 수집 성공은 구분합니다. 고도화 항목별 결정·근거는 [2026-09-22 계획](.wiki/wiki/product/enhancement-plan-2026-09-22.md)에 기록했습니다.
 
 ## 목적
 
@@ -35,21 +35,27 @@ Guru Tracker는 서로 다른 공개 공시 형식을 한곳에서 읽기 쉽게
 
 ### 시간별 동기화와 접근 시 보완
 
-무료 등급 구성을 유지하기 위해 **Supabase Cron**으로 시간마다 한 번 수집합니다. `pg_cron`과 `pg_net`이 보호된 Next.js 내부 동기화 엔드포인트를 호출하며, 호출 비밀값은 Supabase Vault 및 서버 전용 설정에만 보관합니다. ARK·House의 job SQL은 `supabase/ark-cron.sql`, `supabase/house-cron.sql`로 작성했고 두 job 모두 등록했습니다. 등록 자체는 실제 수집 성공을 뜻하지 않으며 성공 여부는 각 엔드포인트 응답으로 확인합니다. Stanley는 접근 갱신만 사용합니다. 시간별 일정에는 Vercel Hobby Cron을 사용하지 않습니다. Vercel Hobby Cron은 시간별 실행에 적합하지 않기 때문입니다.
+무료 등급 구성을 유지하기 위해 **Supabase Cron**으로 시간마다 한 번 수집합니다. `pg_cron`과 `pg_net`이 보호된 Next.js 내부 동기화 엔드포인트를 호출하며, 호출 비밀값은 Supabase Vault 및 서버 전용 설정에만 보관합니다. ARK·House의 job SQL은 `supabase/ark-cron.sql`, `supabase/house-cron.sql`이며 매시 7·13분에 실행합니다. 모든 대상이 시간별 일정과 접근 시 보완 갱신을 함께 사용합니다. 등록 자체는 실제 수집 성공을 뜻하지 않으며 각 엔드포인트 응답으로 확인합니다. Vercel Hobby Cron은 시간별 실행에 적합하지 않아 사용하지 않습니다.
 
-Burry 시간별 설정은 `supabase/burry-cron.sql`에 있으며 운영 등록 전입니다. 매시 19분에 `/api/internal/sync/burry`를 호출하고, 접근 갱신과 같은 조정자를 사용합니다. Stanley와 Burry의 캐시·lease·이벤트는 대상별로 분리합니다.
+Stanley와 Burry 시간별 설정은 `supabase/stanley-cron.sql`, `supabase/burry-cron.sql`입니다. 2026-09-22 운영 등록을 완료했으며 각각 매시 1·19분에 `/api/internal/sync/stanley`, `/api/internal/sync/burry`를 호출합니다. 두 운영 API는 인증 누락 시 401, 정상 인증 시 200 `unchanged`를 반환했습니다. 접근 갱신과 같은 조정자를 사용하고 캐시·lease·이벤트는 대상별로 분리합니다.
 
-Laffont·Gerstner·Tepper는 `supabase/migrations/202609220001_sec_managers.sql`과 `supabase/sec-managers-cron.sql`을 적용했습니다. 각각 매시 25·31·37분에 `/api/internal/sync/laffont`, `/gerstner`, `/tepper`를 호출합니다. SQL은 기본 비활성 등록이며 운영 API의 인증·수집 응답 확인 후 `cron.alter_job`으로 활성화합니다. 대상별 state·lease·이벤트와 Storage 경로를 분리하고 접근 갱신과 같은 조정자를 사용합니다.
+Laffont·Gerstner·Tepper는 `supabase/migrations/202609220001_sec_managers.sql`과 `supabase/sec-managers-cron.sql`을 적용했습니다. 각각 매시 25·31·37분에 `/api/internal/sync/laffont`, `/gerstner`, `/tepper`를 호출하며, 2026-09-22 운영의 활성 상태와 200 `unchanged` 응답을 확인했습니다. 설정 SQL은 기본 비활성이므로 새 환경에서는 운영 API 검증 후 해당 블록의 `v_endpoint_verified`를 설정하거나 `cron.alter_job`으로 활성화합니다. 기본값 그대로 파일 전체를 재실행하면 기존 활성 job도 꺼질 수 있으므로 운영 상태 점검만을 위해 재실행하지 않습니다. 대상별 state·lease·이벤트와 Storage 경로를 분리하고 접근 갱신과 같은 조정자를 사용합니다.
 
 2026-09-22 실제 SEC 원문에서 세 대상 모두 기준일 `2026-06-30`, 제출일 `2026-08-14`를 확인했습니다. Laffont(CIK `0001135730`) 211행·USD 48,629,053,706, Gerstner(`0001541617`) 20행·USD 9,829,676,383, Tepper(`0001656456`) 27행·USD 7,725,383,349의 정보표 행 수와 합계가 표지와 일치했습니다. 원격 최초 저장 후 세 대상 모두 재처리 `unchanged`, version 1·이벤트 1건을 확인했습니다. 원본 13F-HR의 선택 항목 `isAmendment` 생략은 허용하되 정정 공시와 정정 메타데이터의 모순은 거부합니다.
 
 로컬 통합 검증은 `pnpm biome`과 `pnpm test` 59/59 통과입니다. 실제 저장 스냅샷을 사용한 격리 Chromium에서 세 상세의 데스크톱·모바일 배치, 모바일 탐색과 라이트·다크 보유 카드를 확인했습니다. 격리 렌더러의 티커 참조 조회는 대역이며 실제 Google 로그인 검증을 대신하지 않습니다. 원격 여섯 state/events 테이블은 RLS가 활성화되어 있고 익명·로그인 역할의 직접 SELECT 권한이 없습니다.
 
-Leopold Aschenbrenner도 같은 SEC 13F 조정자·DB lease 경로를 씁니다. `supabase/migrations/202609220002_aschenbrenner.sql`을 원격 적용했고, `supabase/sec-managers-cron.sql`의 `guru_tracker_aschenbrenner_hourly` job을 매시 43분으로 비활성 등록했습니다. 앱 배포와 운영 보호 API 검증 후 활성화해야 합니다. 운용사는 Situational Awareness LP(CIK `0002045724`)이며 제출 대행 accession도 submissions의 제출자 CIK·이름과 표지 `filingManager.name`으로 검증합니다.
+Leopold Aschenbrenner도 같은 SEC 13F 조정자·DB lease 경로를 씁니다. `supabase/migrations/202609220002_aschenbrenner.sql`을 원격 적용했고, `guru_tracker_aschenbrenner_hourly` job은 2026-09-22 운영 API의 인증 누락 401·정상 인증 200 `unchanged`를 확인한 뒤 매시 43분 일정으로 활성화했습니다. 운용사는 Situational Awareness LP(CIK `0002045724`)이며 제출 대행 accession도 submissions의 제출자 CIK·이름과 표지 `filingManager.name`으로 검증합니다.
 
 공식 공시 `0000935836-26-000418`(기준일 `2026-06-30`, 제출일 `2026-08-14`)의 26행·USD 20,242,292,228을 실제 수집·저장했습니다. 최초 `updated`, 재처리 `unchanged` 후 version 1·이벤트 1건·직전 스냅샷 없음이 유지됩니다. 로컬 실제 Next.js API에서 인증 누락 401·다른 Origin 403·인증된 내부 호출 200 `unchanged`를 확인했습니다. `pnpm biome`과 전체 테스트 64/64가 통과했습니다.
 
-Stanley·ARK·Nancy Pelosi는 각각 접근 갱신과 보호된 내부 진입점이 같은 멱등 조정자·DB lease를 공유합니다. ARK의 lease와 캐시는 펀드별로 분리되고, Nancy Pelosi는 최신 PTR 문서 1건을 스냅샷 단위로 삼아 lease도 하나입니다. 화면은 저장된 데이터를 먼저 읽고, 마지막 성공 후 한 시간이 지났거나 캐시가 비었을 때 접근 갱신을 요청합니다. lease는 90초, 재시도 간격은 최소 60초이며 만료된 작업의 뒤늦은 커밋은 펜싱 토큰으로 차단합니다. 공통 갱신 컴포넌트는 펀드를 바꿀 때 요청 상태를 초기화하고 펀드별 쿨다운을 적용합니다. House 시간별 Cron은 등록되어 매시 13분에 호출합니다. 과거 배포는 PDF 워커 파일 누락으로 503 `HOUSE_VALIDATION`을 반환했고, 워커 경로를 고친 최신 배포는 성공했으며 운영 조회 HTTP 200을 사용자 확인으로 알고 있습니다. 다만 동기화 응답 본문(`status`)은 아직 확인하지 않았으므로 수집이 `updated`·`unchanged`를 반환했다고 단정하지 않습니다. ARK 시간별 job도 등록되어 매시 7분에 호출하며, 그 실제 수집 성공 여부는 이번 확인 범위가 아니므로 각 엔드포인트 응답으로 따로 확인합니다.
+여덟 대상은 각각 접근 갱신과 보호된 내부 진입점이 같은 멱등 조정자·DB lease를 공유합니다. ARK의 lease와 캐시는 펀드별로 분리되고, Nancy Pelosi는 최신 PTR 문서 1건을 스냅샷 단위로 삼아 lease도 하나입니다. 화면은 저장된 데이터를 먼저 읽고 마지막 성공 후 한 시간이 지났거나 캐시가 비었을 때 접근 갱신을 요청합니다. lease는 90초, 재시도 간격은 최소 60초이며 만료된 작업의 뒤늦은 커밋은 펜싱 토큰으로 차단합니다. 펀드를 바꿀 때 요청 상태를 초기화하고 펀드별 쿨다운을 적용합니다. 과거 House PDF 워커 누락에 따른 503과 일부 ARK 503 기록은 당시 관찰이며, 2026-09-22의 이번 운영 검증에서는 House와 ARK 6개 펀드 모두 200 `unchanged`를 반환했습니다. 과거 ARK 503의 원인을 새로 규명한 것은 아닙니다.
+
+### 관리자 동기화 상태
+
+`/admin`은 기존 관리자 검증을 마친 뒤에만 `getSyncHealthView()`로 읽기 전용 `admin_sync_health()` RPC를 한 번 호출합니다. 여섯 SEC 대상·하원 PTR·ARK 6펀드의 13개 단위를 데스크톱 표와 모바일 카드로 표시합니다. 수집 상태는 진행 중인 lease, 실패, 수집 전, 마지막 성공 후 1시간 이상 지연, 정상으로 구분하며 Cron 활성·비활성·미등록·중복은 별도로 표시합니다. 마지막 성공·시도·조회 시각은 한국 시간이며 공시 기준일이나 실시간 보유 여부를 뜻하지 않습니다.
+
+`supabase/migrations/202609220003_sync_health.sql`은 `pg_cron`이 설치된 DB에 적용합니다. RPC는 상태 메타데이터와 일정·활성 여부만 반환하며 스냅샷 본문·오류 원문·Cron 명령·Vault·사용자 정보는 반환하지 않습니다. `anon`·`authenticated`의 실행 권한을 차단하고 `service_role`만 허용합니다. 상태판 조회는 수집이나 Cron 변경을 하지 않으며 조회 실패는 가입 승인 처리와 분리됩니다.
 
 ### 안전한 스냅샷 관리
 
@@ -100,8 +106,8 @@ Guru Tracker의 접근 방식은 **소유자 승인**으로 확정되었고, 그
 | 웹 애플리케이션 | Next.js App Router | 여덟 대상의 공시 조회 홈·상세(`/main`, `/main/gurus/...`)와 승인 화면(`/login`, `/pending`, `/admin`) 구현 |
 | 개발 도구 | pnpm, TypeScript, Biome, Husky, Tailwind CSS | 구현 |
 | UI 컴포넌트 | Tailwind CSS 4, shadcn/ui (Radix 기반), Recharts | 버튼·배지·표·상태 안내·공시 비중 도넛 차트 구현 |
-| 호스팅 | Vercel Hobby | 배포 완료(워커 경로 수정 반영 최신 배포 성공, 운영 조회 HTTP 200은 사용자 확인 / 동기화 응답 본문은 미확인) |
-| 데이터베이스·파일 저장소 | Supabase PostgreSQL / Storage | Stanley·ARK 원격 저장·동일 원문 재처리 검증 완료, Nancy Pelosi 마이그레이션 적용·수집·화면 구현(운영 수집 응답 본문은 미확인) |
+| 호스팅 | Vercel Hobby | 배포된 보호 API 및 저장된 Cron 명령의 운영 호출 검증 완료(2026-09-22, 13개 수집 단위 모두 HTTP 200 `unchanged`) |
+| 데이터베이스·파일 저장소 | Supabase PostgreSQL / Storage | 여덟 대상의 저장 상태와 8개 활성 Cron 확인, 관리자 읽기 전용 상태 RPC 원격 적용 |
 | 클라이언트 제공 방식 | PWA-first | 계획 |
 | 인증·접근 제어 | Supabase Auth(Google OAuth) + 소유자 승인, 서버 전용 `ADMIN_EMAIL` | 저장소 구현 완료(라우트·마이그레이션 `202609180001`·회귀 테스트), 로컬 릴리스 빌드 가드 스윕 50/50·66/66과 Chromium 데스크톱·모바일 화면 스모크 통과 / 배포 설정과 실운영 Google·메일 검증 미완료 |
 
@@ -189,7 +195,7 @@ Nancy Pelosi 상세(`/main/gurus/nancy-pelosi`)는 **최신 PTR 문서 1건**만
    - `RESEND_API_KEY`·`RESEND_FROM`: 승인 요청 알림을 보내는 Resend 자격 증명과 발신 주소. 없으면 메일만 생략되고 요청은 `pending`으로 남습니다.
    - Supabase **Authentication → URL Configuration → Redirect URLs**에 개발용 `http://localhost:*/auth/callback`과 `http://127.0.0.1:*/auth/callback`을 등록합니다. 운영은 `https://실제서비스도메인/auth/callback`을 정확히 등록하고 Site URL도 운영 origin으로 설정합니다.
    - Vercel **Production** 환경의 `APP_URL`은 실제 서비스 origin으로 설정한 뒤 재배포합니다. Preview에서 로그인까지 사용할 경우 그 배포의 고정 origin과 정확한 callback 허용 목록을 별도로 설정합니다. `NODE_ENV`는 직접 설정하지 않습니다.
-2. Supabase SQL Editor 또는 인증된 마이그레이션 도구에서 `supabase/migrations/`의 Stanley(`202609140001`), ARK(`202609150001`), House(`202609160001`), 접근 승인(`202609180001`), Burry(`202609210001_burry.sql`), SEC 관리자(`202609220001_sec_managers.sql`), Leopold Aschenbrenner(`202609220002_aschenbrenner.sql`)를 순서대로 한 번씩 적용합니다. 기존 DB를 초기화하지 않으며 이미 적용된 파일은 재실행하지 않습니다. Burry는 기존 Stanley의 비공개 `sec-originals` 버킷을 사용합니다. 접근 승인 마이그레이션 또는 `ADMIN_EMAIL`이 없으면 승인 화면에 설정 안내가 표시됩니다.
+2. Supabase SQL Editor 또는 인증된 마이그레이션 도구에서 `supabase/migrations/`의 Stanley(`202609140001`), ARK(`202609150001`), House(`202609160001`), 접근 승인(`202609180001`), Burry(`202609210001_burry.sql`), SEC 관리자(`202609220001_sec_managers.sql`), Leopold Aschenbrenner(`202609220002_aschenbrenner.sql`)를 순서대로 한 번씩 적용합니다. **`pg_cron` 확장을 활성화한 다음** 관리자 상태 조회(`202609220003_sync_health.sql`)를 적용합니다. 기존 DB를 초기화하지 않으며 이미 적용된 파일은 재실행하지 않습니다. Burry는 기존 Stanley의 비공개 `sec-originals` 버킷을 사용합니다. 접근 승인 마이그레이션 또는 `ADMIN_EMAIL`이 없으면 승인 화면에 설정 안내가 표시됩니다.
 3. `pnpm install`, `pnpm dev`로 실행합니다. 승인된 사용자는 조회 홈 `/main`에서 Stanley·Burry·Cathie·Nancy Pelosi·Leopold Aschenbrenner 항목으로 이동합니다. 마이그레이션이 누락된 상세는 설정 안내를 표시합니다. Cathie의 펀드 선택은 `?fund=ARKQ`처럼 URL에 유지되며 지원하지 않는 값·중복 펀드 선택은 404입니다.
 4. 빈 캐시·오래된 캐시에서 `POST /api/sync/stanley`, `/api/sync/burry`, `/api/sync/laffont`, `/api/sync/gerstner`, `/api/sync/tepper`, `/api/sync/aschenbrenner`, `/api/sync/ark?fund=ARKK`, `/api/sync/house`가 자동 요청됩니다. 브라우저의 같은 Origin만 허용합니다. 대응하는 `/api/internal/sync/...`는 `Authorization: Bearer <SYNC_SECRET>`이 필요하며 각각 같은 조정자를 사용합니다. ARK 요청에는 6개 중 하나의 대문자 펀드 코드가 필요합니다.
 
@@ -213,7 +219,7 @@ Google 브랜딩의 홈페이지·개인정보처리방침·약관에는 배포�
 3. `supabase/house-cron.sql`을 실행합니다. `guru_tracker_house_hourly` 한 개 job이 매시 13분에 보호된 엔드포인트 `/api/internal/sync/house`를 한 번 호출하고 제한 시간은 60초입니다. 재실행 시 같은 job만 갱신하며 기존 job을 삭제하지 않습니다. 운영에는 이 job을 등록했습니다. `202609160001_house_ptr.sql`을 적용하지 않았거나 Vault 값이 없으면 이 job은 자료를 만들지 않습니다.
 4. 파일 끝의 조회 예시로 일정·응답 상태 코드와 마지막 성공 시각을 확인합니다. 요청 헤더·Vault 원문·`net.http_request_queue` 내용을 로그에 복사하지 않습니다. 이 SQL은 Stanley·ARK Cron을 등록하지 않습니다.
 5. `next.config.ts`의 `outputFileTracingIncludes`가 수집을 실행하는 두 house 라우트와 PDF 워커 파일을 함께 지정하는지 확인합니다. pdfjs는 Node에서 워커를 opaque dynamic import로 불러 `@vercel/nft`가 추적하지 못하므로, 이 설정이 없으면 배포 함수에 `pdf.worker.mjs`가 빠지고 PDF 텍스트 추출이 런타임에 실패해 동기화가 503 `HOUSE_VALIDATION`으로 거절됩니다. 현재 설정은 `/api/sync/house`와 `/api/internal/sync/house` 각각에 `realpathSync`로 심링크를 푼 실제 `pdf.worker.mjs` 경로를 프로젝트 루트 기준 POSIX 상대 경로로 넣습니다. **심링크를 거친 경로는 include에 쓰지 않습니다.** pnpm은 `node_modules/pdfjs-dist`를 `.pnpm/pdfjs-dist@<버전>/…`로 가는 심링크로 두는데, 심링크 디렉터리를 거친 파일이 배포 함수 파일 목록에 들어가면 Vercel이 패키징을 거부합니다. 버전 폴더는 하드코딩하지 않고 매번 실제 경로에서 계산합니다.
-6. 배포 뒤 `POST /api/internal/sync/house`를 `Authorization: Bearer <SYNC_SECRET>`로 호출해 응답 본문의 `status`를 확인합니다. 최신 배포의 운영 조회 HTTP 200은 사용자 확인이지만 응답 본문은 아직 확인하지 않았으므로 `{"status":"updated"}`·`{"status":"unchanged"}`를 단정하지 않습니다. 503 `HOUSE_VALIDATION`이 오면 함수 번들에 `pdf.worker.mjs`가 들어갔는지 확인합니다.
+6. 배포 뒤 `POST /api/internal/sync/house`를 `Authorization: Bearer <SYNC_SECRET>`로 호출해 응답 본문의 `status`를 확인합니다. 2026-09-22 저장된 Cron 명령의 실제 운영 호출에서 HTTP 200과 `{"status":"unchanged"}`를 확인했습니다. 이후 503 `HOUSE_VALIDATION`이 오면 함수 번들에 `pdf.worker.mjs`가 들어갔는지 확인합니다.
 
 ### 공시 검증과 현재 확인 범위
 
@@ -230,8 +236,8 @@ Google 브랜딩의 홈페이지·개인정보처리방침·약관에는 배포�
 - 옵션 금액은 기초자산 공시금액이며 프리미엄·투자 원금·손익이 아닙니다. 원문 SH/PRN 수량을 계약 수로 환산하지 않습니다. Stanley와 같은 차트로 공시 금액 구성을 표시하되 실제 투자 비중으로 해석하지 않도록 안내합니다.
 - 실제 수집 자료와 서버 조정자·내부 API를 PGlite 및 메모리 Storage에 연결한 스모크에서 `updated` → `unchanged`, 버전 1·이벤트 1·원문 객체 4개 유지, 쿨다운 `busy`, 비인증 401, Stanley 상태 불변을 확인했습니다. 원격 Supabase 검증은 아닙니다.
 - 실제 페이지 컴포넌트와 공식 수집 자료를 연결한 격리 Chromium에서 1440·390·320px, 라이트·다크, 표 8행·모바일 카드 8개, 홈 연결과 빈 데이터·오류·미설정 안내를 확인했습니다. 타입 검사와 전체 테스트 55개가 통과했습니다.
-- **2026-09-22 DB 적용 완료:** Supabase MCP로 `supabase/migrations/202609210001_burry.sql`을 적용했습니다. 원격 이력은 `20260921225045_burry`이며 상태 1행·버전 0·이벤트 0, 두 테이블 RLS 및 서버 전용 RPC 권한을 확인했습니다. 아직 최초 수집 전입니다. 앱 배포 확인 후 `supabase/burry-cron.sql`을 적용해야 하며, job 이름은 `guru_tracker_burry_hourly`, 일정은 `19 * * * *`입니다.
-- 같은 날 운영 점검에서 기존 수동 적용분의 마이그레이션 이력은 비어 있었지만 실제 테이블·RPC·제약은 존재했습니다. 과거 파일을 재실행하거나 이력을 임의로 채우지 않았습니다. 세 원문 버킷은 비공개이고 익명·로그인 사용자의 접근 차단 정책이 존재합니다. 보존된 HTTP 응답 42건 중 39건은 200, 3건은 ARK 시간대의 503이며 최신 House 응답은 `unchanged`였습니다. ARKK의 마지막 성공은 다른 다섯 펀드보다 한 시간 이전이나 저장된 오류는 null이어서 503 원인은 아직 확정하지 못했습니다. 서버 로그·Supabase Advisor는 현재 연결된 MCP 도구에 없어 이번 점검에 포함하지 않았습니다.
+- **2026-09-22 운영 확인 완료:** 원격 마이그레이션 `20260921225045_burry` 적용 뒤의 현재 스냅샷을 확인했고, 배포된 보호 API와 저장된 Cron 명령이 모두 200 `unchanged`를 반환했습니다. 재처리 전후 버전 1·이벤트 1건·직전 스냅샷 없음·원문 및 정규화 해시는 유지됐습니다. `supabase/burry-cron.sql`의 `guru_tracker_burry_hourly` job은 `19 * * * *`로 활성 등록됐습니다.
+- 이전 운영 점검에서는 기존 수동 적용분의 마이그레이션 이력이 비어 있었지만 실제 테이블·RPC·제약은 존재했습니다. 과거 파일을 재실행하거나 이력을 임의로 채우지 않았습니다. 세 원문 버킷은 비공개이고 익명·로그인 사용자의 접근 차단 정책이 존재합니다. 당시 보존된 HTTP 응답 42건 중 39건은 200, 3건은 ARK 시간대의 503이며 최신 House 응답은 `unchanged`였습니다. 당시 ARKK의 마지막 성공은 다른 다섯 펀드보다 한 시간 이전이나 저장된 오류는 null이어서 503 원인은 확정하지 못했습니다. 서버 로그·Supabase Advisor는 연결된 MCP 도구에 없어 해당 점검에 포함하지 않았습니다. 2026-09-22의 이번 검증 결과는 위의 관리자 동기화 상태 및 아래 ARK 운영 확인 기록과 구분합니다.
 
 ### ARK 원문 검증과 현재 확인 범위
 
@@ -239,7 +245,7 @@ Google 브랜딩의 홈페이지·개인정보처리방침·약관에는 배포�
 - 실제 수집기로 기준일 **2026-09-14**의 ARKK 47행, ARKQ 39행, ARKW 44행, ARKG 33행, ARKF 41행, ARKX 35행을 확인했습니다. 합계 239행 중 티커가 비어 있는 17행도 보존했습니다. 이는 해당 기준일의 공식 펀드 holdings 검증이며 개인 계좌나 거래 이력의 검증이 아닙니다.
 - 필수 CSV 열, 인용 필드, 펀드·기준일 일치, 면책 문구까지의 완전성, 금액과 반올림 비중을 검증합니다. 미국 동부 시간 기준 미래 날짜, 혼합 펀드·날짜, 중복 자산, 잘린 파일은 반영하지 않습니다. 검증된 원문 전체를 비공개 Storage에 보관한 다음에만 스냅샷을 커밋합니다.
 - 실제 수집 CSV와 서버·API 함수를 인메모리 PostgreSQL에 연결한 통합 스모크에서 6개 펀드의 최초 반영, 동일 원문 재처리, 캐시 우선 조회, 접근·Cron의 lease 공유, 원문 손상 시 캐시 보존을 확인했습니다. 별도로 마이그레이션 적용 후 실제 Supabase Storage·DB에 6개 펀드를 수집하여 모두 `updated`, 동일 원문 재처리에서 모두 `unchanged`를 확인했습니다. 각 버전은 1, 직전 스냅샷은 null로 유지됩니다. 실제 원격 캐시를 사용하는 Next.js 화면에서 펀드별 총 239행의 데스크톱 표와 ARKK 모바일 카드·도넛을 확인했습니다.
-- 회귀 테스트는 CSV 경계, 센트 정밀도·음수 자산, 펀드별 lease, 오래된 펜스, 이벤트 충돌 시 원자 롤백, 익명·로그인 역할의 캐시·RPC·원문 접근 차단을 검증합니다. Cron SQL은 PostgreSQL에서 재등록·요청 구성·설정 오류를 확인했지만 실제 `pg_cron` 실행과 외부 전달은 배포 후 별도 확인해야 합니다.
+- 회귀 테스트는 CSV 경계, 센트 정밀도·음수 자산, 펀드별 lease, 오래된 펜스, 이벤트 충돌 시 원자 롤백, 익명·로그인 역할의 캐시·RPC·원문 접근 차단을 검증합니다. 2026-09-22 저장된 ARK Cron 명령을 실제 실행해 여섯 보호 API 호출 모두 HTTP 200 `unchanged`를 확인했고, 각 펀드의 최근 성공 시각과 오류 없음·버전 7을 조회했습니다. 매시간 실행이 앞으로도 항상 성공한다는 보장은 아닙니다.
 - 실제 페이지 컴포넌트에 공식 수집 자료를 연결한 **격리 브라우저**에서 1440px 표와 390px 카드의 6개 펀드 전체 행·빈 티커 보존, 도넛, 키보드·터치 툴팁을 확인했습니다. 320px에서는 금액과 수량을 한 열로 쌓아 센트 금액을 한 줄로 읽게 했습니다. 펀드 전환 시 재시도 분리, 음수 자료의 차트 제외·원문 보존, 갱신 성공 뒤 조회 실패의 오류 표시도 확인했습니다. 이 화면 검증은 운영 DB를 사용하지 않았습니다.
 - 기존 Stanley는 실제 저장된 캐시로 데스크톱 95행·모바일 95개 카드, 티커·PUT/CALL 표시와 상위 5개·기타 도넛이 유지됨을 확인했습니다. 실제 Next.js 경로에서 잘못된·중복 펀드의 404, 접근 API의 잘못된 펀드 400·다른 Origin 403, 내부 API의 인증 누락 401도 확인했습니다.
 
@@ -251,7 +257,7 @@ Google 브랜딩의 홈페이지·개인정보처리방침·약관에는 배포�
 - 파서는 PDF 텍스트 조각의 좌표를 읽습니다. 표 밖 값은 라벨 x=22, 값 x=99인 조각만 인정하고, 페이지마다 반복되는 표 헤더에서 열 기준 x를 다시 읽으며 거래 행은 페이지 경계를 넘어 이어집니다. 표 종료는 각주 `* For the complete list` 줄로만 판정하고 그 줄을 만나지 못하면 전체를 실패시킵니다. `D:`·`L:`·`C:` 같은 원문 접두는 유지하고, 줄바꿈으로 갈라진 설명·금액 조각은 이어 붙입니다.
 - **`Cap. Gains > $200?` 열은 파싱하지 않습니다.** 자산명은 원문 문자열 그대로이고 공식 자산유형 코드표 48종에 없는 코드, 지침에 없는 거래유형, 존재하지 않는 날짜, 원문에 없는 금액 표기는 부분 수용 없이 전체를 실패시킵니다. 원문이 구간이 아닌 단일 금액을 적은 거래(예: `$15.00`)는 표기 그대로 보존합니다.
 - Pelosi가 제출한 공식 PTR 문서 6건(2025년 제출 3건·2026년 제출 3건, 1~3페이지, 거래 1~18행, 다중 페이지 표·설명 행·줄바꿈 금액 포함)으로 파서를 대조했고, 문서번호 20035143의 7행은 독립 추출 스냅샷과 모든 필드가 일치했습니다. 색인 XML·PDF를 손상·변형한 입력은 모두 반영되지 않았습니다.
-- 실제 수집기가 공식 원문에서 만든 커밋 payload를 **인메모리 PostgreSQL**에 적용한 E2E에서 최초 반영이 `updated`, 같은 원문 재처리가 `unchanged`였습니다. 원문과 색인은 비공개 버킷 `house-originals`에 `house/{documentHash}` 접두사로 저장하도록 구성했습니다. **운영 Supabase에는 이 마이그레이션을 적용하고 배포했습니다. 과거 배포 함수에 pdfjs 워커 파일이 없어 운영 수집이 503 `HOUSE_VALIDATION`을 반환했고, 워커 경로를 고친 최신 배포는 운영 조회 HTTP 200까지 사용자 확인을 받았지만 동기화 응답 본문은 아직 확인하지 않았습니다.**
+- 실제 수집기가 공식 원문에서 만든 커밋 payload를 **인메모리 PostgreSQL**에 적용한 E2E에서 최초 반영이 `updated`, 같은 원문 재처리가 `unchanged`였습니다. 원문과 색인은 비공개 버킷 `house-originals`에 `house/{documentHash}` 접두사로 저장하도록 구성했습니다. **운영 Supabase에는 이 마이그레이션을 적용하고 배포했습니다. 과거 배포 함수의 pdfjs 워커 누락으로 발생한 503 기록과 구분하여, 2026-09-22 저장된 Cron 명령의 실제 운영 호출에서 HTTP 200 `unchanged`를 확인했습니다.**
 - 회귀 테스트는 합성 조각의 페이지 경계·금액 분리·설명 행·파일링 상태(`tests/house-parse.test.ts`)와 PGlite 인메모리 PostgreSQL의 lease·스냅샷 회전·오래된 제출 거부·같은 원문 해시의 정규화 불일치 실패·펜스 불일치 차단(`tests/house-ptr-state.test.ts`)을 검증합니다. 이 결과는 실제 원문 수집이나 원격 Supabase 검증을 대신하지 않습니다.
 - 실제 페이지 컴포넌트에 검증된 스냅샷을 연결한 **격리 브라우저**에서 1440px 표와 390px 카드로 거래 7행, `매수 · P`·`배우자 · SP`·`거래금액 범위` 표기, 320px~1440px 가로 오버플로 없음, 캐시 준비·데이터 없음·조회 오류·설정 필요·갱신 중·오래된 캐시·이전 스냅샷 상태 전환을 확인했습니다. 같은 격리 화면에서 데스크톱 표와 모바일 카드의 `원문 티커` 열이 공식 최신 원문 7행의 `(BE)`·`(INTC)` 괄호 표기를 그대로 옮긴 `BE`·`INTC`로 표시되고, 표기가 없는 `REOF XXV, LLC` 행은 `티커 미기재`로 표시되는 것을 확인했습니다. 이어서 검증용 행을 별도로 추가해 `AB` 자산유형에서도 원문 괄호 티커가 보존되는지와 `PS` 행이 `비상장 주식`으로 표시되는지도 확인했습니다. 이 화면 검증은 운영 DB를 사용하지 않았습니다.
 - 같은 격리 화면에서 **자산별 활동 요약**을 실제 Next.js로 확인했습니다. 1440px·390px·320px 모두에서 총 거래 7건·원문 자산 3개·옵션 거래 3건, 자산별 `BE` 4건·`INTC` 2건·`REOF XXV, LLC` 1건과 최다 건수 기준 막대 상대 길이(4·2·1건 → 100%·50%·25%)를 확인했고, 320px에서도 세 지표가 한 줄에 유지됐습니다. 거래가 없는 요약의 안내 문구, 긴 자산명의 줄바꿈, 같은 이름의 주식·옵션 병합과 `AB`·`PS` 분리 경계, 옵션 거래 건수가 전체 거래 건수의 부분집합으로 표시되는지도 함께 확인했습니다. 이 화면 검증도 운영 DB를 사용하지 않았습니다.

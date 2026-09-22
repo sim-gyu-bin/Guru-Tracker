@@ -5,6 +5,7 @@ import {
   AdminDecisionBoundary,
   AdminDecisionForm,
 } from "@/components/admin-decision-forms";
+import { AdminSyncHealth } from "@/components/admin-sync-health";
 import { AppShell } from "@/components/app-shell";
 import { GuruLink } from "@/components/guru-link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -33,6 +34,7 @@ import {
 import { requireAdminPage } from "@/server/access";
 import { decideAccess, listAccessRows } from "@/server/access-store";
 import { isSameOriginRequest } from "@/server/origin";
+import { getSyncHealthView } from "@/server/sync-health";
 
 // 관리자 결정은 매 요청마다 DB에서 다시 읽는다. 같은 화면을 두 번 열어도 최신 상태를 본다.
 export const dynamic = "force-dynamic";
@@ -182,6 +184,8 @@ function RowActions({
  */
 export default async function AdminPage({ searchParams }: AdminPageProps) {
   const admin = await requireAdminPage();
+  // 관리자 검증 뒤에만 읽는다. 상태판 조회가 실패해도 가입 승인 화면을 막지 않는다.
+  const syncHealthPromise = getSyncHealthView();
   const params = await searchParams;
 
   const requested =
@@ -207,6 +211,7 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
       : null;
   const pendingCount =
     ordered?.filter((row) => row.status === "pending").length ?? 0;
+  const syncHealth = await syncHealthPromise;
 
   // 확인 패널은 안내받은 revision이 현재 행과 같고 그 동작을 지금 실행할 수 있을 때만 연다.
   // 오래된 메일·이미 처리된 요청·자기 자신의 해제는 패널 대신 현재 상태를 알린다.
@@ -442,6 +447,8 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
         자신의 관리자 권한은 스스로 해제할 수 없습니다. 접근 해제된 계정은 다시
         로그인해도 자동 승인되지 않으며, 재승인은 이 화면에서만 할 수 있습니다.
       </p>
+
+      <AdminSyncHealth view={syncHealth} />
     </AppShell>
   );
 }
