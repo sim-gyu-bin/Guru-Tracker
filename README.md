@@ -131,9 +131,21 @@ Nancy Pelosi의 자산별 활동 요약 막대도 공통 초록→연두 그라�
 
 실제 Next.js의 개인정보처리방침→이용약관 이동을 지연시켜 390px·1440px에서 진행 표시, 기존 화면 유지와 완료 후 숨김을 확인했습니다. 빠른 뒤로·앞으로 이동에서도 시작·100% 완료·숨김을 확인했습니다. 로그인 폼은 브라우저에서 제출 이벤트와 Escape 취소를 별도 스모크 검증했습니다. 실제 OAuth 인증·로그아웃과 관리자 데이터 변경은 실행하지 않았습니다. `pnpm biome`의 TypeScript 검사와 Biome 검사가 통과했습니다.
 
-여섯 SEC 상세의 **13F 공시 평가금액 구성**은 저장된 스냅샷을 상위 5개와 기타로 집계합니다. CUSIP·증권 종류·PUT/CALL·수량 단위가 같은 항목만 합치며, 금액 합산·순위는 `BigInt`로 계산합니다. 도넛 옆 목록에 비중과 USD 금액을 항상 표시하고, 모바일에서는 차트 아래로 배치합니다. 차트에 키보드 포커스를 둔 뒤 좌우 방향키로 툴팁 항목을 이동할 수 있습니다. 빈 공시·총액 0은 차트를 그리지 않습니다.
+여섯 SEC 상세의 **13F 공시 평가금액 구성**은 저장된 스냅샷을 상위 5개와 기타로 집계합니다. CUSIP·증권 종류·PUT/CALL·수량 단위가 같은 항목만 합치며, 금액 합산·순위는 `BigInt`로 계산합니다. 도넛 옆 목록에 비중과 USD 금액을 항상 표시하고, 모바일에서는 차트 아래로 배치합니다. 빈 공시·총액 0은 차트를 그리지 않습니다.
 
-마우스를 올리거나 모바일에서 조각을 탭하면 세부 툴팁을 확인할 수 있습니다. 화면의 텍스트 목록은 툴팁 사용 여부와 관계없이 유지됩니다.
+여섯 SEC 상세와 ARK의 여섯 펀드는 동일한 큰 도넛 디자인을 사용하며 Nancy Pelosi 화면은 변경하지 않습니다. 상위 5개 합산 비중은 위에, 중앙에는 해당 인물 사진을, 아래에는 한글 이름을 표시합니다. ARK는 캐시 우드 사진을 사용하되 부제의 펀드명과 개인 계좌가 아니라는 안내를 유지합니다. 각 조각은 독립적으로 왼쪽 기본색에서 오른쪽 밝은색으로 흐르는 선형 그라데이션을 쓰며, 기타의 색 변화는 더 약하게 적용합니다. 조각 사이에는 1.2° 간격을 두고 꼭짓점은 살짝 둥글리되 선 테두리·사진 프레임은 두지 않습니다. 간격을 제외한 각도를 원래 비중대로 배분하며 라벨·목록의 실제 비중은 바꾸지 않습니다. 사진은 가운데 공간을 넓게 채우며, 도넛 전체와 원형 사진 뒤에만 부드러운 어두운 그림자를 적용합니다. 모든 조각은 티커·비중 두 줄을 유지합니다. 조각의 중간 각도와 도넛 두께의 중간 위치에 글자 묶음을 가운데 정렬하고, 웹폰트의 실제 글자 크기를 측정해 18px부터 최소 12px까지 단계적으로 줄입니다. 중앙에서 두 줄이 들어가지 않을 때만 라벨 전체를 조각 방향에 가까운 위·아래·좌·우 여백으로 옮깁니다. 바깥 라벨은 겹치지 않도록 간격을 조정하며 라벨 공간에 맞춰 도넛 크기를 정합니다. 연결선은 꺾임 없는 직선 하나이며, 같은 방향의 작은 열린 화살촉이 해당 조각의 바깥 호 중앙을 가리킵니다. 선과 글자 사이에는 여백을 둡니다. 확인된 티커가 없으면 순번 대신 축약한 발행사 이름을 씁니다. 전체 발행사·티커·비중·금액·SEC의 PUT/CALL 정보는 상시 목록에서 확인할 수 있습니다. SEC·ARK 차트는 별도 툴팁 없이 조각 라벨과 상시 목록으로 정보를 제공합니다.
+
+인물 사진은 사용자 요청으로 다음 공개 페이지에서 확보해 `public/`에 보관합니다. 화면의 출처 문구는 사용자 요청으로 생략하고 이 문서에 기록합니다. **재사용 허가는 확인하지 않았으며 비상업 용도나 출처 표기만으로 허가가 생기지는 않습니다.**
+
+| 인물 | 로컬 파일 | 공개 사진 출처 |
+| --- | --- | --- |
+| 스탠리 드러켄밀러 | `stanley-druckenmiller.jpg` | [Robin Hood Investors Conference](https://robinhood.org/events/investors-conference/) · 흑백 프로필 |
+| 마이클 버리 | `michael-burry.png` | [Investopedia](https://www.investopedia.com/who-is-michael-burry-5235600) |
+| 필리프 라퐁 | `philippe-laffont.jpg` | [Robin Hood Investors Conference](https://robinhood.org/events/investors-conference/) · 흑백 프로필 |
+| 브래드 거스트너 | `brad-gerstner.jpg` | [Forbes](https://www.forbes.com/profile/brad-gerstner/) |
+| 데이비드 테퍼 | `david-tepper.jpg` | [Forbes](https://www.forbes.com/profile/david-tepper/) |
+| 레오폴드 아셴브레너 | `leopold-aschenbrenner.jpg` | [Stanford Digital Economy Lab](https://digitaleconomy.stanford.edu/event/leopold-aschenbrenner-situational-awareness/) |
+| 캐시 우드 | `cathie-wood.jpg` | [Forbes](https://www.forbes.com/profile/cathie-wood/) |
 
 이 비중은 **공시 기준일의 제출 금액 구성**이며 현재 전체 자산 배분을 뜻하지 않습니다. 옵션 금액은 매입원금·프리미엄·손익으로 해석하지 않습니다. 집계는 `src/domain/holding-allocation.ts`, 화면은 `src/components/holding-allocation-chart.tsx`가 담당하며 추가 수집이나 DB 저장은 하지 않습니다.
 
@@ -141,7 +153,9 @@ Nancy Pelosi의 자산별 활동 요약 막대도 공통 초록→연두 그라�
 
 공통 SEC 상세의 티커는 [OpenFIGI API](https://www.openfigi.com/api/documentation)의 **현재 미국 시장 참조 정보**입니다. 공시의 CUSIP·CINS를 정확히 조회하며, [CGS 식별자 규칙](https://www.cusip.com/identifiers.html)에 따라 첫 글자가 영문자인 CINS는 `ID_CINS`, 숫자로 시작하는 CUSIP은 `ID_CUSIP`으로 요청합니다. 미국 Equity의 유일한 티커·FIGI 조합만 표시하고, 이름 추측·다른 시장·비상장 식별자 대체는 하지 않습니다. 미매핑은 `—`, 일시적인 공급자 실패는 `일시 불가`로 구분합니다. SH와 옵션 기초자산에만 적용하며 PRN에는 적용하지 않습니다. **Pelosi PTR 화면의 `원문 티커` 열과는 무관합니다. PTR 화면은 원문에 적힌 표기만 쓰고 외부 식별자 조회를 하지 않습니다.**
 
-`src/server/tickers.ts`는 Stanley 13F 화면을 위해 API 키 없이 최대 10건씩 순차 조회하고, 검증된 배치 결과를 Next 데이터 캐시에 24시간 저장합니다. 최초 조회 중에도 기존 공시 목록·차트를 먼저 표시하며, 매핑 결과는 카드·표·차트 범례와 툴팁에 반영합니다. 실패한 배치는 정상 미매핑으로 캐시하지 않고, 다른 배치의 결과와 재검증 전 정상 캐시는 보존합니다. 참조 티커는 공시 기준일 당시의 티커가 아니며 SEC 스냅샷·dataset version·변경 이벤트를 수정하지 않습니다.
+`src/server/tickers.ts`는 Stanley 13F 화면을 위해 API 키 없이 최대 10건씩 순차 조회하고, 검증된 배치 결과를 Next 데이터 캐시에 24시간 저장합니다. 최초 조회 중에도 기존 공시 목록·차트를 먼저 표시하며, 매핑 결과는 카드·표·차트 범례 및 조각 라벨에 반영합니다. 실패한 배치는 정상 미매핑으로 캐시하지 않고, 다른 배치의 결과와 재검증 전 정상 캐시는 보존합니다. 참조 티커는 공시 기준일 당시의 티커가 아니며 SEC 스냅샷·dataset version·변경 이벤트를 수정하지 않습니다.
+
+공시에 소문자로 적힌 CUSIP·CINS는 체크섬 검사와 OpenFIGI 요청에서만 대문자로 통일합니다. 조회 결과는 원문 식별자에 연결하며 SEC 원문·스냅샷 자체를 보정하지 않습니다.
 
 Laffont·Gerstner·Tepper·Aschenbrenner의 공통 상세에도 같은 OpenFIGI 참조 조회를 적용합니다. SEC 원문과 저장 스냅샷은 그대로 유지합니다.
 

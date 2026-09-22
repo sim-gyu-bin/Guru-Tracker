@@ -71,6 +71,11 @@ export function ArkAllocationChart({
         USD_CENT_SCALE,
       )}`}
       view={view}
+      // 인물 사진 아래에는 한글 이름을, 부제와 주석에는 펀드 구분과 개인 계좌가 아님을 유지한다.
+      presentation={{
+        name: "캐시 우드",
+        portrait: { src: "/cathie-wood.jpg" },
+      }}
       footnotes={[
         "차트 비중은 평가금액에서 다시 계산한 값이고, 공식 비중은 목록·표에 적은 ARK 원문 값입니다. 공식 비중 합계는 반올림 때문에 정확히 100%가 아닐 수 있습니다.",
         "ARK 펀드의 공식 보유 자료이며 개인 계좌나 실시간 매매가 아닙니다.",
