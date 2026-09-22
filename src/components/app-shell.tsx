@@ -108,16 +108,10 @@ export function AppShell({
         aria-label="주 탐색"
       >
         <GuruLink
-          className="flex min-h-9 items-center gap-[9px] px-2 text-sm font-bold tracking-[-0.02em]"
+          className="flex min-h-11 items-center whitespace-nowrap px-2 text-2xl font-extrabold tracking-[-0.045em] text-foreground"
           href="/main"
         >
-          <span
-            className="grid size-[23px] place-items-center rounded-md bg-foreground text-[9px] tracking-[-0.08em] text-primary-foreground"
-            aria-hidden="true"
-          >
-            GT
-          </span>
-          <span>Guru Tracker</span>
+          Guru Tracker
         </GuruLink>
 
         <nav className="mt-8 grid gap-0.5" aria-label="추적 대상">
@@ -156,7 +150,7 @@ export function AppShell({
           {/* 좁은 화면의 주 탐색 입구다. 761px 이상에서는 사이드바가 그 역할을 대신한다. */}
           <MobileNavigation admin={admin} targets={targets} unavailable={[]} />
           <GuruLink
-            className="inline-flex min-h-11 items-center text-xl font-bold min-[761px]:hidden"
+            className="inline-flex min-h-11 items-center whitespace-nowrap text-2xl font-extrabold tracking-[-0.045em] text-foreground min-[761px]:hidden"
             href="/main"
           >
             Guru Tracker

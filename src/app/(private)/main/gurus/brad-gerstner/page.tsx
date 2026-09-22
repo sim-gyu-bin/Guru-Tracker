@@ -17,6 +17,7 @@ export default async function BradGerstnerPage() {
         manager: "gerstner",
         screen: "gerstner",
         name: "Brad Gerstner",
+        introduction: "알티미터를 이끌며 인터넷·소프트웨어 기업에 집중 투자",
         managerName: "Altimeter Capital Management, LP",
       }}
       view={view}

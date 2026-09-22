@@ -1,6 +1,7 @@
 import { cache, Suspense } from "react";
 
 import { AppShell } from "@/components/app-shell";
+import { GuruDetailHeader } from "@/components/guru-detail-header";
 import { GuruLink } from "@/components/guru-link";
 import { HoldingAllocationChart } from "@/components/holding-allocation-chart";
 import { SecRefresh, type SecRefreshManager } from "@/components/sec-refresh";
@@ -36,11 +37,12 @@ const EMPTY_TICKERS: TickerLookup = {
 
 type SecManagerScreen = "stanley" | "laffont" | "gerstner" | "tepper";
 
-/** 공통 상세가 쓰는 사람·운용사·경로 설정이다. 매니저 식별자는 동기화 URL과 서버 조회 대상을 항상 같게 유지한다. */
+/** 공통 상세가 쓰는 사람·소개·운용사·경로 설정이다. 매니저 식별자는 동기화 URL과 서버 조회 대상을 항상 같게 유지한다. */
 export type SecManagerDetailConfig = Readonly<{
   manager: SecRefreshManager;
   screen: SecManagerScreen;
   name: string;
+  introduction: string;
   managerName: string;
 }>;
 
@@ -57,8 +59,14 @@ function statusLabel(status: SecView["status"]) {
   return "데이터 없음";
 }
 
+/**
+ * 캐시 상태 배지의 색을 고른다. 준비 상태만 네온 초록으로 강조하고 오류·설정 필요·빈 상태는 의미 색을 유지한다.
+ * 라이트는 옅은 초록 배경 위에서 짙은 초록 글자가 4.5:1 이상이 되도록 `--foreground`를 18% 섞고,
+ * 다크는 순수 네온 초록 글자에 정적 형광광(`dark:shadow-primary-glow-soft`)만 더한다.
+ */
 function statusClassName(status: SecView["status"]) {
-  if (status === "ready") return "border-success/30 bg-success/10 text-success";
+  if (status === "ready")
+    return "border-primary/25 bg-primary/5 text-[color:color-mix(in_oklab,var(--primary)_82%,var(--foreground))] dark:border-primary/40 dark:bg-primary/10 dark:text-primary dark:shadow-primary-glow-soft";
   if (status === "error")
     return "border-destructive/25 bg-destructive/10 text-destructive";
   if (status === "unconfigured")
@@ -432,13 +440,12 @@ export function SecManagerDetail({
       </nav>
       <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <p className="mb-2 text-sm font-semibold tracking-[0.01em] text-muted-foreground">
-            SEC EDGAR 13F · 저장된 공식 공시
-          </p>
-          <h1 className="mb-2.5 text-3xl leading-9 font-semibold tracking-tight text-foreground">
-            {config.name}
-          </h1>
-          <p className="mb-0 max-w-[680px] text-lg leading-7 text-muted-foreground">
+          <GuruDetailHeader
+            introduction={config.introduction}
+            name={config.name}
+            source="SEC EDGAR 13F · 저장된 공식 공시"
+          />
+          <p className="mt-1.5 mb-0 max-w-[680px] text-sm leading-5 text-muted-foreground">
             {snapshot
               ? `실시간 포지션이 아닌 SEC에 제출된 ${snapshot.managerName}의 기관 보유 현황입니다.`
               : `실시간 포지션이 아닌 SEC에 제출된 ${config.managerName}의 기관 보유 현황입니다.`}

@@ -107,15 +107,15 @@ function GuruCard({
           {/* 출처 식별용 장식 타일이며, 자료 상태는 별도 문구로 전달한다. */}
           <span
             aria-hidden="true"
-            className="grid size-9 shrink-0 place-items-center rounded-[7px] bg-[linear-gradient(140deg,var(--interactive-subtle),color-mix(in_oklab,var(--success)_10%,transparent))] text-xs font-bold text-success"
+            className="grid size-9 shrink-0 place-items-center rounded-[7px] border border-primary/20 bg-linear-to-br from-primary/15 to-chart-1/5 text-xs font-bold text-primary dark:shadow-[0_0_8px_color-mix(in_srgb,var(--primary)_15%,transparent)]"
           >
             {initials}
           </span>
           <span className="grid min-w-0 gap-1">
-            <strong className="text-lg leading-7 font-semibold tracking-[-0.02em]">
+            <strong className="text-lg leading-7 font-semibold tracking-[-0.02em] text-foreground">
               {name}
             </strong>
-            <span className="text-sm leading-5 text-muted-foreground">
+            <span className="w-fit max-w-full break-keep text-sm leading-5 text-muted-foreground">
               {statusLabel}
             </span>
           </span>
@@ -125,9 +125,9 @@ function GuruCard({
           className="mt-2 size-4 shrink-0 text-muted-foreground/70"
         />
       </span>
-      {/* 공식 출처 표기. 청록 계열 success 톤으로 통일하되 문구는 그대로 유지한다. */}
+      {/* 상세와 같은 초록 토큰을 사용한다. 출처 식별용이며 데이터 성공 상태를 뜻하지 않는다. */}
       <Badge
-        className="h-auto w-fit self-start rounded-full border-success/30 bg-success/10 px-2 py-[3px] text-xs font-semibold text-success"
+        className="h-auto w-fit self-start rounded-full border-primary/25 bg-linear-to-r from-primary/10 to-chart-1/5 px-2 py-[3px] text-xs font-semibold text-primary dark:shadow-[0_0_8px_color-mix(in_srgb,var(--primary)_12%,transparent)]"
         variant="outline"
       >
         {sourceLabel}
@@ -181,30 +181,27 @@ export default async function HomePage() {
         도입부 배경광. 색과 세기는 globals.css의 --glow-* 토큰이 정하므로 라이트·다크가 같은 마크업을 쓴다.
         움직이지 않는 정적 방사광만 쓰고, `isolate` 문맥 안에서 음수 z로 내용 뒤에만 깔린다.
       */}
-      <div className="relative isolate mb-6 flex flex-col gap-4 min-[761px]:flex-row min-[761px]:items-start min-[761px]:justify-between min-[761px]:gap-6">
+      <div className="relative isolate mb-6 grid gap-3 min-[761px]:grid-cols-[minmax(0,1fr)_auto] min-[761px]:items-start min-[761px]:gap-x-6">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_20%_45%,var(--glow-blue),transparent_65%),radial-gradient(ellipse_at_80%_35%,var(--glow-green),transparent_65%)] blur-xl"
         />
         <div className="min-w-0">
-          {/* 강조색은 제목 일부에만 쓰고, 다크의 파랑은 가독성이 높은 공통 토큰을 사용한다. */}
-          <h1 className="mb-2 text-3xl leading-9 font-semibold tracking-tight">
-            <span className="bg-linear-to-r from-interactive via-success to-primary bg-clip-text text-transparent dark:from-chart-2">
-              공시
-            </span>{" "}
-            조회
+          <h1 className="mb-2 text-3xl leading-9 font-semibold tracking-tight text-foreground">
+            공시 조회
           </h1>
-          <p className="m-0 max-w-[720px] text-lg leading-7 text-muted-foreground">
-            저장된 공시 캐시를 먼저 표시하고, 캐시가 비었거나 오래됐을 때만 공식
-            출처에 갱신을 요청합니다.
-          </p>
         </div>
         <Badge
-          className="h-auto self-start rounded-full border-border bg-card px-2.5 py-1 text-xs font-semibold text-muted-foreground"
+          className="h-auto max-w-full self-start justify-self-start whitespace-normal break-keep rounded-full border-border bg-card px-2.5 py-1 text-xs font-semibold text-muted-foreground min-[761px]:max-w-md min-[761px]:justify-self-end"
           variant="outline"
         >
           Stanley · Burry · Cathie · Nancy · Philippe · Brad · David 조회 지원
         </Badge>
+        {/* 지원 배지와 가로 폭을 나누지 않으며 한국어 단어 중간 줄바꿈을 막는다. */}
+        <p className="m-0 break-keep text-lg leading-7 text-muted-foreground min-[761px]:col-span-2">
+          저장된 공시 캐시를 먼저 표시하고, 캐시가 비었거나 오래됐을 때만 공식
+          출처에 갱신을 요청합니다.
+        </p>
       </div>
 
       <SecRefresh

@@ -17,6 +17,7 @@ export default async function PhilippeLaffontPage() {
         manager: "laffont",
         screen: "laffont",
         name: "Philippe Laffont",
+        introduction: "코아튜를 이끌며 글로벌 기술주와 성장 기업에 투자",
         managerName: "COATUE MANAGEMENT LLC",
       }}
       view={view}
