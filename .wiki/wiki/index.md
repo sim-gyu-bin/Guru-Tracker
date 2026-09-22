@@ -30,6 +30,8 @@ The tracked set now has eight people. On 2026-09-22 Leopold Aschenbrenner, whose
 
 The locally installed `ui-ux-pro-max` preserves official upstream content and its original English, with only OMP execution-path adaptation. Project-specific UI constraints live separately in `.omp/RULES.md`; they must not be attributed to or inserted into upstream guidance. See `.omp/AGENTS.md` for the preservation policy.
 
+The 2026-09-22 approved cleanup removes the unused Space Grotesk asset and license while retaining active Pretendard assets; see the [theme decision](decisions/fintech-theme.md). Unused dropdown and Stanley refresh modules and two uncalled server helpers were also removed; no dependency or routing-policy change was made.
+
 ## Pages
 
 ### Governance and evidence

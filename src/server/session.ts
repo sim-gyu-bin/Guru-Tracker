@@ -14,7 +14,6 @@ import {
   identityInputOf,
   publicConfig,
   type SessionClient,
-  type SessionCookieBridge,
 } from "./supabase";
 
 /**
@@ -60,11 +59,6 @@ export async function sessionState(): Promise<SessionState> {
   const identity = verifiedGoogleIdentity(identityInputOf(data.user));
   if (!identity) return { kind: "unverified" };
   return { kind: "identity", userId: identity.userId, email: identity.email };
-}
-
-/** 서버 액션·라우트 핸들러에서 넘겨받은 bridge를 그대로 쓰는 세션 클라이언트. */
-export function bridgedSessionClient(bridge: SessionCookieBridge) {
-  return publicConfig() ? createSessionClient(bridge) : null;
 }
 
 /**

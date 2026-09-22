@@ -156,20 +156,3 @@ export async function approvedApi(): Promise<
   }
   return deny(503, "접근 상태를 확인하지 못했습니다.");
 }
-
-/** 관리자만 쓰는 JSON API. 승인되지 않은 관리자는 403이다. */
-export async function adminApi(): Promise<
-  { ok: true; row: AccessRow } | ApiDenial
-> {
-  const state = await accessState();
-  if (state.kind === "member" && isAdminRow(state.row)) {
-    return { ok: true, row: state.row };
-  }
-  if (state.kind === "anonymous" || state.kind === "unverified") {
-    return deny(401, "로그인이 필요합니다.");
-  }
-  if (state.kind === "member") {
-    return deny(403, "관리자 권한이 필요합니다.");
-  }
-  return deny(503, "접근 상태를 확인하지 못했습니다.");
-}
