@@ -35,7 +35,12 @@ const EMPTY_TICKERS: TickerLookup = {
   unavailableCusips: [],
 };
 
-type SecManagerScreen = "stanley" | "laffont" | "gerstner" | "tepper";
+type SecManagerScreen =
+  | "stanley"
+  | "laffont"
+  | "gerstner"
+  | "tepper"
+  | "aschenbrenner";
 
 /** 공통 상세가 쓰는 사람·소개·운용사·경로 설정이다. 매니저 식별자는 동기화 URL과 서버 조회 대상을 항상 같게 유지한다. */
 export type SecManagerDetailConfig = Readonly<{

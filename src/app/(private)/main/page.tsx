@@ -67,6 +67,13 @@ const ADDITIONAL_SEC_GURUS = [
     href: "/main/gurus/david-tepper",
     managerName: "Appaloosa LP",
   },
+  {
+    manager: "aschenbrenner",
+    name: "Leopold Aschenbrenner",
+    initials: "LA",
+    href: "/main/gurus/leopold-aschenbrenner",
+    managerName: "Situational Awareness LP",
+  },
 ] as const;
 
 /** 카드가 표시하는 공식 메타데이터 한 행이다. 값은 저장된 캐시에서만 오며 없으면 '데이터 없음'이다. */
@@ -159,19 +166,25 @@ export default async function HomePage() {
   // 공시 자료를 읽기 전에 승인 상태를 서버에서 다시 확인한다. 승인되지 않은 요청은 여기서 끝난다.
   const row = await requireApprovedPage();
   // SEC 13F 대상은 같은 판독기를 쓰고 수집 대상만 다르다.
-  const [stanley, burry, laffont, gerstner, tepper, ark, house] =
+  const [stanley, burry, laffont, gerstner, tepper, aschenbrenner, ark, house] =
     await Promise.all([
       getSecView("stanley"),
       getSecView("burry"),
       getSecView("laffont"),
       getSecView("gerstner"),
       getSecView("tepper"),
+      getSecView("aschenbrenner"),
       getArkView(HOME_ARK_FUND),
       getHousePtrView(),
     ]);
   const snapshot = stanley.snapshot;
   const burrySnapshot = burry.snapshot;
-  const additionalSecViews = [laffont, gerstner, tepper] as const;
+  const additionalSecViews = [
+    laffont,
+    gerstner,
+    tepper,
+    aschenbrenner,
+  ] as const;
   const arkSnapshot = ark.snapshot;
   const houseSnapshot = house.snapshot;
 
@@ -195,7 +208,8 @@ export default async function HomePage() {
           className="h-auto max-w-full self-start justify-self-start whitespace-normal break-keep rounded-full border-border bg-card px-2.5 py-1 text-xs font-semibold text-muted-foreground min-[761px]:max-w-md min-[761px]:justify-self-end"
           variant="outline"
         >
-          Stanley · Burry · Cathie · Nancy · Philippe · Brad · David 조회 지원
+          Stanley · Burry · Cathie · Nancy · Philippe · Brad · David · Leopold
+          조회 지원
         </Badge>
         {/* 지원 배지와 가로 폭을 나누지 않으며 한국어 단어 중간 줄바꿈을 막는다. */}
         <p className="m-0 break-keep text-lg leading-7 text-muted-foreground min-[761px]:col-span-2">
@@ -253,7 +267,7 @@ export default async function HomePage() {
             className="h-auto shrink-0 rounded-full border-success/30 bg-success/10 px-2.5 py-1 text-sm font-semibold text-[color:color-mix(in_oklab,var(--success)_78%,var(--foreground))]"
             variant="outline"
           >
-            7명
+            8명
           </Badge>
         </div>
         <div className="grid gap-3.5 min-[761px]:grid-cols-2">
@@ -390,9 +404,10 @@ export default async function HomePage() {
             나타내지 않으며, 원문과 기준일을 함께 확인하세요.
           </li>
           <li className="text-sm leading-6 text-muted-foreground">
-            Michael Burry 공시에는 주식과 옵션(PUT·CALL)이 함께 표시됩니다.
-            옵션의 공시 금액은 계약 프리미엄이 아니라 기초자산 공시금액이며,
-            행사가·만기·계약 수·손익은 원문에 없어 추정하지 않습니다.
+            Michael Burry와 Leopold Aschenbrenner 공시에는 주식과
+            옵션(PUT·CALL)이 함께 표시됩니다. 옵션의 공시 금액은 계약 프리미엄이
+            아니라 기초자산 공시금액이며, 행사가·만기·계약 수·손익은 원문에 없어
+            추정하지 않습니다.
           </li>
           <li className="text-sm leading-6 text-muted-foreground">
             ARK 보유 자료는 펀드가 공개한 공식 자료이며 개인 계좌나 실시간

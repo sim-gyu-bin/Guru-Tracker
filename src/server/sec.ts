@@ -26,7 +26,7 @@ const MANAGERS: Record<
     archiveCik: "1649339",
     managerName: "Scion Asset Management, LLC",
   },
-  // 아래 세 대상도 개인 계좌가 아닌 해당 기관의 공식 13F만 수집한다.
+  // 아래 대상들도 개인 계좌가 아닌 해당 기관의 공식 13F만 수집한다.
   laffont: {
     cik: "0001135730",
     archiveCik: "1135730",
@@ -41,6 +41,13 @@ const MANAGERS: Record<
     cik: "0001656456",
     archiveCik: "1656456",
     managerName: "Appaloosa LP",
+  },
+  // Leopold Aschenbrenner가 운용하는 Situational Awareness LP의 13F다. 제출 대행 accession(0000935836)이어도
+  // submissions의 제출자 CIK·이름과 표지 filingManager.name이 이 값과 일치해야만 통과한다.
+  aschenbrenner: {
+    cik: "0002045724",
+    archiveCik: "2045724",
+    managerName: "Situational Awareness LP",
   },
 };
 const parser = new XMLParser({

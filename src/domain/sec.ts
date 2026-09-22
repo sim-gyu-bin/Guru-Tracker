@@ -8,7 +8,8 @@ export type SecManager =
   | "burry"
   | "laffont"
   | "gerstner"
-  | "tepper";
+  | "tepper"
+  | "aschenbrenner";
 
 /** SEC 13F 공시 금액은 USD, 수량은 원문 단위다. 개인 계좌나 실시간 거래를 나타내지 않는다. */
 export interface SecHolding {

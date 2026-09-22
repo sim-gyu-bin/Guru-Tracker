@@ -6,7 +6,12 @@ import {
 } from "@/components/cache-refresh";
 
 /** SEC 13F 화면이 허용하는 동기화 대상 식별자다. URL·cooldown 키는 이 닫힌 목록으로만 만든다. */
-export type SecRefreshManager = "stanley" | "laffont" | "gerstner" | "tepper";
+export type SecRefreshManager =
+  | "stanley"
+  | "laffont"
+  | "gerstner"
+  | "tepper"
+  | "aschenbrenner";
 
 type SecRefreshProps = Readonly<{
   manager: SecRefreshManager;
