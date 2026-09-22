@@ -1,4 +1,7 @@
-import { AllocationChart } from "@/components/allocation-chart";
+import {
+  AllocationChart,
+  type AllocationChartPresentation,
+} from "@/components/allocation-chart";
 import type {
   HoldingAllocation,
   HoldingAllocationItem,
@@ -25,15 +28,18 @@ function describeSecurity(item: HoldingAllocationItem): string {
  * 서버에서 BigInt로 집계한 13F 평가금액 구성을 공통 차트 컴포넌트가 쓰는 표시 값으로 변환한다.
  * 금액은 원문 USD 정수를 그대로 통화 표기하고, 티커는 OpenFIGI의 현재 참조 매핑만 사용한다.
  * 공시 기준일의 금액만 다루며, 총액 0 또는 빈 공시는 안내 문구로 대신한다.
+ * presentation은 지정된 화면에서만 전달되며, 없으면 기존 도넛·툴팁 구성을 그대로 쓴다.
  */
 export function HoldingAllocationChart({
   allocation,
   reportDate,
   tickers,
+  presentation,
 }: {
   allocation: HoldingAllocation;
   reportDate: string;
   tickers: TickerLookup["byCusip"];
+  presentation?: AllocationChartPresentation;
 }) {
   const view: AllocationChartView = {
     slices: allocation.items.map((item) => ({
@@ -59,6 +65,7 @@ export function HoldingAllocationChart({
       subtitle={`기준일 ${reportDate}`}
       totalLabel={`합계 ${formatUsdAmount(BigInt(allocation.totalValueUsd), 0)}`}
       view={view}
+      presentation={presentation}
       footnotes={[
         "SEC 공시 금액 기준이며 현재 전체 자산 배분이 아닙니다.",
         "PUT/CALL 금액은 옵션 매입원금·프리미엄이나 손익을 뜻하지 않으며, 주식·PUT·CALL을 구분해 집계합니다.",

@@ -13,16 +13,5 @@ Guru Tracker 자체 호스팅 폰트 출처
    받은 날짜: 2026-09-21
    변환: 없음(배포본 그대로). 한국어 본문 전체를 이 파일 하나로 덮는다.
 
-2) SpaceGrotesk-Variable.woff2
-   패밀리/축: Space Grotesk, 가변 wght 300-700, unitsPerEm 1000, 매핑된 코드포인트 735자(글리프 1001개, 라틴 전용)
-   출처: https://github.com/google/fonts/tree/main/ofl/spacegrotesk
-         raw: https://raw.githubusercontent.com/google/fonts/main/ofl/spacegrotesk/SpaceGrotesk%5Bwght%5D.ttf
-   라이선스: SIL Open Font License 1.1 — LICENSE-SpaceGrotesk.txt
-   크기: 49192 바이트
-   sha256: f59bc02b368680ed8bcb263e3e6d75baf423bea5dcb8ac3664c42f6ee0b2b951
-   받은 날짜: 2026-09-21
-   변환: 위 가변 TTF를 fontTools(4.60.2) + brotli로 woff2 컨테이너에 다시 담았다.
-         글리프·축 값은 그대로다. 이전 서비스명용 파일이며 현재 로딩하지 않는다. 파일·라이선스는 보존한다.
-
-두 라이선스 모두 원문을 수정하지 않고 함께 보관한다. 폰트를 교체하거나 다시 받을 때는
+라이선스 원문을 수정하지 않고 폰트와 함께 보관한다. 폰트를 교체하거나 다시 받을 때는
 크기·해시·축 값과 라이선스 파일을 함께 확인한다.

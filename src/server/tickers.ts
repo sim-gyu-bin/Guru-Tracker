@@ -44,8 +44,8 @@ const getCachedBatch = unstable_cache(
         body: JSON.stringify(
           cusips.map((cusip) => ({
             // CGS의 CINS는 첫 영문자가 국가·지역 코드다. exact 식별자 타입만 구분한다.
-            idType: /^[A-Z]/.test(cusip) ? "ID_CINS" : "ID_CUSIP",
-            idValue: cusip,
+            idType: /^[A-Z]/i.test(cusip) ? "ID_CINS" : "ID_CUSIP",
+            idValue: cusip.toUpperCase(),
             exchCode: "US",
             marketSecDes: "Equity",
             // 폐기·비상장 티커를 현재 미국 상장 티커로 표시하지 않는다.
@@ -74,6 +74,7 @@ const getCachedBatch = unstable_cache(
 
 /**
  * SH 보유의 exact CUSIP·CINS에 현재 미국 참조 티커를 붙인다. 13F 원본은 변경하지 않는다.
+ * 공시의 소문자 식별자도 조회·체크섬 검사 때만 대문자로 통일하고 결과 키는 원문을 유지한다.
  * 옵션 PUT/CALL은 기초자산 식별자이며 PRN은 요청하지 않는다. 이름 추측도 하지 않는다.
  * 잘못된 CUSIP·정상 no-match·모호성은 unresolved, 배치 조회 실패는 unavailable이다.
  * 실패는 캐시 함수 밖에서 격리하여 다른 배치의 성공 결과와 기존 정상 캐시를 보존한다.
@@ -95,7 +96,7 @@ export async function getHoldingTickers(
   ].sort();
   const validCusips: string[] = [];
   for (const cusip of cusips) {
-    if (isCusip(cusip)) validCusips.push(cusip);
+    if (isCusip(cusip.toUpperCase())) validCusips.push(cusip);
     else result.unresolvedCusips.push(cusip);
   }
   // 무인증 API는 최대 10 jobs/request다. 병렬 배치·자동 재시도로 제한을 증폭하지 않는다.

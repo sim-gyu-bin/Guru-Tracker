@@ -1,5 +1,5 @@
 import { cache, Suspense } from "react";
-
+import type { AllocationChartPresentation } from "@/components/allocation-chart";
 import { AppShell } from "@/components/app-shell";
 import { GuruDetailHeader } from "@/components/guru-detail-header";
 import { GuruLink } from "@/components/guru-link";
@@ -265,17 +265,21 @@ function HoldingsContent({
   filingLabel,
   tickers,
   tickerLoading,
+  presentation,
 }: {
   holdings: SecHolding[];
   reportDate: string;
   filingLabel: string;
   tickers: TickerLookup;
   tickerLoading: boolean;
+  /** 인포그래픽 도넛 표시 설정이다. 지정한 화면에서만 채우고 나머지 13F 화면은 기존 차트를 쓴다. */
+  presentation?: AllocationChartPresentation;
 }) {
   return (
     <>
       <HoldingAllocationChart
         allocation={getHoldingAllocation(holdings)}
+        presentation={presentation}
         reportDate={reportDate}
         tickers={tickers.byCusip}
       />
@@ -343,10 +347,12 @@ async function ResolvedHoldingsContent({
   holdings,
   reportDate,
   filingLabel,
+  presentation,
 }: {
   holdings: SecHolding[];
   reportDate: string;
   filingLabel: string;
+  presentation?: AllocationChartPresentation;
 }) {
   try {
     const tickers = await getHoldingTickers(holdings);
@@ -354,6 +360,7 @@ async function ResolvedHoldingsContent({
       <HoldingsContent
         filingLabel={filingLabel}
         holdings={holdings}
+        presentation={presentation}
         reportDate={reportDate}
         tickerLoading={false}
         tickers={tickers}
@@ -364,6 +371,7 @@ async function ResolvedHoldingsContent({
       <HoldingsContent
         filingLabel={filingLabel}
         holdings={holdings}
+        presentation={presentation}
         reportDate={reportDate}
         tickerLoading={false}
         tickers={{
@@ -414,6 +422,26 @@ function PreviousFiling({ snapshot }: { snapshot: SecSnapshot | null }) {
   );
 }
 
+// 공개 인물 사진과 한글 이름을 함께 표시한다. 사진별 출처와 사용 조건은 README에 기록한다.
+const SEC_CHART_PRESENTATIONS: Record<
+  SecManagerScreen,
+  AllocationChartPresentation
+> = {
+  stanley: {
+    name: "스탠리 드러켄밀러",
+    portrait: { src: "/stanley-druckenmiller.jpg" },
+  },
+  laffont: { name: "필리프 라퐁", portrait: { src: "/philippe-laffont.jpg" } },
+  gerstner: {
+    name: "브래드 거스트너",
+    portrait: { src: "/brad-gerstner.jpg" },
+  },
+  tepper: { name: "데이비드 테퍼", portrait: { src: "/david-tepper.jpg" } },
+  aschenbrenner: {
+    name: "레오폴드 아셴브레너",
+    portrait: { src: "/leopold-aschenbrenner.jpg" },
+  },
+};
 /**
  * Stanley 및 일반 SEC 13F 관리자의 공통 상세 화면이다.
  * 캐시 상태·공시 기준일·제출일·원문 링크·이전 스냅샷·차트·반응형 보유표를 같은 순서로 표시한다. PUT/CALL은 원문 유형만 표시하며 손익을 추정하지 않는다.
@@ -424,6 +452,7 @@ export function SecManagerDetail({
   admin,
 }: SecManagerDetailProps) {
   const snapshot = view.snapshot;
+  const chartPresentation = SEC_CHART_PRESENTATIONS[config.screen];
   return (
     <AppShell admin={admin} current={config.screen}>
       <nav
@@ -530,6 +559,7 @@ export function SecManagerDetail({
               <HoldingsContent
                 filingLabel={`${snapshot.form} · ${snapshot.accession}`}
                 holdings={snapshot.holdings}
+                presentation={chartPresentation}
                 reportDate={snapshot.reportDate}
                 tickerLoading
                 tickers={EMPTY_TICKERS}
@@ -539,6 +569,7 @@ export function SecManagerDetail({
             <ResolvedHoldingsContent
               filingLabel={`${snapshot.form} · ${snapshot.accession}`}
               holdings={snapshot.holdings}
+              presentation={chartPresentation}
               reportDate={snapshot.reportDate}
             />
           </Suspense>

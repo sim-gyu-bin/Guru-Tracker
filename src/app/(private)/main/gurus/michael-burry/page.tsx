@@ -302,6 +302,10 @@ function HoldingsContent({
     <>
       <HoldingAllocationChart
         allocation={getHoldingAllocation(holdings)}
+        presentation={{
+          name: "마이클 버리",
+          portrait: { src: "/michael-burry.png" },
+        }}
         reportDate={reportDate}
         tickers={tickers.byCusip}
       />
