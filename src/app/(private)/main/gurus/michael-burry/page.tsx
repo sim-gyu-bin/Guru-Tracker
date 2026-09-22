@@ -304,7 +304,8 @@ function HoldingsContent({
         allocation={getHoldingAllocation(holdings)}
         presentation={{
           name: "마이클 버리",
-          portrait: { src: "/michael-burry.png" },
+          autoRotate: true,
+          portrait: { src: "/michael-burry.png", zoom: 1.8, focusY: 0.3 },
         }}
         reportDate={reportDate}
         tickers={tickers.byCusip}
