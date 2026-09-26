@@ -175,7 +175,7 @@ export function AppShell({
             <div className="hidden items-center gap-2 min-[761px]:flex">
               {admin ? (
                 <Button asChild className="h-11 px-3" variant="outline">
-                  <GuruLink href="/admin">가입 승인</GuruLink>
+                  <GuruLink href="/admin">운영 관리</GuruLink>
                 </Button>
               ) : null}
               {/* 로그아웃은 상태를 바꾸므로 링크가 아니라 같은 출처 POST로만 실행한다. */}
