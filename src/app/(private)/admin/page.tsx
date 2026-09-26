@@ -6,6 +6,7 @@ import {
   AdminDecisionForm,
 } from "@/components/admin-decision-forms";
 import { AdminSyncHealth } from "@/components/admin-sync-health";
+import { AdminTabs } from "@/components/admin-tabs";
 import { AppShell } from "@/components/app-shell";
 import { GuruLink } from "@/components/guru-link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -176,7 +177,7 @@ function RowActions({
 }
 
 /**
- * 관리자 가입 승인 화면.
+ * 가입 승인과 공시 동기화 상태를 URL 기반 탭으로 나누는 운영 관리 화면.
  *
  * 대기 요청 검토·승인·거절·접근 해제·재승인을 한 화면에서 처리한다. 메일 링크는 여기로 오는
  * 안내일 뿐이며, 실제 변경은 관리자가 이 화면에서 누른 버튼(POST)으로만 일어난다.
@@ -187,6 +188,14 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
   // 관리자 검증 뒤에만 읽는다. 상태판 조회가 실패해도 가입 승인 화면을 막지 않는다.
   const syncHealthPromise = getSyncHealthView();
   const params = await searchParams;
+
+  // 승인 안내 쿼리가 있으면 동기화 탭 URL이어도 안내가 가려지지 않게 가입 승인을 우선한다.
+  // `tab=sync` 한 값만 유효하며, 배열·알 수 없는 값은 URL을 보존한 채 가입 승인으로 표시한다.
+  const hasApprovalQuery = ["request", "intent", "revision", "result"].some(
+    (key) => params[key] !== undefined,
+  );
+  const activeTab =
+    !hasApprovalQuery && params.tab === "sync" ? "sync" : "approvals";
 
   const requested =
     typeof params.request === "string" && isUserId(params.request)
@@ -245,210 +254,240 @@ export default async function AdminPage({ searchParams }: AdminPageProps) {
 
   return (
     <AppShell admin current="admin">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h1 className="text-xl font-semibold tracking-[-0.01em]">가입 승인</h1>
-        <p className="text-[13px] text-muted-foreground">
-          승인 {pendingCount}건 · 전체 {ordered?.length ?? 0}건
-        </p>
-      </div>
+      <h1 className="text-xl font-semibold tracking-[-0.01em]">운영 관리</h1>
       <p className="mt-2 max-w-[720px] text-[13px] leading-[20px] text-muted-foreground">
-        Google 로그인으로 접수된 요청을 검토합니다. 승인된 계정만 공시 화면과
-        동기화 API를 쓸 수 있고, 접근 해제는 다음 요청부터 적용됩니다.
+        가입 요청과 공시 수집 상태를 함께 관리합니다.
       </p>
 
-      {outcome ? (
-        <Alert
-          className="mt-5"
-          variant={outcome.failed ? "destructive" : "default"}
-        >
-          <AlertTitle>
-            {outcome.failed
-              ? "결정을 반영하지 못했습니다"
-              : "결정을 반영했습니다"}
-          </AlertTitle>
-          <AlertDescription className="text-[13px] leading-[19px]">
-            {outcome.text}
-          </AlertDescription>
-        </Alert>
-      ) : null}
-
-      <AdminDecisionBoundary>
-        {confirm ? (
-          <div
-            aria-label="결정 확인"
-            className="mt-3 rounded-lg border border-border bg-card p-4"
-            role="group"
-          >
-            <p className="text-[13px] font-medium">
-              {`${confirm.row.email} · ${ACCESS_ACTION_LABELS[confirm.action]} 확정`}
-            </p>
-            <p className="mt-1 text-[13px] leading-[19px] text-muted-foreground">
-              {`현재 상태는 ${ACCESS_STATUS_LABELS[confirm.row.status]}입니다. ${
-                confirm.action === "approve"
-                  ? "확정하면 이 계정이 공시 화면과 동기화 API를 쓸 수 있습니다."
-                  : confirm.action === "reject"
-                    ? "확정하면 이 계정은 승인되지 않은 상태로 남습니다."
-                    : "확정하면 다음 요청부터 이 계정의 접근이 끊깁니다."
-              }`}
-            </p>
-            <AdminDecisionForm
-              action={decide}
-              className="mt-3 flex flex-wrap gap-2"
-            >
-              <input name="userId" type="hidden" value={confirm.row.userId} />
-              <input name="action" type="hidden" value={confirm.action} />
-              <input
-                name="expectedRevision"
-                type="hidden"
-                value={String(confirm.row.revision)}
-              />
-              <Button size="sm" type="submit">
-                {`${ACCESS_ACTION_LABELS[confirm.action]} 확정`}
-              </Button>
-              <Button asChild size="sm" variant="ghost">
-                <GuruLink href="/admin">취소</GuruLink>
-              </Button>
-            </AdminDecisionForm>
-          </div>
-        ) : requested !== null ? (
-          <Alert className="mt-3">
-            <AlertTitle>결정을 진행할 수 없습니다</AlertTitle>
-            <AlertDescription className="text-[13px] leading-[19px]">
-              {panelNotice(focus, intent, mailRevision)}
-            </AlertDescription>
-          </Alert>
-        ) : null}
-
-        {ordered === null ? (
-          <Alert className="mt-5" variant="destructive">
-            <AlertTitle>가입 요청 목록을 불러오지 못했습니다</AlertTitle>
-            <AlertDescription className="text-[13px] leading-[19px]">
-              저장된 승인 상태 서비스에 연결하지 못했습니다. 잠시 뒤 다시 시도해
-              주세요.
-            </AlertDescription>
-          </Alert>
-        ) : ordered.length === 0 ? (
-          <p className="mt-5 rounded-lg border border-border bg-card px-4 py-6 text-center text-[13px] text-muted-foreground">
-            접수된 가입 요청이 없습니다.
-          </p>
-        ) : (
+      <AdminTabs
+        activeTab={activeTab}
+        approvals={
           <>
-            {/* 모바일 PWA는 단일 열 카드로, 데스크톱은 정렬된 표로 보여 준다. 같은 데이터·같은 동작이다. */}
-            <ul className="mt-5 grid gap-2 min-[761px]:hidden">
-              {ordered.map((row) => (
-                <li
-                  className={`min-w-0 rounded-lg border border-border p-4 ${
-                    row.userId === requested ? "bg-muted/60" : "bg-card"
-                  }`}
-                  key={row.userId}
+            <section aria-labelledby="approval-heading">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="text-xl font-semibold" id="approval-heading">
+                  가입 승인
+                </h2>
+                <p className="text-[13px] text-muted-foreground">
+                  승인 {pendingCount}건 · 전체 {ordered?.length ?? 0}건
+                </p>
+              </div>
+              <p className="mt-2 max-w-[720px] text-[13px] leading-[20px] text-muted-foreground">
+                Google 로그인으로 접수된 요청을 검토합니다. 승인된 계정만 공시
+                화면과 동기화 API를 쓸 수 있고, 접근 해제는 다음 요청부터
+                적용됩니다.
+              </p>
+
+              {outcome ? (
+                <Alert
+                  className="mt-5"
+                  variant={outcome.failed ? "destructive" : "default"}
                 >
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="break-all text-[13px] font-medium">
-                      {row.email}
-                    </span>
-                    <Badge variant={statusBadge(row.status)}>
-                      {ACCESS_STATUS_LABELS[row.status]}
-                    </Badge>
-                    {row.userId === admin.userId ? (
-                      <Badge variant="outline">내 계정</Badge>
-                    ) : null}
-                    {row.isAdmin ? (
-                      <Badge variant="secondary">관리자</Badge>
-                    ) : null}
-                  </div>
-                  <dl className="mt-3 grid grid-cols-2 gap-2">
-                    <div className="min-w-0">
-                      <dt className="text-[11px] text-muted-foreground">
-                        요청
-                      </dt>
-                      <dd className="mt-0.5 text-[12px] whitespace-nowrap">
-                        {moment(row.requestedAt)}
-                      </dd>
-                    </div>
-                    <div className="min-w-0">
-                      <dt className="text-[11px] text-muted-foreground">
-                        결정
-                      </dt>
-                      <dd className="mt-0.5 text-[12px] whitespace-nowrap">
-                        {moment(row.decidedAt)}
-                      </dd>
-                    </div>
-                  </dl>
-                  <div className="mt-3">
-                    <RowActions
-                      actions={decisionsFor(row.status)}
-                      adminId={admin.userId}
-                      row={row}
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-5 hidden overflow-x-auto rounded-lg border border-border bg-card min-[761px]:block">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>계정</TableHead>
-                    <TableHead>상태</TableHead>
-                    <TableHead>요청</TableHead>
-                    <TableHead>결정</TableHead>
-                    <TableHead className="text-right">동작</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {ordered.map((row) => (
-                    <TableRow
-                      className={
-                        row.userId === requested ? "bg-muted/60" : undefined
-                      }
-                      key={row.userId}
+                  <AlertTitle>
+                    {outcome.failed
+                      ? "결정을 반영하지 못했습니다"
+                      : "결정을 반영했습니다"}
+                  </AlertTitle>
+                  <AlertDescription className="text-[13px] leading-[19px]">
+                    {outcome.text}
+                  </AlertDescription>
+                </Alert>
+              ) : null}
+
+              <AdminDecisionBoundary>
+                {confirm ? (
+                  <div
+                    aria-label="결정 확인"
+                    className="mt-3 rounded-lg border border-border bg-card p-4"
+                    role="group"
+                  >
+                    <p className="text-[13px] font-medium">
+                      {`${confirm.row.email} · ${ACCESS_ACTION_LABELS[confirm.action]} 확정`}
+                    </p>
+                    <p className="mt-1 text-[13px] leading-[19px] text-muted-foreground">
+                      {`현재 상태는 ${ACCESS_STATUS_LABELS[confirm.row.status]}입니다. ${
+                        confirm.action === "approve"
+                          ? "확정하면 이 계정이 공시 화면과 동기화 API를 쓸 수 있습니다."
+                          : confirm.action === "reject"
+                            ? "확정하면 이 계정은 승인되지 않은 상태로 남습니다."
+                            : "확정하면 다음 요청부터 이 계정의 접근이 끊깁니다."
+                      }`}
+                    </p>
+                    <AdminDecisionForm
+                      action={decide}
+                      className="mt-3 flex flex-wrap gap-2"
                     >
-                      <TableCell>
-                        <span className="break-all font-medium">
-                          {row.email}
-                        </span>
-                        <span className="mt-1 flex gap-1.5">
-                          {row.userId === admin.userId ? (
-                            <Badge variant="outline">내 계정</Badge>
-                          ) : null}
-                          {row.isAdmin ? (
-                            <Badge variant="secondary">관리자</Badge>
-                          ) : null}
-                        </span>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={statusBadge(row.status)}>
-                          {ACCESS_STATUS_LABELS[row.status]}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap text-[12px] text-muted-foreground">
-                        {moment(row.requestedAt)}
-                      </TableCell>
-                      <TableCell className="whitespace-nowrap text-[12px] text-muted-foreground">
-                        {moment(row.decidedAt)}
-                      </TableCell>
-                      <TableCell>
-                        <RowActions
-                          actions={decisionsFor(row.status)}
-                          adminId={admin.userId}
-                          row={row}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                      <input
+                        name="userId"
+                        type="hidden"
+                        value={confirm.row.userId}
+                      />
+                      <input
+                        name="action"
+                        type="hidden"
+                        value={confirm.action}
+                      />
+                      <input
+                        name="expectedRevision"
+                        type="hidden"
+                        value={String(confirm.row.revision)}
+                      />
+                      <Button size="sm" type="submit">
+                        {`${ACCESS_ACTION_LABELS[confirm.action]} 확정`}
+                      </Button>
+                      <Button asChild size="sm" variant="ghost">
+                        <GuruLink href="/admin">취소</GuruLink>
+                      </Button>
+                    </AdminDecisionForm>
+                  </div>
+                ) : requested !== null ? (
+                  <Alert className="mt-3">
+                    <AlertTitle>결정을 진행할 수 없습니다</AlertTitle>
+                    <AlertDescription className="text-[13px] leading-[19px]">
+                      {panelNotice(focus, intent, mailRevision)}
+                    </AlertDescription>
+                  </Alert>
+                ) : null}
+
+                {ordered === null ? (
+                  <Alert className="mt-5" variant="destructive">
+                    <AlertTitle>
+                      가입 요청 목록을 불러오지 못했습니다
+                    </AlertTitle>
+                    <AlertDescription className="text-[13px] leading-[19px]">
+                      저장된 승인 상태 서비스에 연결하지 못했습니다. 잠시 뒤
+                      다시 시도해 주세요.
+                    </AlertDescription>
+                  </Alert>
+                ) : ordered.length === 0 ? (
+                  <p className="mt-5 rounded-lg border border-border bg-card px-4 py-6 text-center text-[13px] text-muted-foreground">
+                    접수된 가입 요청이 없습니다.
+                  </p>
+                ) : (
+                  <>
+                    {/* 모바일 PWA는 단일 열 카드로, 데스크톱은 정렬된 표로 보여 준다. 같은 데이터·같은 동작이다. */}
+                    <ul className="mt-5 grid gap-2 min-[761px]:hidden">
+                      {ordered.map((row) => (
+                        <li
+                          className={`min-w-0 rounded-lg border border-border p-4 ${
+                            row.userId === requested ? "bg-muted/60" : "bg-card"
+                          }`}
+                          key={row.userId}
+                        >
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="break-all text-[13px] font-medium">
+                              {row.email}
+                            </span>
+                            <Badge variant={statusBadge(row.status)}>
+                              {ACCESS_STATUS_LABELS[row.status]}
+                            </Badge>
+                            {row.userId === admin.userId ? (
+                              <Badge variant="outline">내 계정</Badge>
+                            ) : null}
+                            {row.isAdmin ? (
+                              <Badge variant="secondary">관리자</Badge>
+                            ) : null}
+                          </div>
+                          <dl className="mt-3 grid grid-cols-2 gap-2">
+                            <div className="min-w-0">
+                              <dt className="text-[11px] text-muted-foreground">
+                                요청
+                              </dt>
+                              <dd className="mt-0.5 text-[12px] whitespace-nowrap">
+                                {moment(row.requestedAt)}
+                              </dd>
+                            </div>
+                            <div className="min-w-0">
+                              <dt className="text-[11px] text-muted-foreground">
+                                결정
+                              </dt>
+                              <dd className="mt-0.5 text-[12px] whitespace-nowrap">
+                                {moment(row.decidedAt)}
+                              </dd>
+                            </div>
+                          </dl>
+                          <div className="mt-3">
+                            <RowActions
+                              actions={decisionsFor(row.status)}
+                              adminId={admin.userId}
+                              row={row}
+                            />
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    <div className="mt-5 hidden overflow-x-auto rounded-lg border border-border bg-card min-[761px]:block">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>계정</TableHead>
+                            <TableHead>상태</TableHead>
+                            <TableHead>요청</TableHead>
+                            <TableHead>결정</TableHead>
+                            <TableHead className="text-right">동작</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {ordered.map((row) => (
+                            <TableRow
+                              className={
+                                row.userId === requested
+                                  ? "bg-muted/60"
+                                  : undefined
+                              }
+                              key={row.userId}
+                            >
+                              <TableCell>
+                                <span className="break-all font-medium">
+                                  {row.email}
+                                </span>
+                                <span className="mt-1 flex gap-1.5">
+                                  {row.userId === admin.userId ? (
+                                    <Badge variant="outline">내 계정</Badge>
+                                  ) : null}
+                                  {row.isAdmin ? (
+                                    <Badge variant="secondary">관리자</Badge>
+                                  ) : null}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant={statusBadge(row.status)}>
+                                  {ACCESS_STATUS_LABELS[row.status]}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap text-[12px] text-muted-foreground">
+                                {moment(row.requestedAt)}
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap text-[12px] text-muted-foreground">
+                                {moment(row.decidedAt)}
+                              </TableCell>
+                              <TableCell>
+                                <RowActions
+                                  actions={decisionsFor(row.status)}
+                                  adminId={admin.userId}
+                                  row={row}
+                                />
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </>
+                )}
+              </AdminDecisionBoundary>
+
+              <p className="mt-3 text-[11px] leading-[17px] text-muted-foreground">
+                자신의 관리자 권한은 스스로 해제할 수 없습니다. 접근 해제된
+                계정은 다시 로그인해도 자동 승인되지 않으며, 재승인은 이
+                화면에서만 할 수 있습니다.
+              </p>
+            </section>
           </>
-        )}
-      </AdminDecisionBoundary>
-
-      <p className="mt-3 text-[11px] leading-[17px] text-muted-foreground">
-        자신의 관리자 권한은 스스로 해제할 수 없습니다. 접근 해제된 계정은 다시
-        로그인해도 자동 승인되지 않으며, 재승인은 이 화면에서만 할 수 있습니다.
-      </p>
-
-      <AdminSyncHealth view={syncHealth} />
+        }
+        pendingCount={pendingCount}
+        sync={<AdminSyncHealth view={syncHealth} />}
+      />
     </AppShell>
   );
 }

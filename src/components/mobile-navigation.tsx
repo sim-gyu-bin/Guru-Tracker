@@ -25,7 +25,7 @@ export type TrackedTargetItem = Readonly<{
 }>;
 
 type MobileNavigationProps = Readonly<{
-  /** 관리자 승인 화면 항목을 넣을지 여부. 판정은 서버가 하고 이 값은 표시만 바꾼다. */
+  /** 운영 관리 화면 항목을 넣을지 여부. 관리자 판정은 서버가 하고 이 값은 표시만 바꾼다. */
   admin: boolean;
   /** 공식 출처가 연결되어 이동할 수 있는 대상이다. */
   targets: readonly TrackedTargetItem[];
@@ -145,7 +145,7 @@ export function MobileNavigation({
                   className={`${itemClassName} text-muted-foreground hover:bg-muted`}
                   href="/admin"
                 >
-                  <span>가입 승인</span>
+                  <span>운영 관리</span>
                 </GuruLink>
               </SheetClose>
             </nav>

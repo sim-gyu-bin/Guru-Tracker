@@ -137,7 +137,7 @@ function SyncHealthDefinition({
 export function AdminSyncHealth({ view }: { view: SyncHealthView }) {
   if (view.status === "unconfigured") {
     return (
-      <section aria-labelledby="sync-health-heading" className="mt-8">
+      <section aria-labelledby="sync-health-heading" className="mt-0">
         <h2 className="text-xl font-semibold" id="sync-health-heading">
           동기화 상태
         </h2>
@@ -154,7 +154,7 @@ export function AdminSyncHealth({ view }: { view: SyncHealthView }) {
 
   if (view.status === "error") {
     return (
-      <section aria-labelledby="sync-health-heading" className="mt-8">
+      <section aria-labelledby="sync-health-heading" className="mt-0">
         <h2 className="text-xl font-semibold" id="sync-health-heading">
           동기화 상태
         </h2>
@@ -170,7 +170,7 @@ export function AdminSyncHealth({ view }: { view: SyncHealthView }) {
   }
 
   return (
-    <section aria-labelledby="sync-health-heading" className="mt-8">
+    <section aria-labelledby="sync-health-heading" className="mt-0">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <div>
           <h2 className="text-xl font-semibold" id="sync-health-heading">
